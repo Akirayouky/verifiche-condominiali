@@ -94,6 +94,24 @@ export async function PUT(
         finalUpdateData = { attivo: true }
         break
 
+      case 'reject':
+        // Rifiuta utente: lo disattiva e rimuove approved_at per nasconderlo dalla lista attesa
+        finalUpdateData = { 
+          attivo: false,
+          approved_at: null,
+          rejected_at: now  // Aggiungiamo un campo per tracciare il rifiuto
+        }
+        break
+
+      case 'reset_password':
+        // Reset password: imposta un flag per richiedere cambio password al primo login
+        finalUpdateData = { 
+          password_reset_required: true,
+          password_reset_at: now,
+          // Potresti anche generare una password temporanea qui se necessario
+        }
+        break
+
       case 'update':
         // Aggiorna dati generici
         finalUpdateData = updateData

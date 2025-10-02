@@ -12,6 +12,9 @@ interface User {
   attivo: boolean
   created_at: string
   approved_at: string | null
+  rejected_at: string | null
+  password_reset_required: boolean | null
+  password_reset_at: string | null
 }
 
 export default function GestioneUtenti() {
@@ -63,6 +66,82 @@ export default function GestioneUtenti() {
     }
   }
 
+  const rifiutaUtente = async (userId: string) => {
+    if (!confirm('Sei sicuro di voler rifiutare questo utente? Verrà rimosso dalla lista di attesa.')) {
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          azione: 'reject'
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        await caricaUtenti()
+        alert('Utente rifiutato e rimosso dalla lista di attesa')
+      } else {
+        alert('Errore nel rifiuto: ' + result.error)
+      }
+    } catch (err) {
+      alert('Errore nel rifiuto dell\'utente')
+    }
+  }
+
+  const resetPassword = async (userId: string) => {
+    if (!confirm('Resettare la password? L\'utente dovrà impostarla al primo accesso.')) {
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          azione: 'reset_password'
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        alert('Password resettata! L\'utente dovrà impostarla al primo accesso.')
+      } else {
+        alert('Errore nel reset password: ' + result.error)
+      }
+    } catch (err) {
+      alert('Errore nel reset della password')
+    }
+  }
+
+  const attivaUtente = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          azione: 'activate'
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        await caricaUtenti()
+        alert('Utente riattivato')
+      } else {
+        alert('Errore nella riattivazione: ' + result.error)
+      }
+    } catch (err) {
+      alert('Errore nella riattivazione dell\'utente')
+    }
+  }
+
   const disattivaUtente = async (userId: string) => {
     try {
       const response = await fetch(`/api/users/${userId}`, {
@@ -96,7 +175,12 @@ export default function GestioneUtenti() {
     })
   }
 
-  const utentiDaApprovare = users.filter(user => !user.approved_at && user.role === 'sopralluoghista')
+  const utentiDaApprovare = users.filter(user => 
+    !user.approved_at && 
+    !user.rejected_at && 
+    user.role === 'sopralluoghista' &&
+    user.attivo // Solo utenti attivi in attesa
+  )
   const utentiApprovati = users.filter(user => user.approved_at || user.role === 'admin')
 
   if (loading) {
@@ -185,7 +269,7 @@ export default function GestioneUtenti() {
                       ✅ Approva
                     </button>
                     <button
-                      onClick={() => disattivaUtente(user.id)}
+                      onClick={() => rifiutaUtente(user.id)}
                       className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
                     >
                       ❌ Rifiuta
@@ -228,27 +312,71 @@ export default function GestioneUtenti() {
                     <div className="text-xs text-gray-500">
                       {user.approved_at ? 
                         `Approvato: ${formatDate(user.approved_at)}` : 
+                        user.rejected_at ? 
+                        `Rifiutato: ${formatDate(user.rejected_at)}` :
                         'In attesa di approvazione'
                       }
+                      {user.password_reset_required && (
+                        <span className="ml-2 px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                          🔑 Reset Password Richiesto
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {user.attivo ? 'Attivo' : 'Disattivo'}
-                  </span>
+                  {/* Badge di stato */}
+                  <div className="flex flex-col gap-1">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      user.attivo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {user.attivo ? 'Attivo' : 'Disattivo'}
+                    </span>
+                    
+                    {user.approved_at ? (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                        ✅ Approvato
+                      </span>
+                    ) : user.rejected_at ? (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                        ❌ Rifiutato
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        ⏳ Pending
+                      </span>
+                    )}
+                  </div>
                   
-                  {user.approved_at ? (
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                      ✅ Approvato
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                      ⏳ Pending
-                    </span>
+                  {/* Bottoni azione - solo per non admin */}
+                  {user.role !== 'admin' && (
+                    <div className="flex flex-col gap-1 ml-2">
+                      {/* Reset Password */}
+                      <button
+                        onClick={() => resetPassword(user.id)}
+                        className="bg-orange-500 text-white px-2 py-1 rounded text-xs hover:bg-orange-600 transition-colors"
+                      >
+                        🔑 Reset Password
+                      </button>
+                      
+                      {/* Attiva/Disattiva */}
+                      {user.attivo ? (
+                        <button
+                          onClick={() => disattivaUtente(user.id)}
+                          className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+                        >
+                          ❌ Disattiva
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => attivaUtente(user.id)}
+                          className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600 transition-colors"
+                        >
+                          ✅ Attiva
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
