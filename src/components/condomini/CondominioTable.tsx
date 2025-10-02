@@ -89,9 +89,6 @@ export default function CondominioTable({
                   Nome Condominio
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Token
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Data Creazione
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -122,20 +119,6 @@ export default function CondominioTable({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <code className="text-sm bg-gray-100 px-2 py-1 rounded font-mono">
-                        {condominio.token}
-                      </code>
-                      <button
-                        onClick={() => copyToClipboard(condominio.token)}
-                        className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Copia token"
-                      >
-                        📋
-                      </button>
-                    </div>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(condominio.data_inserimento)}
                   </td>
@@ -153,6 +136,13 @@ export default function CondominioTable({
                           👁️
                         </button>
                       )}
+                      <button
+                        onClick={() => copyToClipboard(condominio.token)}
+                        className="text-green-600 hover:text-green-900 transition-colors"
+                        title="Copia Token"
+                      >
+                        🔑
+                      </button>
                       <button
                         onClick={() => onEdit(condominio)}
                         className="text-indigo-600 hover:text-indigo-900 transition-colors"

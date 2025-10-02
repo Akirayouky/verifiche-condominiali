@@ -3,9 +3,9 @@
   "/api/condomini/[id]/route": "app/api/condomini/[id]/route.js",
   "/api/condomini/route": "app/api/condomini/route.js",
   "/api/lavorazioni/[id]/route": "app/api/lavorazioni/[id]/route.js",
-  "/api/lavorazioni/route": "app/api/lavorazioni/route.js",
   "/api/tipologie/[id]/route": "app/api/tipologie/[id]/route.js",
   "/api/tipologie/route": "app/api/tipologie/route.js",
   "/api/verifiche/route": "app/api/verifiche/route.js",
+  "/api/lavorazioni/route": "app/api/lavorazioni/route.js",
   "/page": "app/page.js"
 }

@@ -64,7 +64,7 @@ export function Step1({
               </option>
               {condominioAttivi.map((condominio) => (
                 <option key={condominio.id} value={condominio.id}>
-                  {condominio.nome} - Token: {condominio.token.substring(0, 12)}...
+                  {condominio.nome}
                 </option>
               ))}
             </select>
@@ -80,7 +80,6 @@ export function Step1({
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-blue-900">{selectedCondominio.nome}</h4>
-                    <p className="text-sm text-blue-700">Token: {selectedCondominio.token}</p>
                     <p className="text-xs text-blue-600 mt-1">
                       Aggiunto il {new Date(selectedCondominio.data_inserimento).toLocaleDateString('it-IT')}
                     </p>

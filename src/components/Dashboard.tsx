@@ -93,23 +93,18 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           ) : condomini.length > 0 ? (
             <div className="space-y-3">
               {condomini.slice(-5).reverse().map((condominio) => (
-                <div key={condominio.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                      <span className="text-blue-600 font-medium text-sm">
-                        {condominio.nome.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{condominio.nome}</div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(condominio.data_inserimento).toLocaleDateString('it-IT')}
-                      </div>
+                <div key={condominio.id} className="flex items-center py-2 border-b border-gray-100 last:border-0">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-blue-600 font-medium text-sm">
+                      {condominio.nome.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{condominio.nome}</div>
+                    <div className="text-sm text-gray-500">
+                      Aggiunto il {new Date(condominio.data_inserimento).toLocaleDateString('it-IT')}
                     </div>
                   </div>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {condominio.token.slice(0, 12)}...
-                  </code>
                 </div>
               ))}
             </div>
