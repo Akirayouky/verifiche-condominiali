@@ -81,7 +81,7 @@ export default function WizardVerifiche() {
 
   const canProceedStep1 = !!(selectedCondominio && selectedTipologia)
   const canProceedStep2 = selectedTipologia ? 
-    selectedTipologia.campiPersonalizzati
+    selectedTipologia.campi_personalizzati
       .filter(c => c.obbligatorio)
       .every(c => datiVerifica[c.nome] && datiVerifica[c.nome] !== '') 
     : true

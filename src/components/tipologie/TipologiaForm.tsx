@@ -22,7 +22,7 @@ export default function TipologiaForm({
   const [formData, setFormData] = useState<CreateTipologiaRequest>({
     nome: initialData?.nome || '',
     descrizione: initialData?.descrizione || '',
-    campiPersonalizzati: initialData?.campiPersonalizzati || []
+    campi_personalizzati: initialData?.campi_personalizzati || []
   })
   const [errors, setErrors] = useState<string[]>([])
 
@@ -55,7 +55,7 @@ export default function TipologiaForm({
       setFormData({
         nome: '',
         descrizione: '',
-        campiPersonalizzati: []
+        campi_personalizzati: []
       })
     }
   }
@@ -74,21 +74,21 @@ export default function TipologiaForm({
     }
     setFormData(prev => ({
       ...prev,
-      campiPersonalizzati: [...prev.campiPersonalizzati, nuovoCampo]
+      campi_personalizzati: [...prev.campi_personalizzati, nuovoCampo]
     }))
   }
 
   const rimuoviCampo = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      campiPersonalizzati: prev.campiPersonalizzati.filter((_, i) => i !== index)
+      campi_personalizzati: prev.campi_personalizzati.filter((_, i) => i !== index)
     }))
   }
 
   const updateCampo = (index: number, campo: Partial<Omit<CampoPersonalizzato, 'id'>>) => {
     setFormData(prev => ({
       ...prev,
-      campiPersonalizzati: prev.campiPersonalizzati.map((c, i) => 
+      campi_personalizzati: prev.campi_personalizzati.map((c, i) => 
         i === index ? { ...c, ...campo } : c
       )
     }))
@@ -170,7 +170,7 @@ export default function TipologiaForm({
           </div>
 
           <div className="space-y-4">
-            {formData.campiPersonalizzati.map((campo, index) => (
+            {formData.campi_personalizzati.map((campo, index) => (
               <div key={index} className="border border-gray-200 p-4 rounded-md">
                 <div className="flex justify-between items-start mb-3">
                   <h5 className="font-medium text-gray-700">Campo #{index + 1}</h5>
@@ -251,7 +251,7 @@ export default function TipologiaForm({
               </div>
             ))}
 
-            {formData.campiPersonalizzati.length === 0 && (
+            {formData.campi_personalizzati.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <div className="text-4xl mb-2">📝</div>
                 <p>Nessun campo personalizzato configurato</p>

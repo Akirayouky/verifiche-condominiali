@@ -14,7 +14,7 @@ export default function Dashboard() {
 
   // Calcola condomini recenti (ultimi 7 giorni)
   const condomininiRecenti = condomini.filter(c => {
-    const created = new Date(c.dataInserimento)
+    const created = new Date(c.data_inserimento)
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
     return created >= weekAgo
@@ -99,7 +99,7 @@ export default function Dashboard() {
                     <div>
                       <div className="font-medium text-gray-900">{condominio.nome}</div>
                       <div className="text-sm text-gray-500">
-                        {new Date(condominio.dataInserimento).toLocaleDateString('it-IT')}
+                        {new Date(condominio.data_inserimento).toLocaleDateString('it-IT')}
                       </div>
                     </div>
                   </div>

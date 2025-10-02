@@ -93,7 +93,7 @@ export default function GestioneCondomini() {
   const stats = {
     totale: condomini.length,
     recenti: condomini.filter(c => {
-      const created = new Date(c.dataInserimento)
+      const created = new Date(c.data_inserimento)
       const weekAgo = new Date()
       weekAgo.setDate(weekAgo.getDate() - 7)
       return created >= weekAgo

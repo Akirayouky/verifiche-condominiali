@@ -119,7 +119,7 @@ export function Step1({
                         {tipologia.descrizione}
                       </div>
                       <div className="text-xs text-gray-400 mt-2">
-                        {tipologia.campiPersonalizzati.length} campi configurati
+                        {tipologia.campi_personalizzati.length} campi configurati
                       </div>
                     </div>
                   </div>
@@ -148,7 +148,7 @@ export function Step1({
           <div className="space-y-1 text-sm">
             <div><strong>Condominio:</strong> {selectedCondominio.nome}</div>
             <div><strong>Tipologia:</strong> {selectedTipologia.nome}</div>
-            <div><strong>Campi da compilare:</strong> {selectedTipologia.campiPersonalizzati.length}</div>
+            <div><strong>Campi da compilare:</strong> {selectedTipologia.campi_personalizzati.length}</div>
           </div>
         </div>
       )}
@@ -202,7 +202,7 @@ export function Step2({
   const validateFields = () => {
     const newErrors: Record<string, string> = {}
     
-    tipologia.campiPersonalizzati.forEach(campo => {
+    tipologia.campi_personalizzati.forEach(campo => {
       if (campo.obbligatorio) {
         const value = datiVerifica[campo.nome]
         if (!value || (typeof value === 'string' && value.trim() === '')) {
@@ -330,7 +330,7 @@ export function Step2({
       </div>
 
       <div className="space-y-6">
-        {tipologia.campiPersonalizzati.map((campo) => (
+        {tipologia.campi_personalizzati.map((campo) => (
           <div key={campo.id}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {campo.nome}
@@ -347,7 +347,7 @@ export function Step2({
           </div>
         ))}
 
-        {tipologia.campiPersonalizzati.length === 0 && (
+        {tipologia.campi_personalizzati.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-2">📝</div>
             <p>Nessun campo configurato per questa tipologia</p>

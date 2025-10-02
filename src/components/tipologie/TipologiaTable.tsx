@@ -114,10 +114,10 @@ export default function TipologiaTable({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <span className="text-sm font-medium text-gray-900">
-                        {tipologia.campiPersonalizzati.length}
+                        {tipologia.campi_personalizzati.length}
                       </span>
                       <span className="ml-2 text-xs text-gray-500">campi</span>
-                      {tipologia.campiPersonalizzati.some(c => c.obbligatorio) && (
+                      {tipologia.campi_personalizzati.some(c => c.obbligatorio) && (
                         <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
                           obbligatori
                         </span>
@@ -134,7 +134,7 @@ export default function TipologiaTable({
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(tipologia.dataCreazione)}
+                    {formatDate(tipologia.data_creazione)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">

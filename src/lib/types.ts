@@ -2,8 +2,8 @@ export interface Condominio {
   id: string
   nome: string
   token: string
-  dataInserimento: string
-  dataUltimaModifica: string
+  data_inserimento: string
+  data_ultima_modifica: string
 }
 
 export interface ApiResponse<T> {
@@ -26,10 +26,10 @@ export interface TipologiaVerifica {
   id: string
   nome: string
   descrizione: string
-  campiPersonalizzati: CampoPersonalizzato[]
+  campi_personalizzati: CampoPersonalizzato[]
   attiva: boolean
-  dataCreazione: string
-  dataUltimaModifica: string
+  data_creazione: string
+  data_ultima_modifica: string
 }
 
 export interface CampoPersonalizzato {
@@ -44,7 +44,7 @@ export interface CampoPersonalizzato {
 export interface CreateTipologiaRequest {
   nome: string
   descrizione: string
-  campiPersonalizzati: Omit<CampoPersonalizzato, 'id'>[]
+  campi_personalizzati: Omit<CampoPersonalizzato, 'id'>[]
 }
 
 export interface UpdateTipologiaRequest extends CreateTipologiaRequest {
@@ -53,31 +53,31 @@ export interface UpdateTipologiaRequest extends CreateTipologiaRequest {
 
 export interface Verifica {
   id: string
-  condominioId: string
-  tipologiaId: string
+  condominio_id: string
+  tipologia_id: string
   stato: 'bozza' | 'in_corso' | 'completata' | 'archiviata'
-  datiVerifica: Record<string, any>
+  dati_verifica: Record<string, any>
   note: string
-  emailInviata: boolean
-  dataCreazione: string
-  dataCompletamento?: string
-  dataUltimaModifica: string
+  email_inviata: boolean
+  data_creazione: string
+  data_completamento?: string
+  data_ultima_modifica: string
 }
 
 export interface CreateVerificaRequest {
-  condominioId: string
-  tipologiaId: string
-  datiVerifica: Record<string, any>
+  condominio_id: string
+  tipologia_id: string
+  dati_verifica: Record<string, any>
   note?: string
 }
 
 export interface Lavorazione {
   id: string
-  verificaId: string
+  verifica_id: string
   stato: 'aperta' | 'chiusa' | 'riaperta'
   descrizione: string
   note: string[]
-  dataApertura: string
-  dataChiusura?: string
-  dataRiapertura?: string
+  data_apertura: string
+  data_chiusura?: string
+  data_riapertura?: string
 }

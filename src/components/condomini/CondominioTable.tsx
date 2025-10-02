@@ -137,10 +137,10 @@ export default function CondominioTable({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(condominio.dataInserimento)}
+                    {formatDate(condominio.data_inserimento)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(condominio.dataUltimaModifica)}
+                    {formatDate(condominio.data_ultima_modifica)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
