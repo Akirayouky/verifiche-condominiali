@@ -46,35 +46,51 @@ export function Step1({
         </label>
         {loadingCondomini ? (
           <div className="animate-pulse">
-            <div className="h-10 bg-gray-200 rounded-md"></div>
+            <div className="h-12 bg-gray-200 rounded-md"></div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {condominioAttivi.map((condominio) => (
-              <button
-                key={condominio.id}
-                onClick={() => onCondominioChange(condominio)}
-                className={`p-4 border-2 rounded-lg text-left transition-all ${
-                  selectedCondominio?.id === condominio.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300'
-                }`}
-              >
+        ) : condominioAttivi.length > 0 ? (
+          <div className="space-y-3">
+            <select
+              value={selectedCondominio?.id || ''}
+              onChange={(e) => {
+                const condominio = condominioAttivi.find(c => c.id === e.target.value)
+                if (condominio) onCondominioChange(condominio)
+              }}
+              title="Seleziona un condominio"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 appearance-none cursor-pointer"
+            >
+              <option value="" disabled>
+                🏢 Seleziona un condominio...
+              </option>
+              {condominioAttivi.map((condominio) => (
+                <option key={condominio.id} value={condominio.id}>
+                  {condominio.nome} - Token: {condominio.token.substring(0, 12)}...
+                </option>
+              ))}
+            </select>
+            
+            {/* Card informativa del condominio selezionato */}
+            {selectedCondominio && (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                    <span className="text-blue-600 font-medium">
-                      {condominio.nome.charAt(0).toUpperCase()}
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <span className="text-blue-600 font-bold text-lg">
+                      {selectedCondominio.nome.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <div>
-                    <div className="font-medium text-gray-900">{condominio.nome}</div>
-                    <div className="text-sm text-gray-500">Token: {condominio.token}</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-900">{selectedCondominio.nome}</h4>
+                    <p className="text-sm text-blue-700">Token: {selectedCondominio.token}</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Aggiunto il {new Date(selectedCondominio.data_inserimento).toLocaleDateString('it-IT')}
+                    </p>
                   </div>
+                  <div className="text-blue-500 text-2xl">✓</div>
                 </div>
-              </button>
-            ))}
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
         
         {!loadingCondomini && condominioAttivi.length === 0 && (
           <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
@@ -258,6 +274,8 @@ export function Step2({
             type="date"
             value={value}
             onChange={(e) => handleFieldChange(campo, e.target.value)}
+            title={campo.nome}
+            placeholder={campo.placeholder}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasError ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -271,6 +289,8 @@ export function Step2({
               type="checkbox"
               checked={value === true}
               onChange={(e) => handleFieldChange(campo, e.target.checked)}
+              title={campo.nome}
+              placeholder={campo.placeholder}
               className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <span className="text-sm text-gray-700">
@@ -284,6 +304,7 @@ export function Step2({
           <select
             value={value}
             onChange={(e) => handleFieldChange(campo, e.target.value)}
+            title={campo.nome}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasError ? 'border-red-500' : 'border-gray-300'
             }`}
