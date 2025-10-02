@@ -1,1 +1,0 @@
-{"success":true,"message":"Test completato","results":{"totalUsers":[{"count":6}],"adminExists":true,"adminData":{"id":"519ca80a-f866-4b47-911d-d2ea4054f764","username":"admin","email":"admin@verifiche.com","role":"admin","approved":true},"passwordCorrect":true}}

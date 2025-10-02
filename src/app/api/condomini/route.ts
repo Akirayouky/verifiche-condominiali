@@ -1,23 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { dbQuery } from '@/lib/supabase'
+import { dbQuery, supabase } from '@/lib/supabase'
 
-// Utility per generare token unici
-async function generateUniqueToken(): Promise<string> {
-  let token: string
-  let exists: boolean
-  
-  do {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-    token = 'cond_'
-    for (let i = 0; i < 16; i++) {
-      token += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    
-    // Verifica se il token esiste già nel database Supabase
-    const { data: existing } = await dbQuery.condomini.getAll()
-    exists = existing?.some(c => c.token === token) || false
-  } while (exists)
-  
+// Utility per generare token unici (versione semplificata)
+function generateUniqueToken(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let token = 'cond_'
+  for (let i = 0; i < 16; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  // Aggiungi timestamp per unicità
+  token += Date.now().toString(36)
   return token
 }
 
@@ -68,11 +60,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Crea nuovo condominio
+// POST - Crea nuovo condominio (versione semplificata)
 export async function POST(request: NextRequest) {
   try {
+    console.log('🏢 POST condomini - Start')
+    
     const body = await request.json()
-    const { nome, assigned_to } = body
+    console.log('📝 Request body:', body)
+    
+    const { nome } = body
 
     if (!nome || nome.trim() === '') {
       return NextResponse.json(
@@ -81,37 +77,48 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Genera token unico per il condominio
-    const token = await generateUniqueToken()
-
+    // Crea condominio con solo i campi base
     const condominioData = {
-      nome: nome.trim(),
-      token,
-      assigned_to: assigned_to || null // Assegnazione opzionale durante creazione
+      nome: nome.trim()
     }
 
-    const { data, error } = await dbQuery.condomini.create(condominioData)
+    console.log('💾 Creating condominio with data:', condominioData)
+
+    // Usa la chiamata Supabase diretta per maggior controllo
+    const { data, error } = await supabase
+      .from('condomini')
+      .insert([condominioData])
+      .select()
+      .single()
     
     if (error) {
-      console.error('Errore Supabase create:', error)
+      console.error('❌ Errore Supabase create:', error)
       return NextResponse.json(
-        { success: false, error: 'Errore nella creazione del condominio' },
+        { 
+          success: false, 
+          error: 'Errore nella creazione del condominio',
+          details: error.message 
+        },
         { status: 500 }
       )
     }
 
+    console.log('✅ Condominio creato:', data)
+
     return NextResponse.json({
       success: true,
       data: data,
-      message: assigned_to 
-        ? 'Condominio creato e assegnato con successo' 
-        : 'Condominio creato con successo'
+      message: 'Condominio creato con successo'
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Errore POST condominio:', error)
+    console.error('💥 Errore POST condominio:', error)
     return NextResponse.json(
-      { success: false, error: 'Errore nella creazione del condominio' },
+      { 
+        success: false, 
+        error: 'Errore nella creazione del condominio',
+        details: String(error) 
+      },
       { status: 500 }
     )
   }
