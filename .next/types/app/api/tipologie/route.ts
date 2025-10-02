@@ -1,8 +1,8 @@
-// File: /Users/akirayouky/Desktop/Siti/Condomini/src/app/api/condomini/route.ts
-import * as entry from '../../../../../src/app/api/condomini/route.js'
+// File: /Users/akirayouky/Desktop/Siti/Condomini/src/app/api/tipologie/route.ts
+import * as entry from '../../../../../src/app/api/tipologie/route.js'
 import type { NextRequest } from 'next/server.js'
 
-type TEntry = typeof import('../../../../../src/app/api/condomini/route.js')
+type TEntry = typeof import('../../../../../src/app/api/tipologie/route.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{

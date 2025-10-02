@@ -18,7 +18,7 @@ export const dbQuery = {
 
   // Tipologie
   tipologie: {
-    getAll: () => supabase.from('tipologie_verifiche').select('*').order('data_inserimento', { ascending: false }),
+    getAll: () => supabase.from('tipologie_verifiche').select('*').order('data_creazione', { ascending: false }),
     create: (data: any) => supabase.from('tipologie_verifiche').insert([data]).select().single(),
     getById: (id: string) => supabase.from('tipologie_verifiche').select('*').eq('id', id).single(),
     update: (id: string, data: any) => supabase.from('tipologie_verifiche').update(data).eq('id', id).select().single(),
@@ -27,7 +27,7 @@ export const dbQuery = {
 
   // Verifiche
   verifiche: {
-    getAll: () => supabase.from('verifiche').select('*').order('data_inserimento', { ascending: false }),
+    getAll: () => supabase.from('verifiche').select('*').order('data_creazione', { ascending: false }),
     create: (data: any) => supabase.from('verifiche').insert([data]).select().single(),
     getById: (id: string) => supabase.from('verifiche').select('*').eq('id', id).single(),
     update: (id: string, data: any) => supabase.from('verifiche').update(data).eq('id', id).select().single(),
@@ -36,7 +36,7 @@ export const dbQuery = {
 
   // Lavorazioni
   lavorazioni: {
-    getAll: () => supabase.from('lavorazioni').select('*').order('data_inserimento', { ascending: false }),
+    getAll: () => supabase.from('lavorazioni').select('*').order('data_creazione', { ascending: false }),
     create: (data: any) => supabase.from('lavorazioni').insert([data]).select().single(),
     getById: (id: string) => supabase.from('lavorazioni').select('*').eq('id', id).single(),
     update: (id: string, data: any) => supabase.from('lavorazioni').update(data).eq('id', id).select().single(),
