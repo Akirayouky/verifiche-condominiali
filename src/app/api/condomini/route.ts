@@ -21,10 +21,14 @@ async function generateUniqueToken(): Promise<string> {
   return token
 }
 
-// GET - Ottieni tutti i condomini
-export async function GET() {
+// GET - Ottieni tutti i condomini (con filtri opzionali)
+export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await dbQuery.condomini.getAll()
+    const { searchParams } = new URL(request.url)
+    const assignedTo = searchParams.get('assigned_to') // Filtra per sopralluoghista
+    const unassignedOnly = searchParams.get('unassigned') === 'true' // Solo non assegnati
+    
+    let { data, error } = await dbQuery.condomini.getAll()
     
     if (error) {
       console.error('Errore Supabase GET:', error)
@@ -32,6 +36,19 @@ export async function GET() {
         { success: false, error: 'Errore nel recupero dei condomini' },
         { status: 500 }
       )
+    }
+
+    // Applica filtri se richiesti
+    if (data && (assignedTo || unassignedOnly)) {
+      data = data.filter(condominio => {
+        if (unassignedOnly) {
+          return !condominio.assigned_to // Solo condomini non assegnati
+        }
+        if (assignedTo) {
+          return condominio.assigned_to === assignedTo // Solo del sopralluoghista specificato
+        }
+        return true
+      })
     }
     
     return NextResponse.json({
@@ -55,7 +72,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nome } = body
+    const { nome, assigned_to } = body
 
     if (!nome || nome.trim() === '') {
       return NextResponse.json(
@@ -69,7 +86,8 @@ export async function POST(request: NextRequest) {
 
     const condominioData = {
       nome: nome.trim(),
-      token
+      token,
+      assigned_to: assigned_to || null // Assegnazione opzionale durante creazione
     }
 
     const { data, error } = await dbQuery.condomini.create(condominioData)
@@ -85,7 +103,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: data,
-      message: 'Condominio creato con successo'
+      message: assigned_to 
+        ? 'Condominio creato e assegnato con successo' 
+        : 'Condominio creato con successo'
     }, { status: 201 })
 
   } catch (error) {

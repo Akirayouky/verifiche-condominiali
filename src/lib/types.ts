@@ -4,6 +4,7 @@ export interface Condominio {
   token: string
   data_inserimento: string
   data_ultima_modifica: string
+  assigned_to?: string | null // ID del sopralluoghista assegnato (opzionale/nullable)
 }
 
 export interface User {
@@ -57,7 +58,13 @@ export interface CreateCondominioRequest {
 }
 
 export interface UpdateCondominioRequest {
-  nome: string
+  nome?: string
+  assigned_to?: string | null // Per assegnare/rimuovere sopralluoghista
+}
+
+export interface AssignCondominioRequest {
+  condominio_id: string
+  sopralluoghista_id: string | null // null per rimuovere assegnazione
 }
 
 export interface TipologiaVerifica {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/supabase'
+import bcrypt from 'bcryptjs'
 
 // Funzione per generare password temporanea
 function generateTempPassword(): string {
@@ -129,11 +130,10 @@ export async function PUT(
         const tempPassword = generateTempPassword()
         
         // Hash della password temporanea
-        const bcrypt = require('bcryptjs')
         const hashedTempPassword = await bcrypt.hash(tempPassword, 10)
         
         finalUpdateData = { 
-          password: hashedTempPassword,
+          password_hash: hashedTempPassword,
           last_login: null, // Forza re-login
           // Impostiamo un flag per indicare che è una password temporanea
           // Useremo un campo esistente per ora

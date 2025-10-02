@@ -55,17 +55,25 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { nome } = body
+    const { nome, assigned_to } = body
 
-    if (!nome || nome.trim() === '') {
+    // Verifica che almeno uno dei campi sia presente per l'aggiornamento
+    if (!nome?.trim() && assigned_to === undefined) {
       return NextResponse.json(
-        { success: false, error: 'Il nome del condominio è obbligatorio' },
+        { success: false, error: 'Almeno un campo deve essere fornito per l\'aggiornamento' },
         { status: 400 }
       )
     }
 
-    const updateData = {
-      nome: nome.trim()
+    const updateData: any = {}
+    
+    // Solo aggiorna i campi forniti
+    if (nome?.trim()) {
+      updateData.nome = nome.trim()
+    }
+    
+    if (assigned_to !== undefined) {
+      updateData.assigned_to = assigned_to // può essere string (ID utente) o null (rimuovi assegnazione)
     }
     
     const { data, error } = await dbQuery.condomini.update(id, updateData)
@@ -85,10 +93,17 @@ export async function PUT(
       )
     }
 
+    let message = 'Condominio aggiornato con successo'
+    if (assigned_to !== undefined) {
+      message = assigned_to 
+        ? 'Condominio assegnato con successo'
+        : 'Assegnazione rimossa con successo'
+    }
+
     return NextResponse.json({
       success: true,
       data: data,
-      message: 'Condominio aggiornato con successo'
+      message: message
     })
 
   } catch (error) {

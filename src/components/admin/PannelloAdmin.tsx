@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Lavorazione } from '@/lib/types'
 import FotoViewer from '@/components/ui/FotoViewer'
 import GestioneUtenti from './GestioneUtenti'
+import GestioneAssegnazioni from './GestioneAssegnazioni'
 
 export default function PannelloAdmin() {
   const [activeTab, setActiveTab] = useState('lavorazioni')
@@ -159,11 +160,22 @@ export default function PannelloAdmin() {
           >
             👥 Utenti
           </button>
+          <button
+            onClick={() => setActiveTab('assegnazioni')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'assegnazioni'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            🏢 Assegnazioni Condomini
+          </button>
         </nav>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'utenti' && <GestioneUtenti />}
+      {activeTab === 'assegnazioni' && <GestioneAssegnazioni />}
       
       {activeTab === 'lavorazioni' && (
         <div className="space-y-6">
