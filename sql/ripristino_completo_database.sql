@@ -119,19 +119,27 @@ ALTER TABLE public.lavorazioni ENABLE ROW LEVEL SECURITY;
 -- 9. CREA POLICY DI BASE (permissive per sviluppo)
 -- ATTENZIONE: In produzione personalizzare le policy per la sicurezza
 
-CREATE POLICY IF NOT EXISTS "Allow all operations on users" 
+-- Elimina policy esistenti prima di ricrearle
+DROP POLICY IF EXISTS "Allow all operations on users" ON public.users;
+DROP POLICY IF EXISTS "Allow all operations on condomini" ON public.condomini;
+DROP POLICY IF EXISTS "Allow all operations on tipologie_verifiche" ON public.tipologie_verifiche;
+DROP POLICY IF EXISTS "Allow all operations on verifiche" ON public.verifiche;
+DROP POLICY IF EXISTS "Allow all operations on lavorazioni" ON public.lavorazioni;
+
+-- Crea nuove policy
+CREATE POLICY "Allow all operations on users" 
 ON public.users FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Allow all operations on condomini" 
+CREATE POLICY "Allow all operations on condomini" 
 ON public.condomini FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Allow all operations on tipologie_verifiche" 
+CREATE POLICY "Allow all operations on tipologie_verifiche" 
 ON public.tipologie_verifiche FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Allow all operations on verifiche" 
+CREATE POLICY "Allow all operations on verifiche" 
 ON public.verifiche FOR ALL USING (true) WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Allow all operations on lavorazioni" 
+CREATE POLICY "Allow all operations on lavorazioni" 
 ON public.lavorazioni FOR ALL USING (true) WITH CHECK (true);
 
 -- 10. INSERISCI DATI DI BASE
