@@ -3,10 +3,10 @@
 
 -- Aggiungi colonna assigned_to (nullable) che fa riferimento all'ID dell'utente sopralluoghista
 ALTER TABLE condomini 
-ADD COLUMN assigned_to uuid REFERENCES users(id) ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS assigned_to uuid REFERENCES users(id) ON DELETE SET NULL;
 
 -- Aggiungi commento per documentare il campo
 COMMENT ON COLUMN condomini.assigned_to IS 'ID del sopralluoghista a cui è assegnato questo condominio. NULL = non assegnato';
 
 -- Indice per migliorare le performance delle query filtrate per sopralluoghista
-CREATE INDEX idx_condomini_assigned_to ON condomini(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_condomini_assigned_to ON condomini(assigned_to);
