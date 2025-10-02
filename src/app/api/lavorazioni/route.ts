@@ -1,118 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { Lavorazione } from '@/lib/types'
-
-// Database in memoria per le lavorazioni
-let lavorazioniDB: Lavorazione[] = [
-  {
-    id: '1',
-    verifica_id: '1',
-    stato: 'completata',
-    descrizione: 'Verifica antincendio completata - Sistema conforme',
-    note: [
-      'Tutti gli estintori controllati e funzionanti',
-      'Vie di fuga libere e segnalate correttamente',
-      'Controlli periodici programmati per il prossimo trimestre'
-    ],
-    data_apertura: '2024-02-01T09:00:00Z',
-    data_chiusura: '2024-02-01T11:30:00Z',
-    utente_assegnato: 'mario.rossi'
-  },
-  {
-    id: '2',
-    verifica_id: '2', 
-    stato: 'in_corso',
-    descrizione: 'Controllo ascensore in corso',
-    note: [
-      'Iniziata verifica funzionamento meccanico',
-      'Controllo sistemi di sicurezza previsto per domani'
-    ],
-    data_apertura: '2024-02-05T14:00:00Z',
-    utente_assegnato: 'mario.rossi',
-    verifica: {
-      id: '2',
-      condominio_id: 'cond_002',
-      tipologia_id: 'tip_002',
-      stato: 'in_corso',
-      dati_verifica: {},
-      note: '',
-      email_inviata: false,
-      data_creazione: '2024-02-05T14:00:00Z',
-      data_ultima_modifica: '2024-02-05T14:00:00Z'
-    }
-  },
-  {
-    id: '3',
-    verifica_id: '3',
-    stato: 'da_eseguire',
-    descrizione: 'Controllo impianto elettrico - Verifica quadri elettrici',
-    note: [],
-    data_apertura: '2024-02-10T08:00:00Z',
-    utente_assegnato: 'luigi.verdi',
-    verifica: {
-      id: '4',
-      condominio_id: 'cond_001',
-      tipologia_id: 'tip_001',
-      stato: 'bozza',
-      dati_verifica: {},
-      note: '',
-      email_inviata: false,
-      data_creazione: '2024-02-10T08:00:00Z',
-      data_ultima_modifica: '2024-02-10T08:00:00Z'
-    }
-  },
-  {
-    id: '4',
-    verifica_id: '1',
-    stato: 'riaperta',
-    descrizione: 'Riapertura per controllo aggiuntivo estintore piano terra',
-    note: [
-      'Rilevata anomalia su estintore E-12',
-      'Necessaria sostituzione entro 7 giorni',
-      'Contattato fornitore per preventivo'
-    ],
-    data_apertura: '2024-02-01T09:00:00Z',
-    data_chiusura: '2024-02-01T11:30:00Z',
-    data_riapertura: '2024-02-10T10:15:00Z',
-    utente_assegnato: 'mario.rossi',
-    verifica: {
-      id: '1',
-      condominio_id: 'cond_001',
-      tipologia_id: 'tip_001',
-      stato: 'completata',
-      dati_verifica: {},
-      note: '',
-      email_inviata: true,
-      data_creazione: '2024-02-01T08:00:00Z',
-      data_completamento: '2024-02-01T11:30:00Z',
-      data_ultima_modifica: '2024-02-10T10:15:00Z'
-    }
-  }
-]
+import { dbQuery } from '@/lib/supabase'
 
 // GET - Ottieni tutte le lavorazioni
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const stato = searchParams.get('stato')
-    const verificaId = searchParams.get('verificaId')
+    const verificaId = searchParams.get('verifica_id')
+    const utenteAssegnato = searchParams.get('utente_assegnato')
 
-    let filteredLavorazioni = lavorazioniDB
+    let query = dbQuery.lavorazioni.getAll()
 
-    if (stato) {
-      filteredLavorazioni = filteredLavorazioni.filter(l => l.stato === stato)
+    // Applica filtri se presenti
+    if (stato && stato !== 'tutte') {
+      query = query.eq('stato', stato)
+    }
+    if (verificaId) {
+      query = query.eq('verifica_id', verificaId)
+    }
+    if (utenteAssegnato) {
+      query = query.eq('utente_assegnato', utenteAssegnato)
     }
 
-    if (verificaId) {
-      filteredLavorazioni = filteredLavorazioni.filter(l => l.verifica_id === verificaId)
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Errore Supabase GET lavorazioni:', error)
+      return NextResponse.json(
+        { success: false, error: 'Errore nel recupero delle lavorazioni' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
       success: true,
-      data: filteredLavorazioni,
-      total: filteredLavorazioni.length
+      data: data || [],
+      total: data?.length || 0
     })
   } catch (error) {
+    console.error('Errore GET lavorazioni:', error)
     return NextResponse.json(
       { success: false, error: 'Errore nel recupero delle lavorazioni' },
       { status: 500 }
@@ -124,9 +52,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { verificaId, descrizione, note } = body
+    const { verifica_id, descrizione, note, utente_assegnato } = body
 
-    if (!verificaId || !descrizione) {
+    if (!verifica_id || !descrizione) {
       return NextResponse.json(
         { success: false, error: 'Verifica ID e descrizione sono obbligatori' },
         { status: 400 }
@@ -135,24 +63,34 @@ export async function POST(request: NextRequest) {
 
     const now = new Date().toISOString()
 
-    const nuovaLavorazione: Lavorazione = {
+    const nuovaLavorazione = {
       id: uuidv4(),
-      verifica_id: verificaId,
+      verifica_id,
       stato: 'da_eseguire',
       descrizione: descrizione.trim(),
       note: note ? [note] : [],
-      data_apertura: now
+      data_apertura: now,
+      utente_assegnato
     }
 
-    lavorazioniDB.push(nuovaLavorazione)
+    const { data, error } = await dbQuery.lavorazioni.create(nuovaLavorazione)
+
+    if (error) {
+      console.error('Errore Supabase POST lavorazione:', error)
+      return NextResponse.json(
+        { success: false, error: 'Errore nella creazione della lavorazione' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
-      data: nuovaLavorazione,
+      data: data,
       message: 'Lavorazione creata con successo'
     }, { status: 201 })
 
   } catch (error) {
+    console.error('Errore POST lavorazione:', error)
     return NextResponse.json(
       { success: false, error: 'Errore nella creazione della lavorazione' },
       { status: 500 }

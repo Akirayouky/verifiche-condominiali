@@ -1,83 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Lavorazione } from '@/lib/types'
-
-// Riferimento al database in memoria
-let lavorazioniDB: Lavorazione[] = [
-  {
-    id: '1',
-    verifica_id: '1',
-    stato: 'completata',
-    descrizione: 'Verifica antincendio - Condominio Via Roma 15',
-    note: [
-      'Tutti gli estintori controllati e funzionanti',
-      'Vie di fuga libere e segnalate correttamente'
-    ],
-    data_apertura: '2024-02-01T09:00:00Z',
-    data_chiusura: '2024-02-01T11:30:00Z',
-    utente_assegnato: 'mario.rossi',
-    data_assegnazione: '2024-02-01T08:00:00Z',
-    verifica: {
-      id: '1',
-      condominio_id: 'cond_001',
-      tipologia_id: 'tip_001',
-      stato: 'completata',
-      dati_verifica: {},
-      note: '',
-      email_inviata: true,
-      data_creazione: '2024-02-01T08:00:00Z',
-      data_completamento: '2024-02-01T11:30:00Z',
-      data_ultima_modifica: '2024-02-01T11:30:00Z'
-    }
-  },
-  {
-    id: '2',
-    verifica_id: '2',
-    stato: 'da_eseguire',
-    descrizione: 'Verifica elettrica - Condominio Via Milano 32',
-    note: [],
-    data_apertura: '2024-02-02T08:00:00Z',
-    utente_assegnato: 'mario.rossi',
-    data_assegnazione: '2024-02-02T08:00:00Z',
-    verifica: {
-      id: '2',
-      condominio_id: 'cond_002',
-      tipologia_id: 'tip_002',
-      stato: 'bozza',
-      dati_verifica: {},
-      note: '',
-      email_inviata: false,
-      data_creazione: '2024-02-02T08:00:00Z',
-      data_ultima_modifica: '2024-02-02T08:00:00Z'
-    }
-  },
-  {
-    id: '3',
-    verifica_id: '3',
-    stato: 'riaperta',
-    descrizione: 'Verifica ascensore - Condominio Via Torino 8',
-    note: [
-      'Prima verifica completata',
-      'Riaperta per controllo aggiuntivo cavi'
-    ],
-    data_apertura: '2024-02-03T10:00:00Z',
-    data_chiusura: '2024-02-03T12:00:00Z',
-    data_riapertura: '2024-02-04T09:00:00Z',
-    utente_assegnato: 'luigi.verdi',
-    data_assegnazione: '2024-02-04T09:00:00Z',
-    verifica: {
-      id: '3',
-      condominio_id: 'cond_003',
-      tipologia_id: 'tip_003',
-      stato: 'completata',
-      dati_verifica: {},
-      note: '',
-      email_inviata: true,
-      data_creazione: '2024-02-03T10:00:00Z',
-      data_completamento: '2024-02-03T12:00:00Z',
-      data_ultima_modifica: '2024-02-04T09:00:00Z'
-    }
-  }
-]
+import { dbQuery } from '@/lib/supabase'
 
 // GET - Ottieni lavorazione per ID
 export async function GET(
@@ -86,9 +8,18 @@ export async function GET(
 ) {
   try {
     const { id } = params
-    const lavorazione = lavorazioniDB.find(l => l.id === id)
 
-    if (!lavorazione) {
+    const { data, error } = await dbQuery.lavorazioni.getById(id)
+
+    if (error) {
+      console.error('Errore Supabase GET lavorazione:', error)
+      return NextResponse.json(
+        { success: false, error: 'Errore nel recupero della lavorazione' },
+        { status: 500 }
+      )
+    }
+
+    if (!data) {
       return NextResponse.json(
         { success: false, error: 'Lavorazione non trovata' },
         { status: 404 }
@@ -97,10 +28,11 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: lavorazione
+      data: data
     })
 
   } catch (error) {
+    console.error('Errore GET lavorazione:', error)
     return NextResponse.json(
       { success: false, error: 'Errore nel recupero della lavorazione' },
       { status: 500 }
@@ -108,7 +40,7 @@ export async function GET(
   }
 }
 
-// PUT - Aggiorna lavorazione (chiudi, riapri, modifica)
+// PUT - Aggiorna lavorazione
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -116,87 +48,105 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { azione, descrizione, nota, dati_verifica } = body
+    const { azione, dati } = body
 
-    const lavorazioneIndex = lavorazioniDB.findIndex(l => l.id === id)
-    
-    if (lavorazioneIndex === -1) {
+    // Ottieni la lavorazione esistente
+    const { data: lavorazioneEsistente, error: getError } = await dbQuery.lavorazioni.getById(id)
+
+    if (getError) {
+      console.error('Errore Supabase GET lavorazione esistente:', getError)
+      return NextResponse.json(
+        { success: false, error: 'Errore nel recupero della lavorazione' },
+        { status: 500 }
+      )
+    }
+
+    if (!lavorazioneEsistente) {
       return NextResponse.json(
         { success: false, error: 'Lavorazione non trovata' },
         { status: 404 }
       )
     }
 
-    const lavorazione = lavorazioniDB[lavorazioneIndex]
     const now = new Date().toISOString()
+    let updateData: any = {}
 
     switch (azione) {
-      case 'inizia':
-        if (lavorazione.stato !== 'da_eseguire') {
-          return NextResponse.json(
-            { success: false, error: 'Solo le lavorazioni da eseguire possono essere iniziate' },
-            { status: 400 }
-          )
-        }
-        lavorazione.stato = 'in_corso'
-        if (nota) lavorazione.note.push(nota)
-        break
-
       case 'completa':
-        if (lavorazione.stato !== 'in_corso' && lavorazione.stato !== 'da_eseguire') {
+        if (lavorazioneEsistente.stato === 'completata') {
           return NextResponse.json(
-            { success: false, error: 'Solo le lavorazioni da eseguire o in corso possono essere completate' },
+            { success: false, error: 'La lavorazione è già completata' },
             { status: 400 }
           )
         }
-        lavorazione.stato = 'completata'
-        lavorazione.data_chiusura = now
-        if (nota) lavorazione.note.push(nota)
-        
-        // Aggiorna i dati della verifica associata se forniti
-        if (dati_verifica && lavorazione.verifica) {
-          lavorazione.verifica.dati_verifica = dati_verifica
-          lavorazione.verifica.data_completamento = now
+
+        updateData = {
+          stato: 'completata',
+          data_chiusura: now,
+          note: dati.note ? [...(lavorazioneEsistente.note || []), dati.note] : lavorazioneEsistente.note
         }
         break
 
       case 'riapri':
-        if (lavorazione.stato !== 'completata') {
+        if (lavorazioneEsistente.stato !== 'completata') {
           return NextResponse.json(
             { success: false, error: 'Solo le lavorazioni completate possono essere riaperte' },
             { status: 400 }
           )
         }
-        lavorazione.stato = 'riaperta'
-        lavorazione.data_riapertura = now
-        if (nota) lavorazione.note.push(nota)
+
+        updateData = {
+          stato: 'riaperta',
+          data_riapertura: now,
+          note: dati.motivo ? [...(lavorazioneEsistente.note || []), `Riapertura: ${dati.motivo}`] : lavorazioneEsistente.note
+        }
+        break
+
+      case 'assegna':
+        updateData = {
+          utente_assegnato: dati.utenteAssegnato,
+          data_assegnazione: now
+        }
         break
 
       case 'aggiungi_nota':
-        if (nota) lavorazione.note.push(nota)
+        updateData = {
+          note: [...(lavorazioneEsistente.note || []), dati.nota]
+        }
         break
 
-      case 'modifica':
-        if (descrizione) lavorazione.descrizione = descrizione
-        if (nota) lavorazione.note.push(nota)
+      case 'aggiorna':
+        updateData = {
+          ...dati,
+          data_ultima_modifica: now
+        }
         break
 
       default:
         return NextResponse.json(
-          { success: false, error: 'Azione non riconosciuta' },
+          { success: false, error: 'Azione non valida' },
           { status: 400 }
         )
     }
 
-    lavorazioniDB[lavorazioneIndex] = lavorazione
+    const { data: updatedData, error: updateError } = await dbQuery.lavorazioni.update(id, updateData)
+
+    if (updateError) {
+      console.error('Errore Supabase UPDATE lavorazione:', updateError)
+      return NextResponse.json(
+        { success: false, error: 'Errore nell\'aggiornamento della lavorazione' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
-      data: lavorazione,
+      data: updatedData,
       message: 'Lavorazione aggiornata con successo'
     })
 
   } catch (error) {
+    console.error('Errore PUT lavorazione:', error)
     return NextResponse.json(
       { success: false, error: 'Errore nell\'aggiornamento della lavorazione' },
       { status: 500 }
@@ -211,16 +161,16 @@ export async function DELETE(
 ) {
   try {
     const { id } = params
-    const lavorazioneIndex = lavorazioniDB.findIndex(l => l.id === id)
-    
-    if (lavorazioneIndex === -1) {
+
+    const { error } = await dbQuery.lavorazioni.delete(id)
+
+    if (error) {
+      console.error('Errore Supabase DELETE lavorazione:', error)
       return NextResponse.json(
-        { success: false, error: 'Lavorazione non trovata' },
-        { status: 404 }
+        { success: false, error: 'Errore nell\'eliminazione della lavorazione' },
+        { status: 500 }
       )
     }
-
-    lavorazioniDB.splice(lavorazioneIndex, 1)
 
     return NextResponse.json({
       success: true,
@@ -228,6 +178,7 @@ export async function DELETE(
     })
 
   } catch (error) {
+    console.error('Errore DELETE lavorazione:', error)
     return NextResponse.json(
       { success: false, error: 'Errore nell\'eliminazione della lavorazione' },
       { status: 500 }
