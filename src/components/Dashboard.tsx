@@ -2,7 +2,11 @@
 
 import { useCondomini } from '@/hooks/useCondomini'
 
-export default function Dashboard() {
+interface DashboardProps {
+  onNavigate?: (section: string) => void
+}
+
+export default function Dashboard({ onNavigate }: DashboardProps) {
   const { condomini, loading } = useCondomini()
 
   const stats = {
@@ -120,7 +124,10 @@ export default function Dashboard() {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Azioni Rapide</h3>
           <div className="space-y-3">
-            <button className="w-full text-left p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+            <button 
+              onClick={() => onNavigate?.('condomini')}
+              className="w-full text-left p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
               <div className="flex items-center">
                 <span className="text-2xl mr-3">🏢</span>
                 <div>
@@ -130,7 +137,10 @@ export default function Dashboard() {
               </div>
             </button>
             
-            <button className="w-full text-left p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+            <button 
+              onClick={() => onNavigate?.('verifiche')}
+              className="w-full text-left p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
               <div className="flex items-center">
                 <span className="text-2xl mr-3">✅</span>
                 <div>
@@ -140,12 +150,28 @@ export default function Dashboard() {
               </div>
             </button>
             
-            <button className="w-full text-left p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+            <button 
+              onClick={() => onNavigate?.('tipologie')}
+              className="w-full text-left p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
               <div className="flex items-center">
                 <span className="text-2xl mr-3">📋</span>
                 <div>
                   <div className="font-medium text-gray-900">Tipologie Verifiche</div>
                   <div className="text-sm text-gray-600">Gestisci le tipologie di verifica</div>
+                </div>
+              </div>
+            </button>
+            
+            <button 
+              onClick={() => onNavigate?.('admin')}
+              className="w-full text-left p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <div className="flex items-center">
+                <span className="text-2xl mr-3">⚙️</span>
+                <div>
+                  <div className="font-medium text-gray-900">Pannello Admin</div>
+                  <div className="text-sm text-gray-600">Gestisci lavorazioni e riapri verifiche</div>
                 </div>
               </div>
             </button>

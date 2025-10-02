@@ -49,7 +49,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex-1 p-8">
         <div className="bg-white rounded-lg shadow-sm p-6">
-          {activeSection === 'dashboard' && <Dashboard />}
+          {activeSection === 'dashboard' && <Dashboard onNavigate={setActiveSection} />}
 
           {activeSection === 'condomini' && <GestioneCondomini />}
 
