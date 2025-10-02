@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Lavorazione } from '@/lib/types'
+import FotoViewer from '@/components/ui/FotoViewer'
 
 export default function PannelloAdmin() {
   const [lavorazioni, setLavorazioni] = useState<Lavorazione[]>([])
@@ -242,7 +243,7 @@ export default function PannelloAdmin() {
                     </div>
                     
                     {lavorazione.note.length > 0 && (
-                      <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="bg-gray-50 p-3 rounded-md mb-3">
                         <div className="text-sm font-medium text-gray-700 mb-2">
                           Note ({lavorazione.note.length}):
                         </div>
@@ -256,6 +257,33 @@ export default function PannelloAdmin() {
                         </div>
                       </div>
                     )}
+                    
+                    {/* Visualizzazione foto */}
+                    {lavorazione.verifica?.dati_verifica && 
+                      Object.entries(lavorazione.verifica.dati_verifica).some(([_, value]) => 
+                        Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('data:image')
+                      ) && (
+                        <div className="bg-blue-50 p-3 rounded-md">
+                          <div className="text-sm font-medium text-gray-700 mb-3">
+                            📷 Foto Allegate
+                          </div>
+                          <div className="space-y-4">
+                            {Object.entries(lavorazione.verifica.dati_verifica)
+                              .filter(([_, value]) => 
+                                Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0].startsWith('data:image')
+                              )
+                              .map(([nome, foto]) => (
+                                <FotoViewer
+                                  key={nome}
+                                  foto={foto as string[]}
+                                  nome={nome}
+                                />
+                              ))
+                            }
+                          </div>
+                        </div>
+                      )
+                    }
                   </div>
                   
                   <div className="ml-4 flex flex-col gap-2">

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useCondomini } from '@/hooks/useCondomini'
 import { useTipologie } from '@/hooks/useTipologie'
 import { Condominio, TipologiaVerifica, CampoPersonalizzato } from '@/lib/types'
+import FotoUpload from '@/components/ui/FotoUpload'
 
 interface Step1Props {
   selectedCondominio: Condominio | null
@@ -220,8 +221,17 @@ export function Step2({
     tipologia.campi_personalizzati.forEach(campo => {
       if (campo.obbligatorio) {
         const value = datiVerifica[campo.nome]
-        if (!value || (typeof value === 'string' && value.trim() === '')) {
-          newErrors[campo.nome] = 'Questo campo è obbligatorio'
+        
+        if (campo.tipo === 'foto') {
+          // Per i campi foto, controlla che ci sia almeno una foto
+          if (!value || !Array.isArray(value) || value.length === 0) {
+            newErrors[campo.nome] = 'Almeno una foto è richiesta'
+          }
+        } else {
+          // Validazione per altri tipi di campo
+          if (!value || (typeof value === 'string' && value.trim() === '')) {
+            newErrors[campo.nome] = 'Questo campo è obbligatorio'
+          }
         }
       }
     })
@@ -327,6 +337,17 @@ export function Step2({
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasError ? 'border-red-500' : 'border-gray-300'
             }`}
+          />
+        )
+
+      case 'foto':
+        return (
+          <FotoUpload
+            value={value || []}
+            onChange={(foto) => handleFieldChange(campo, foto)}
+            maxFoto={campo.maxFoto || 5}
+            required={campo.obbligatorio}
+            nome={campo.nome}
           />
         )
 

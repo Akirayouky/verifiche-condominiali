@@ -35,9 +35,10 @@ export interface TipologiaVerifica {
 export interface CampoPersonalizzato {
   id: string
   nome: string
-  tipo: 'testo' | 'numero' | 'data' | 'checkbox' | 'select' | 'textarea'
+  tipo: 'testo' | 'numero' | 'data' | 'checkbox' | 'select' | 'textarea' | 'foto'
   obbligatorio: boolean
   opzioni?: string[] // Per campi select
+  maxFoto?: number // Per limitare il numero di foto (default 5)
   placeholder?: string
 }
 
@@ -80,4 +81,6 @@ export interface Lavorazione {
   data_apertura: string
   data_chiusura?: string
   data_riapertura?: string
+  // Dati della verifica associata (se presenti)
+  verifica?: Verifica
 }

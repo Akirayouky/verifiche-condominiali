@@ -32,7 +32,8 @@ export default function TipologiaForm({
     { value: 'data', label: 'Data' },
     { value: 'checkbox', label: 'Checkbox' },
     { value: 'select', label: 'Lista selezione' },
-    { value: 'textarea', label: 'Testo lungo' }
+    { value: 'textarea', label: 'Testo lungo' },
+    { value: 'foto', label: '📷 Caricamento Foto' }
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,6 +201,7 @@ export default function TipologiaForm({
                     <select
                       value={campo.tipo}
                       onChange={(e) => updateCampo(index, { tipo: e.target.value as any })}
+                      title="Tipo di campo"
                       className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                     >
                       {tipiCampo.map(tipo => (
@@ -245,6 +247,24 @@ export default function TipologiaForm({
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                       />
+                    </div>
+                  )}
+
+                  {campo.tipo === 'foto' && (
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Massimo foto consentite</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={campo.maxFoto || 5}
+                        onChange={(e) => updateCampo(index, { maxFoto: parseInt(e.target.value) || 5 })}
+                        placeholder="5"
+                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        Numero massimo di foto che gli utenti possono caricare (1-10)
+                      </div>
                     </div>
                   )}
                 </div>
