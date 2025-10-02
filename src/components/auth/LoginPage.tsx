@@ -25,7 +25,7 @@ export default function LoginPage() {
       const success = await login(formData.username, formData.password)
 
       if (!success) {
-        setError('Credenziali non valide')
+        setError('Credenziali non valide. Controlla username e password.')
       }
     } catch (err) {
       setError('Errore durante il login')
