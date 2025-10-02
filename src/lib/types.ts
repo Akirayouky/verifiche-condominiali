@@ -75,12 +75,33 @@ export interface CreateVerificaRequest {
 export interface Lavorazione {
   id: string
   verifica_id: string
-  stato: 'aperta' | 'chiusa' | 'riaperta'
+  stato: 'da_eseguire' | 'in_corso' | 'completata' | 'riaperta'
   descrizione: string
   note: string[]
   data_apertura: string
   data_chiusura?: string
   data_riapertura?: string
+  // Assegnazione all'utente
+  utente_assegnato?: string
+  data_assegnazione?: string
   // Dati della verifica associata (se presenti)
   verifica?: Verifica
+}
+
+// Sistema di autenticazione
+export interface User {
+  id: string
+  username: string
+  role: 'admin' | 'user'
+  nome: string
+  cognome: string
+  email?: string
+  attivo: boolean
+  data_creazione: string
+}
+
+export interface AuthState {
+  isAuthenticated: boolean
+  user: User | null
+  role: 'admin' | 'user' | null
 }

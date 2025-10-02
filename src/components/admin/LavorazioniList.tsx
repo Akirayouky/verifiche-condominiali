@@ -277,17 +277,17 @@ function DettaglioLavorazioneModal({ lavorazione, onClose, onAzione }: ModalProp
                 Aggiungi Nota
               </button>
 
-              {lavorazione.stato === 'aperta' && (
+              {(lavorazione.stato === 'da_eseguire' || lavorazione.stato === 'in_corso') && (
                 <button
-                  onClick={() => setAzioneSelezionata('chiudi')}
+                  onClick={() => setAzioneSelezionata('completa')}
                   className="text-green-600 hover:text-green-800 px-4 py-2 border border-green-200 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-2"
                 >
                   <span>✅</span>
-                  Chiudi Lavorazione
+                  Completa Lavorazione
                 </button>
               )}
 
-              {lavorazione.stato === 'chiusa' && (
+              {lavorazione.stato === 'completata' && (
                 <button
                   onClick={() => setAzioneSelezionata('riapri')}
                   className="text-orange-600 hover:text-orange-800 px-4 py-2 border border-orange-200 rounded-lg hover:bg-orange-50 transition-colors flex items-center gap-2"
@@ -303,7 +303,7 @@ function DettaglioLavorazioneModal({ lavorazione, onClose, onAzione }: ModalProp
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="text-sm font-medium text-gray-900 mb-3">
                   {azioneSelezionata === 'aggiungi_nota' && 'Aggiungi Nota'}
-                  {azioneSelezionata === 'chiudi' && 'Chiudi Lavorazione'}
+                  {azioneSelezionata === 'completa' && 'Completa Lavorazione'}
                   {azioneSelezionata === 'riapri' && 'Riapri Lavorazione'}
                 </h4>
                 

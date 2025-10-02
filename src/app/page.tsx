@@ -1,22 +1,38 @@
 'use client'
 
 import { useState } from 'react'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import LoginPage from '@/components/auth/LoginPage'
 import GestioneCondomini from '@/components/condomini/GestioneCondomini'
 import GestioneTipologie from '@/components/tipologie/GestioneTipologie'
 import WizardVerifiche from '@/components/verifiche/WizardVerifiche'
 import PannelloAdmin from '@/components/admin/PannelloAdmin'
+import PannelloUtente from '@/components/user/PannelloUtente'
 import Dashboard from '@/components/Dashboard'
 
-export default function Home() {
-  const [activeSection, setActiveSection] = useState('dashboard')
+function MainApp() {
+  const { isAuthenticated, user, role, logout } = useAuth()
+  const [activeSection, setActiveSection] = useState(role === 'admin' ? 'dashboard' : 'lavorazioni')
 
-  const sections = [
+  // Sezioni diverse in base al ruolo
+  const adminSections = [
     { id: 'dashboard', name: 'Dashboard', icon: '🏠' },
     { id: 'condomini', name: 'Condomini', icon: '🏢' },
     { id: 'tipologie', name: 'Tipologie', icon: '📋' },
-    { id: 'verifiche', name: 'Verifiche', icon: '✅' },
-    { id: 'admin', name: 'Admin', icon: '⚙️' },
+    { id: 'verifiche', name: 'Nuova Verifica', icon: '✅' },
+    { id: 'admin', name: 'Gestione Lavorazioni', icon: '⚙️' },
   ]
+
+  const userSections = [
+    { id: 'lavorazioni', name: 'Le Mie Lavorazioni', icon: '📋' },
+    { id: 'completate', name: 'Completate', icon: '✅' },
+  ]
+
+  const sections = role === 'admin' ? adminSections : userSections
+
+  if (!isAuthenticated) {
+    return <LoginPage />
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -47,19 +63,76 @@ export default function Home() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 p-8">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {activeSection === 'dashboard' && <Dashboard onNavigate={setActiveSection} />}
+      <main className="flex-1 overflow-y-auto">
+        {/* Header con info utente */}
+        <div className="bg-white border-b border-gray-200 px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">
+                {sections.find(s => s.id === activeSection)?.name}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {role === 'admin' ? 'Pannello Amministratore' : 'Pannello Sopralluoghista'}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <div className="text-sm font-medium text-gray-700">
+                  {user?.nome} {user?.cognome}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {role === 'admin' ? '👑 Amministratore' : '👷 Sopralluoghista'}
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded hover:bg-red-50 transition-colors"
+                title="Disconnetti"
+              >
+                🚪 Esci
+              </button>
+            </div>
+          </div>
+        </div>
 
-          {activeSection === 'condomini' && <GestioneCondomini />}
+        <div className="p-8">
+          {/* Sezioni Admin */}
+          {role === 'admin' && (
+            <>
+              {activeSection === 'dashboard' && <Dashboard onNavigate={setActiveSection} />}
+              {activeSection === 'condomini' && <GestioneCondomini />}
+              {activeSection === 'tipologie' && <GestioneTipologie />}
+              {activeSection === 'verifiche' && <WizardVerifiche />}
+              {activeSection === 'admin' && <PannelloAdmin />}
+            </>
+          )}
 
-          {activeSection === 'tipologie' && <GestioneTipologie />}
-
-          {activeSection === 'verifiche' && <WizardVerifiche />}
-
-          {activeSection === 'admin' && <PannelloAdmin />}
+          {/* Sezioni Utente */}
+          {role === 'user' && (
+            <>
+              {activeSection === 'lavorazioni' && <PannelloUtente />}
+              {activeSection === 'completate' && (
+                <div className="bg-white rounded-lg shadow-sm border p-8">
+                  <div className="text-center text-gray-500">
+                    <div className="text-4xl mb-4">✅</div>
+                    <h3 className="text-xl font-medium mb-2">Lavorazioni Completate</h3>
+                    <p>Qui vedrai lo storico delle verifiche che hai completato.</p>
+                    <p className="text-sm mt-2 text-gray-400">Funzionalità in sviluppo...</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   )
 }

@@ -7,7 +7,7 @@ let lavorazioniDB: Lavorazione[] = [
   {
     id: '1',
     verifica_id: '1',
-    stato: 'chiusa',
+    stato: 'completata',
     descrizione: 'Verifica antincendio completata - Sistema conforme',
     note: [
       'Tutti gli estintori controllati e funzionanti',
@@ -15,21 +15,32 @@ let lavorazioniDB: Lavorazione[] = [
       'Controlli periodici programmati per il prossimo trimestre'
     ],
     data_apertura: '2024-02-01T09:00:00Z',
-    data_chiusura: '2024-02-01T11:30:00Z'
+    data_chiusura: '2024-02-01T11:30:00Z',
+    utente_assegnato: 'mario.rossi'
   },
   {
     id: '2',
     verifica_id: '2', 
-    stato: 'aperta',
+    stato: 'in_corso',
     descrizione: 'Controllo ascensore in corso',
     note: [
       'Iniziata verifica funzionamento meccanico',
       'Controllo sistemi di sicurezza previsto per domani'
     ],
-    data_apertura: '2024-02-05T14:00:00Z'
+    data_apertura: '2024-02-05T14:00:00Z',
+    utente_assegnato: 'mario.rossi'
   },
   {
     id: '3',
+    verifica_id: '3',
+    stato: 'da_eseguire',
+    descrizione: 'Controllo impianto elettrico - Verifica quadri elettrici',
+    note: [],
+    data_apertura: '2024-02-10T08:00:00Z',
+    utente_assegnato: 'luigi.verdi'
+  },
+  {
+    id: '4',
     verifica_id: '1',
     stato: 'riaperta',
     descrizione: 'Riapertura per controllo aggiuntivo estintore piano terra',
@@ -92,7 +103,7 @@ export async function POST(request: NextRequest) {
     const nuovaLavorazione: Lavorazione = {
       id: uuidv4(),
       verifica_id: verificaId,
-      stato: 'aperta',
+      stato: 'da_eseguire',
       descrizione: descrizione.trim(),
       note: note ? [note] : [],
       data_apertura: now

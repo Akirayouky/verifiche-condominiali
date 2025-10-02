@@ -89,8 +89,9 @@ export default function PannelloAdmin() {
 
   const getStatoColor = (stato: string) => {
     switch (stato) {
-      case 'aperta': return 'bg-yellow-100 text-yellow-800'
-      case 'chiusa': return 'bg-green-100 text-green-800'
+      case 'da_eseguire': return 'bg-blue-100 text-blue-800'
+      case 'in_corso': return 'bg-yellow-100 text-yellow-800'
+      case 'completata': return 'bg-green-100 text-green-800'
       case 'riaperta': return 'bg-orange-100 text-orange-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -98,8 +99,9 @@ export default function PannelloAdmin() {
 
   const getStatoIcon = (stato: string) => {
     switch (stato) {
-      case 'aperta': return '📂'
-      case 'chiusa': return '✅'
+      case 'da_eseguire': return '�'
+      case 'in_corso': return '⏳'
+      case 'completata': return '✅'
       case 'riaperta': return '🔄'
       default: return '❓'
     }
@@ -107,8 +109,9 @@ export default function PannelloAdmin() {
 
   const stats = {
     totali: lavorazioni.length,
-    aperte: lavorazioni.filter(l => l.stato === 'aperta').length,
-    chiuse: lavorazioni.filter(l => l.stato === 'chiusa').length,
+    da_eseguire: lavorazioni.filter(l => l.stato === 'da_eseguire').length,
+    in_corso: lavorazioni.filter(l => l.stato === 'in_corso').length,
+    completata: lavorazioni.filter(l => l.stato === 'completata').length,
     riaperte: lavorazioni.filter(l => l.stato === 'riaperta').length
   }
 
@@ -146,18 +149,28 @@ export default function PannelloAdmin() {
         <div className="bg-yellow-50 p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-yellow-600">{stats.aperte}</div>
-              <div className="text-yellow-800 text-sm">Aperte</div>
+              <div className="text-2xl font-bold text-yellow-600">{stats.da_eseguire}</div>
+              <div className="text-yellow-800 text-sm">Da Eseguire</div>
             </div>
-            <div className="text-yellow-400 text-2xl">📂</div>
+            <div className="text-yellow-400 text-2xl">⏳</div>
           </div>
         </div>
         
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-blue-600">{stats.in_corso}</div>
+              <div className="text-blue-800 text-sm">In Corso</div>
+            </div>
+            <div className="text-blue-400 text-2xl">🔄</div>
+          </div>
+        </div>
+
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-green-600">{stats.chiuse}</div>
-              <div className="text-green-800 text-sm">Chiuse</div>
+              <div className="text-2xl font-bold text-green-600">{stats.completata}</div>
+              <div className="text-green-800 text-sm">Completate</div>
             </div>
             <div className="text-green-400 text-2xl">✅</div>
           </div>
@@ -294,16 +307,16 @@ export default function PannelloAdmin() {
                       📝 Aggiungi Nota
                     </button>
                     
-                    {lavorazione.stato === 'aperta' && (
+                    {(lavorazione.stato === 'da_eseguire' || lavorazione.stato === 'in_corso') && (
                       <button
-                        onClick={() => handleAzione(lavorazione, 'chiudi')}
+                        onClick={() => handleAzione(lavorazione, 'completa')}
                         className="text-green-600 hover:text-green-800 text-sm px-3 py-1 border border-green-200 rounded"
                       >
-                        ✅ Chiudi
+                        ✅ Completa
                       </button>
                     )}
                     
-                    {lavorazione.stato === 'chiusa' && (
+                    {lavorazione.stato === 'completata' && (
                       <button
                         onClick={() => handleAzione(lavorazione, 'riapri')}
                         className="text-orange-600 hover:text-orange-800 text-sm px-3 py-1 border border-orange-200 rounded"

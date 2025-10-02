@@ -6,14 +6,41 @@ let lavorazioniDB: Lavorazione[] = [
   {
     id: '1',
     verifica_id: '1',
-    stato: 'chiusa',
-    descrizione: 'Verifica antincendio completata - Sistema conforme',
+    stato: 'completata',
+    descrizione: 'Verifica antincendio - Condominio Via Roma 15',
     note: [
       'Tutti gli estintori controllati e funzionanti',
       'Vie di fuga libere e segnalate correttamente'
     ],
     data_apertura: '2024-02-01T09:00:00Z',
-    data_chiusura: '2024-02-01T11:30:00Z'
+    data_chiusura: '2024-02-01T11:30:00Z',
+    utente_assegnato: 'user-001',
+    data_assegnazione: '2024-02-01T08:00:00Z'
+  },
+  {
+    id: '2',
+    verifica_id: '2',
+    stato: 'da_eseguire',
+    descrizione: 'Verifica elettrica - Condominio Via Milano 32',
+    note: [],
+    data_apertura: '2024-02-02T08:00:00Z',
+    utente_assegnato: 'user-001',
+    data_assegnazione: '2024-02-02T08:00:00Z'
+  },
+  {
+    id: '3',
+    verifica_id: '3',
+    stato: 'riaperta',
+    descrizione: 'Verifica ascensore - Condominio Via Torino 8',
+    note: [
+      'Prima verifica completata',
+      'Riaperta per controllo aggiuntivo cavi'
+    ],
+    data_apertura: '2024-02-03T10:00:00Z',
+    data_chiusura: '2024-02-03T12:00:00Z',
+    data_riapertura: '2024-02-04T09:00:00Z',
+    utente_assegnato: 'user-002',
+    data_assegnazione: '2024-02-04T09:00:00Z'
   }
 ]
 
@@ -69,22 +96,33 @@ export async function PUT(
     const now = new Date().toISOString()
 
     switch (azione) {
-      case 'chiudi':
-        if (lavorazione.stato !== 'aperta') {
+      case 'inizia':
+        if (lavorazione.stato !== 'da_eseguire') {
           return NextResponse.json(
-            { success: false, error: 'Solo le lavorazioni aperte possono essere chiuse' },
+            { success: false, error: 'Solo le lavorazioni da eseguire possono essere iniziate' },
             { status: 400 }
           )
         }
-        lavorazione.stato = 'chiusa'
+        lavorazione.stato = 'in_corso'
+        if (nota) lavorazione.note.push(nota)
+        break
+
+      case 'completa':
+        if (lavorazione.stato !== 'in_corso' && lavorazione.stato !== 'da_eseguire') {
+          return NextResponse.json(
+            { success: false, error: 'Solo le lavorazioni da eseguire o in corso possono essere completate' },
+            { status: 400 }
+          )
+        }
+        lavorazione.stato = 'completata'
         lavorazione.data_chiusura = now
         if (nota) lavorazione.note.push(nota)
         break
 
       case 'riapri':
-        if (lavorazione.stato !== 'chiusa') {
+        if (lavorazione.stato !== 'completata') {
           return NextResponse.json(
-            { success: false, error: 'Solo le lavorazioni chiuse possono essere riaperte' },
+            { success: false, error: 'Solo le lavorazioni completate possono essere riaperte' },
             { status: 400 }
           )
         }

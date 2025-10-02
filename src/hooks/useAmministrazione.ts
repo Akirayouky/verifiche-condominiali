@@ -139,8 +139,9 @@ export default function useAmministrazione() {
   const getStatistiche = () => {
     return {
       totali: lavorazioni.length,
-      aperte: lavorazioni.filter(l => l.stato === 'aperta').length,
-      chiuse: lavorazioni.filter(l => l.stato === 'chiusa').length,
+      da_eseguire: lavorazioni.filter(l => l.stato === 'da_eseguire').length,
+      in_corso: lavorazioni.filter(l => l.stato === 'in_corso').length,
+      completata: lavorazioni.filter(l => l.stato === 'completata').length,
       riaperte: lavorazioni.filter(l => l.stato === 'riaperta').length
     }
   }
