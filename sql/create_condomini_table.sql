@@ -11,6 +11,37 @@ CREATE TABLE IF NOT EXISTS condomini (
     assigned_to uuid REFERENCES users(id) ON DELETE SET NULL
 );
 
+-- Aggiungi le colonne mancanti se la tabella esiste già ma non ha tutte le colonne
+ALTER TABLE condomini 
+ADD COLUMN IF NOT EXISTS nome text;
+
+ALTER TABLE condomini 
+ADD COLUMN IF NOT EXISTS token text;
+
+ALTER TABLE condomini 
+ADD COLUMN IF NOT EXISTS data_inserimento timestamp with time zone DEFAULT now();
+
+ALTER TABLE condomini 
+ADD COLUMN IF NOT EXISTS data_ultima_modifica timestamp with time zone DEFAULT now();
+
+ALTER TABLE condomini 
+ADD COLUMN IF NOT EXISTS assigned_to uuid REFERENCES users(id) ON DELETE SET NULL;
+
+-- Aggiungi constraint UNIQUE per token se non esiste
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'condomini_token_key' 
+        AND table_name = 'condomini'
+    ) THEN
+        ALTER TABLE condomini ADD CONSTRAINT condomini_token_key UNIQUE (token);
+    END IF;
+END $$;
+
+-- Aggiungi constraint NOT NULL per nome se non esiste
+ALTER TABLE condomini ALTER COLUMN nome SET NOT NULL;
+
 -- Aggiungi commenti per documentazione
 COMMENT ON TABLE condomini IS 'Tabella dei condomini gestiti dal sistema';
 COMMENT ON COLUMN condomini.id IS 'ID univoco del condominio';
@@ -38,6 +69,10 @@ CREATE TRIGGER update_condomini_modtime
     BEFORE UPDATE ON condomini 
     FOR EACH ROW 
     EXECUTE FUNCTION update_modified_time();
+
+-- Genera token casuali per record esistenti se necessario
+UPDATE condomini SET token = 'cond_' || substr(gen_random_uuid()::text, 1, 8) 
+WHERE token IS NULL OR token = '';
 
 -- Inserisci alcuni condomini di esempio per testare
 INSERT INTO condomini (nome, token) 
