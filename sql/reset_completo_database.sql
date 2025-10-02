@@ -155,7 +155,7 @@ INSERT INTO public.users (
     'a0000000-0000-0000-0000-000000000000',
     'admin',
     'admin@condomini.local',
-    '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- admin123
+    '$2b$10$wMwKq5puhRkKYcjnFFWVv./gqfpRhey3Z835MY2xraqhFrZp5C54m', -- admin123
     'admin',
     'Administrator',
     'System',
