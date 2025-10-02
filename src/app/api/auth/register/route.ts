@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
       email,
       password_hash,
       role: 'sopralluoghista',
-      nome,
-      cognome,
-      telefono,
+      nome: nome || null,
+      cognome: cognome || null,
+      telefono: telefono || null,
       attivo: true
       // approved_at sarà null fino all'approvazione dell'admin
     }

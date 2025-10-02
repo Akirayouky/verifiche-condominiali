@@ -3,8 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Lavorazione } from '@/lib/types'
 import FotoViewer from '@/components/ui/FotoViewer'
+import GestioneUtenti from './GestioneUtenti'
 
 export default function PannelloAdmin() {
+  const [activeTab, setActiveTab] = useState('lavorazioni')
   const [lavorazioni, setLavorazioni] = useState<Lavorazione[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -130,9 +132,41 @@ export default function PannelloAdmin() {
       <div>
         <h2 className="text-3xl font-bold text-gray-800 mb-2">Pannello Amministratore</h2>
         <p className="text-gray-600">
-          Gestisci lavorazioni, riapri verifiche chiuse e aggiungi note
+          Gestisci lavorazioni, utenti e configurazioni del sistema
         </p>
       </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('lavorazioni')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'lavorazioni'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            🔧 Lavorazioni
+          </button>
+          <button
+            onClick={() => setActiveTab('utenti')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'utenti'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            👥 Utenti
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'utenti' && <GestioneUtenti />}
+      
+      {activeTab === 'lavorazioni' && (
+        <div className="space-y-6">
 
       {/* Statistiche */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -374,6 +408,8 @@ export default function PannelloAdmin() {
               </button>
             </div>
           </div>
+        </div>
+      )}
         </div>
       )}
     </div>
