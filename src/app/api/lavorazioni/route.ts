@@ -28,7 +28,18 @@ let lavorazioniDB: Lavorazione[] = [
       'Controllo sistemi di sicurezza previsto per domani'
     ],
     data_apertura: '2024-02-05T14:00:00Z',
-    utente_assegnato: 'mario.rossi'
+    utente_assegnato: 'mario.rossi',
+    verifica: {
+      id: '2',
+      condominio_id: 'cond_002',
+      tipologia_id: 'tip_002',
+      stato: 'in_corso',
+      dati_verifica: {},
+      note: '',
+      email_inviata: false,
+      data_creazione: '2024-02-05T14:00:00Z',
+      data_ultima_modifica: '2024-02-05T14:00:00Z'
+    }
   },
   {
     id: '3',
@@ -37,7 +48,18 @@ let lavorazioniDB: Lavorazione[] = [
     descrizione: 'Controllo impianto elettrico - Verifica quadri elettrici',
     note: [],
     data_apertura: '2024-02-10T08:00:00Z',
-    utente_assegnato: 'luigi.verdi'
+    utente_assegnato: 'luigi.verdi',
+    verifica: {
+      id: '4',
+      condominio_id: 'cond_001',
+      tipologia_id: 'tip_001',
+      stato: 'bozza',
+      dati_verifica: {},
+      note: '',
+      email_inviata: false,
+      data_creazione: '2024-02-10T08:00:00Z',
+      data_ultima_modifica: '2024-02-10T08:00:00Z'
+    }
   },
   {
     id: '4',
@@ -51,7 +73,20 @@ let lavorazioniDB: Lavorazione[] = [
     ],
     data_apertura: '2024-02-01T09:00:00Z',
     data_chiusura: '2024-02-01T11:30:00Z',
-    data_riapertura: '2024-02-10T10:15:00Z'
+    data_riapertura: '2024-02-10T10:15:00Z',
+    utente_assegnato: 'mario.rossi',
+    verifica: {
+      id: '1',
+      condominio_id: 'cond_001',
+      tipologia_id: 'tip_001',
+      stato: 'completata',
+      dati_verifica: {},
+      note: '',
+      email_inviata: true,
+      data_creazione: '2024-02-01T08:00:00Z',
+      data_completamento: '2024-02-01T11:30:00Z',
+      data_ultima_modifica: '2024-02-10T10:15:00Z'
+    }
   }
 ]
 

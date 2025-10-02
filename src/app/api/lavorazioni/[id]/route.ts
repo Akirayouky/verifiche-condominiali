@@ -14,8 +14,20 @@ let lavorazioniDB: Lavorazione[] = [
     ],
     data_apertura: '2024-02-01T09:00:00Z',
     data_chiusura: '2024-02-01T11:30:00Z',
-    utente_assegnato: 'user-001',
-    data_assegnazione: '2024-02-01T08:00:00Z'
+    utente_assegnato: 'mario.rossi',
+    data_assegnazione: '2024-02-01T08:00:00Z',
+    verifica: {
+      id: '1',
+      condominio_id: 'cond_001',
+      tipologia_id: 'tip_001',
+      stato: 'completata',
+      dati_verifica: {},
+      note: '',
+      email_inviata: true,
+      data_creazione: '2024-02-01T08:00:00Z',
+      data_completamento: '2024-02-01T11:30:00Z',
+      data_ultima_modifica: '2024-02-01T11:30:00Z'
+    }
   },
   {
     id: '2',
@@ -24,8 +36,19 @@ let lavorazioniDB: Lavorazione[] = [
     descrizione: 'Verifica elettrica - Condominio Via Milano 32',
     note: [],
     data_apertura: '2024-02-02T08:00:00Z',
-    utente_assegnato: 'user-001',
-    data_assegnazione: '2024-02-02T08:00:00Z'
+    utente_assegnato: 'mario.rossi',
+    data_assegnazione: '2024-02-02T08:00:00Z',
+    verifica: {
+      id: '2',
+      condominio_id: 'cond_002',
+      tipologia_id: 'tip_002',
+      stato: 'bozza',
+      dati_verifica: {},
+      note: '',
+      email_inviata: false,
+      data_creazione: '2024-02-02T08:00:00Z',
+      data_ultima_modifica: '2024-02-02T08:00:00Z'
+    }
   },
   {
     id: '3',
@@ -39,8 +62,20 @@ let lavorazioniDB: Lavorazione[] = [
     data_apertura: '2024-02-03T10:00:00Z',
     data_chiusura: '2024-02-03T12:00:00Z',
     data_riapertura: '2024-02-04T09:00:00Z',
-    utente_assegnato: 'user-002',
-    data_assegnazione: '2024-02-04T09:00:00Z'
+    utente_assegnato: 'luigi.verdi',
+    data_assegnazione: '2024-02-04T09:00:00Z',
+    verifica: {
+      id: '3',
+      condominio_id: 'cond_003',
+      tipologia_id: 'tip_003',
+      stato: 'completata',
+      dati_verifica: {},
+      note: '',
+      email_inviata: true,
+      data_creazione: '2024-02-03T10:00:00Z',
+      data_completamento: '2024-02-03T12:00:00Z',
+      data_ultima_modifica: '2024-02-04T09:00:00Z'
+    }
   }
 ]
 
@@ -81,7 +116,7 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { azione, descrizione, nota } = body
+    const { azione, descrizione, nota, dati_verifica } = body
 
     const lavorazioneIndex = lavorazioniDB.findIndex(l => l.id === id)
     
@@ -117,6 +152,12 @@ export async function PUT(
         lavorazione.stato = 'completata'
         lavorazione.data_chiusura = now
         if (nota) lavorazione.note.push(nota)
+        
+        // Aggiorna i dati della verifica associata se forniti
+        if (dati_verifica && lavorazione.verifica) {
+          lavorazione.verifica.dati_verifica = dati_verifica
+          lavorazione.verifica.data_completamento = now
+        }
         break
 
       case 'riapri':

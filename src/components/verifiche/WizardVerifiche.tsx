@@ -1,11 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { Condominio, TipologiaVerifica, CreateVerificaRequest } from '@/lib/types'
+import { useState, useEffect } from 'react'
+import { Condominio, TipologiaVerifica, CreateVerificaRequest, Lavorazione } from '@/lib/types'
 import { Step1, Step2, Step3 } from './WizardSteps'
 
-export default function WizardVerifiche() {
-  const [currentStep, setCurrentStep] = useState(1)
+interface WizardVerificheProps {
+  // Modalità normale: wizard completo
+  // Modalità lavorazione: wizard preconfigurato per una lavorazione esistente
+  lavorazione?: Lavorazione
+  onLavorazioneComplete?: (lavorazioneId: string) => void
+  onBack?: () => void
+}
+
+export default function WizardVerifiche({ 
+  lavorazione, 
+  onLavorazioneComplete, 
+  onBack 
+}: WizardVerificheProps) {
+  const isLavorazioneMode = !!lavorazione
+  const [currentStep, setCurrentStep] = useState(isLavorazioneMode ? 2 : 1) // Salta Step 1 se è una lavorazione
   const [selectedCondominio, setSelectedCondominio] = useState<Condominio | null>(null)
   const [selectedTipologia, setSelectedTipologia] = useState<TipologiaVerifica | null>(null)
   const [datiVerifica, setDatiVerifica] = useState<Record<string, any>>({})
@@ -13,17 +26,88 @@ export default function WizardVerifiche() {
   const [loading, setLoading] = useState(false)
   const [completata, setCompletata] = useState(false)
 
+  // Carica i dati preconfigurati dalla lavorazione
+  useEffect(() => {
+    const caricaDatiLavorazione = async () => {
+      if (lavorazione && lavorazione.verifica) {
+        const verifica = lavorazione.verifica
+        setLoading(true)
+        
+        try {
+          // Carica condominio
+          if (verifica.condominio_id) {
+            const condominioResponse = await fetch(`/api/condomini/${verifica.condominio_id}`)
+            if (condominioResponse.ok) {
+              const condominioResult = await condominioResponse.json()
+              if (condominioResult.success) {
+                setSelectedCondominio(condominioResult.data)
+              }
+            }
+          }
+
+          // Carica tipologia
+          if (verifica.tipologia_id) {
+            const tipologiaResponse = await fetch(`/api/tipologie/${verifica.tipologia_id}`)
+            if (tipologiaResponse.ok) {
+              const tipologiaResult = await tipologiaResponse.json()
+              if (tipologiaResult.success) {
+                setSelectedTipologia(tipologiaResult.data)
+              }
+            }
+          }
+
+          // Carica dati esistenti se presenti
+          if (verifica.dati_verifica) {
+            setDatiVerifica(verifica.dati_verifica)
+          }
+          if (verifica.note) {
+            setNote(verifica.note)
+          }
+        } catch (error) {
+          console.error('Errore nel caricamento dei dati della lavorazione:', error)
+        } finally {
+          setLoading(false)
+        }
+      }
+    }
+
+    caricaDatiLavorazione()
+  }, [lavorazione])
+
   const handleStep1Next = () => {
     if (selectedCondominio && selectedTipologia) {
       setCurrentStep(2)
     }
   }
 
-  const handleStep2Next = () => {
+  const handleStep2Next = async () => {
+    // Se siamo in modalità lavorazione e la lavorazione è "da_eseguire", iniziala
+    if (isLavorazioneMode && lavorazione && lavorazione.stato === 'da_eseguire') {
+      try {
+        await fetch(`/api/lavorazioni/${lavorazione.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            azione: 'inizia',
+            nota: 'Verifica iniziata dal sopralluoghista'
+          })
+        })
+      } catch (error) {
+        console.error('Errore nell\'iniziare la lavorazione:', error)
+      }
+    }
+    
     setCurrentStep(3)
   }
 
   const handlePrevious = () => {
+    if (isLavorazioneMode && currentStep === 2) {
+      // In modalità lavorazione, dal step 2 torna alla lista
+      if (onBack) {
+        onBack()
+      }
+      return
+    }
     setCurrentStep(prev => prev - 1)
   }
 
@@ -33,35 +117,63 @@ export default function WizardVerifiche() {
     setLoading(true)
 
     try {
-      const verificaData: CreateVerificaRequest = {
-        condominio_id: selectedCondominio.id,
-        tipologia_id: selectedTipologia.id,
-        dati_verifica: datiVerifica,
-        note
-      }
+      if (isLavorazioneMode && lavorazione) {
+        // Modalità lavorazione: aggiorna la lavorazione esistente
+        const response = await fetch(`/api/lavorazioni/${lavorazione.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            azione: 'completa',
+            dati_verifica: datiVerifica,
+            nota: note
+          })
+        })
 
-      const response = await fetch('/api/verifiche', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(verificaData)
-      })
+        const result = await response.json()
 
-      const result = await response.json()
-
-      if (result.success) {
-        setCompletata(true)
-        // Simula invio email
-        setTimeout(() => {
-          // Reset wizard dopo successo
-          setCurrentStep(1)
-          setSelectedCondominio(null)
-          setSelectedTipologia(null)
-          setDatiVerifica({})
-          setNote('')
-          setCompletata(false)
-        }, 3000)
+        if (result.success) {
+          setCompletata(true)
+          // Notifica al componente genitore
+          setTimeout(() => {
+            if (onLavorazioneComplete) {
+              onLavorazioneComplete(lavorazione.id)
+            }
+          }, 2000)
+        } else {
+          alert('Errore nel completamento della lavorazione: ' + result.error)
+        }
       } else {
-        alert('Errore nel completamento della verifica: ' + result.error)
+        // Modalità normale: crea nuova verifica
+        const verificaData: CreateVerificaRequest = {
+          condominio_id: selectedCondominio.id,
+          tipologia_id: selectedTipologia.id,
+          dati_verifica: datiVerifica,
+          note
+        }
+
+        const response = await fetch('/api/verifiche', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(verificaData)
+        })
+
+        const result = await response.json()
+
+        if (result.success) {
+          setCompletata(true)
+          // Simula invio email
+          setTimeout(() => {
+            // Reset wizard dopo successo
+            setCurrentStep(isLavorazioneMode ? 2 : 1)
+            setSelectedCondominio(null)
+            setSelectedTipologia(null)
+            setDatiVerifica({})
+            setNote('')
+            setCompletata(false)
+          }, 3000)
+        } else {
+          alert('Errore nel completamento della verifica: ' + result.error)
+        }
       }
     } catch (error) {
       alert('Errore di connessione')
@@ -93,17 +205,25 @@ export default function WizardVerifiche() {
           <div className="text-center">
             <div className="text-green-500 text-6xl mb-4">✅</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Verifica Completata con Successo!
+              {isLavorazioneMode ? 'Lavorazione Completata!' : 'Verifica Completata con Successo!'}
             </h2>
             <div className="space-y-2 text-gray-600 mb-6">
               <p><strong>Condominio:</strong> {selectedCondominio?.nome}</p>
               <p><strong>Tipologia:</strong> {selectedTipologia?.nome}</p>
               <p><strong>Data:</strong> {new Date().toLocaleDateString('it-IT')}</p>
+              {isLavorazioneMode && lavorazione && (
+                <p><strong>Lavorazione:</strong> #{lavorazione.id}</p>
+              )}
             </div>
             <div className="bg-green-50 p-4 rounded-lg mb-6">
               <div className="flex items-center justify-center text-green-700">
-                <span className="mr-2">📧</span>
-                Email di notifica inviata con successo
+                <span className="mr-2">
+                  {isLavorazioneMode ? '✅' : '📧'}
+                </span>
+                {isLavorazioneMode 
+                  ? 'Lavorazione aggiornata e notificata all\'amministratore' 
+                  : 'Email di notifica inviata con successo'
+                }
               </div>
             </div>
             <p className="text-sm text-gray-500">
@@ -119,11 +239,18 @@ export default function WizardVerifiche() {
     <div className="max-w-4xl mx-auto">
       {/* Header con progress */}
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">Wizard Verifiche</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+          {isLavorazioneMode ? 'Completa Lavorazione' : 'Wizard Verifiche'}
+        </h2>
+        {isLavorazioneMode && lavorazione && (
+          <p className="text-gray-600 mb-4">
+            <strong>Lavorazione #{lavorazione.id}:</strong> {lavorazione.descrizione}
+          </p>
+        )}
         
         {/* Progress Bar */}
         <div className="flex items-center justify-between mb-6">
-          {[1, 2, 3].map((step) => (
+          {(isLavorazioneMode ? [2, 3] : [1, 2, 3]).map((step, index) => (
             <div key={step} className="flex items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
                 step < currentStep 
@@ -135,7 +262,7 @@ export default function WizardVerifiche() {
                 {step < currentStep ? '✓' : step}
               </div>
               
-              {step < 3 && (
+              {index < (isLavorazioneMode ? [2, 3] : [1, 2, 3]).length - 1 && (
                 <div className={`w-16 md:w-32 h-1 mx-2 ${
                   step < currentStep ? 'bg-green-500' : 'bg-gray-200'
                 }`}></div>
@@ -145,10 +272,12 @@ export default function WizardVerifiche() {
         </div>
 
         {/* Step Labels */}
-        <div className="flex justify-between text-sm text-gray-600">
-          <span className={currentStep === 1 ? 'font-medium text-blue-600' : ''}>
-            Selezione
-          </span>
+        <div className={`flex justify-between text-sm text-gray-600 ${isLavorazioneMode ? 'justify-around' : ''}`}>
+          {!isLavorazioneMode && (
+            <span className={currentStep === 1 ? 'font-medium text-blue-600' : ''}>
+              Selezione
+            </span>
+          )}
           <span className={currentStep === 2 ? 'font-medium text-blue-600' : ''}>
             Compilazione
           </span>
@@ -160,7 +289,7 @@ export default function WizardVerifiche() {
 
       {/* Content */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        {currentStep === 1 && (
+        {currentStep === 1 && !isLavorazioneMode && (
           <Step1
             selectedCondominio={selectedCondominio}
             selectedTipologia={selectedTipologia}

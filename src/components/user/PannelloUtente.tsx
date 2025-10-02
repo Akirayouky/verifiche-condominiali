@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Lavorazione, Condominio, TipologiaVerifica } from '@/lib/types'
+import WizardVerifiche from '@/components/verifiche/WizardVerifiche'
 
 export default function PannelloUtente() {
   const { user } = useAuth()
@@ -134,25 +135,20 @@ export default function PannelloUtente() {
           </button>
         </div>
         
-        {/* TODO: Integrare WizardVerifiche preconfigurato */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-            🚧 Wizard Verifica in Sviluppo
-          </h3>
-          <p className="text-yellow-700">
-            Qui apparirà il wizard preconfigurato per completare la verifica.
-            La lavorazione verrà automaticamente passata da &quot;da_eseguire&quot; a &quot;in_corso&quot; e poi a &quot;completata&quot;.
-          </p>
-          <div className="mt-4 p-3 bg-white rounded border">
-            <h4 className="font-medium text-gray-800">Dettagli Lavorazione:</h4>
-            <div className="text-sm text-gray-600 mt-2">
-              <p><strong>ID:</strong> {selectedLavorazione.id}</p>
-              <p><strong>Descrizione:</strong> {selectedLavorazione.descrizione}</p>
-              <p><strong>Stato:</strong> {selectedLavorazione.stato}</p>
-              <p><strong>Assegnata il:</strong> {selectedLavorazione.data_assegnazione ? formatDate(selectedLavorazione.data_assegnazione) : 'N/A'}</p>
-            </div>
-          </div>
-        </div>
+        {/* Wizard Verifiche preconfigurato */}
+        <WizardVerifiche 
+          lavorazione={selectedLavorazione}
+          onLavorazioneComplete={(lavorazioneId) => {
+            // Ricarica le lavorazioni e torna alla lista
+            caricaLavorazioni()
+            setSelectedLavorazione(null)
+            setShowWizard(false)
+          }}
+          onBack={() => {
+            setSelectedLavorazione(null)
+            setShowWizard(false)
+          }}
+        />
       </div>
     )
   }
