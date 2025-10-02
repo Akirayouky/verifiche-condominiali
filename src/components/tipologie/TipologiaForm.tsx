@@ -22,7 +22,7 @@ export default function TipologiaForm({
   const [formData, setFormData] = useState<CreateTipologiaRequest>({
     nome: initialData?.nome || '',
     descrizione: initialData?.descrizione || '',
-    campi_personalizzati: initialData?.campi_personalizzati || []
+    campi_richiesti: initialData?.campi_richiesti || []
   })
   const [errors, setErrors] = useState<string[]>([])
 
@@ -56,7 +56,7 @@ export default function TipologiaForm({
       setFormData({
         nome: '',
         descrizione: '',
-        campi_personalizzati: []
+        campi_richiesti: []
       })
     }
   }
@@ -75,21 +75,21 @@ export default function TipologiaForm({
     }
     setFormData(prev => ({
       ...prev,
-      campi_personalizzati: [...prev.campi_personalizzati, nuovoCampo]
+      campi_richiesti: [...prev.campi_richiesti, nuovoCampo]
     }))
   }
 
   const rimuoviCampo = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      campi_personalizzati: prev.campi_personalizzati.filter((_, i) => i !== index)
+      campi_richiesti: prev.campi_richiesti.filter((_, i) => i !== index)
     }))
   }
 
   const updateCampo = (index: number, campo: Partial<Omit<CampoPersonalizzato, 'id'>>) => {
     setFormData(prev => ({
       ...prev,
-      campi_personalizzati: prev.campi_personalizzati.map((c, i) => 
+      campi_richiesti: prev.campi_richiesti.map((c, i) => 
         i === index ? { ...c, ...campo } : c
       )
     }))
@@ -171,7 +171,7 @@ export default function TipologiaForm({
           </div>
 
           <div className="space-y-4">
-            {formData.campi_personalizzati.map((campo, index) => (
+            {formData.campi_richiesti.map((campo, index) => (
               <div key={index} className="border border-gray-200 p-4 rounded-md">
                 <div className="flex justify-between items-start mb-3">
                   <h5 className="font-medium text-gray-700">Campo #{index + 1}</h5>
@@ -271,7 +271,7 @@ export default function TipologiaForm({
               </div>
             ))}
 
-            {formData.campi_personalizzati.length === 0 && (
+            {formData.campi_richiesti.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <div className="text-4xl mb-2">📝</div>
                 <p>Nessun campo personalizzato configurato</p>

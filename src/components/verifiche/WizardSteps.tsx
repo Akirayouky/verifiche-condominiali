@@ -135,7 +135,7 @@ export function Step1({
                         {tipologia.descrizione}
                       </div>
                       <div className="text-xs text-gray-400 mt-2">
-                        {tipologia.campi_personalizzati?.length || 0} campi configurati
+                        {tipologia.campi_richiesti?.length || 0} campi configurati
                       </div>
                     </div>
                   </div>
@@ -164,7 +164,7 @@ export function Step1({
           <div className="space-y-1 text-sm">
             <div><strong>Condominio:</strong> {selectedCondominio.nome}</div>
             <div><strong>Tipologia:</strong> {selectedTipologia.nome}</div>
-            <div><strong>Campi da compilare:</strong> {selectedTipologia.campi_personalizzati?.length || 0}</div>
+            <div><strong>Campi da compilare:</strong> {selectedTipologia.campi_richiesti?.length || 0}</div>
           </div>
         </div>
       )}
@@ -218,7 +218,7 @@ export function Step2({
   const validateFields = () => {
     const newErrors: Record<string, string> = {}
     
-    tipologia.campi_personalizzati.forEach(campo => {
+    tipologia.campi_richiesti.forEach(campo => {
       if (campo.obbligatorio) {
         const value = datiVerifica[campo.nome]
         
@@ -371,7 +371,7 @@ export function Step2({
       </div>
 
       <div className="space-y-6">
-        {(tipologia.campi_personalizzati || []).map((campo) => (
+        {(tipologia.campi_richiesti || []).map((campo) => (
           <div key={campo.id}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {campo.nome}
@@ -388,7 +388,7 @@ export function Step2({
           </div>
         ))}
 
-        {(!tipologia.campi_personalizzati || tipologia.campi_personalizzati.length === 0) && (
+        {(!tipologia.campi_richiesti || tipologia.campi_richiesti.length === 0) && (
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-2">📝</div>
             <p>Nessun campo configurato per questa tipologia</p>

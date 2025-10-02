@@ -71,7 +71,7 @@ export interface TipologiaVerifica {
   id: string
   nome: string
   descrizione: string
-  campi_personalizzati: CampoPersonalizzato[]
+  campi_richiesti: CampoPersonalizzato[]
   attiva: boolean
   data_creazione: string
   data_ultima_modifica: string
@@ -90,7 +90,7 @@ export interface CampoPersonalizzato {
 export interface CreateTipologiaRequest {
   nome: string
   descrizione: string
-  campi_personalizzati: Omit<CampoPersonalizzato, 'id'>[]
+  campi_richiesti: Omit<CampoPersonalizzato, 'id'>[]
 }
 
 export interface UpdateTipologiaRequest extends CreateTipologiaRequest {

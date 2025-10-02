@@ -47,7 +47,7 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { nome, descrizione, campi_personalizzati, attiva } = body
+    const { nome, descrizione, campi_personalizzati, campi_richiesti, attiva } = body
 
     if (!nome || nome.trim() === '') {
       return NextResponse.json(
@@ -59,7 +59,7 @@ export async function PUT(
     const updateData = {
       nome: nome.trim(),
       descrizione: descrizione || '',
-      campi_personalizzati: campi_personalizzati || [],
+      campi_richiesti: campi_richiesti || campi_personalizzati || [],
       attiva: attiva !== undefined ? attiva : true
     }
 

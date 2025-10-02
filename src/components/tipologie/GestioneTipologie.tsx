@@ -91,7 +91,7 @@ export default function GestioneTipologie() {
     const updateData: UpdateTipologiaRequest = {
       nome: tipologia.nome,
       descrizione: tipologia.descrizione,
-      campi_personalizzati: tipologia.campi_personalizzati || [],
+      campi_richiesti: tipologia.campi_richiesti || [],
       attiva
     }
 
@@ -116,7 +116,7 @@ export default function GestioneTipologie() {
   const stats = {
     totale: tipologie.length,
     attive: tipologie.filter(t => t.attiva).length,
-    conCampi: tipologie.filter(t => t.campi_personalizzati?.length > 0).length
+    conCampi: tipologie.filter(t => t.campi_richiesti?.length > 0).length
   }
 
   return (
@@ -226,7 +226,7 @@ export default function GestioneTipologie() {
           initialData={{
             nome: editingTipologia.nome,
             descrizione: editingTipologia.descrizione,
-            campi_personalizzati: editingTipologia.campi_personalizzati || [],
+            campi_richiesti: editingTipologia.campi_richiesti || [],
             attiva: editingTipologia.attiva
           }}
           isEdit={true}

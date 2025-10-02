@@ -32,7 +32,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nome, descrizione, campi_personalizzati } = body
+    const { nome, descrizione, campi_personalizzati, campi_richiesti } = body
 
     if (!nome || nome.trim() === '') {
       return NextResponse.json(
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const tipologiaData = {
       nome: nome.trim(),
       descrizione: descrizione || '',
-      campi_personalizzati: campi_personalizzati || [],
+      campi_richiesti: campi_richiesti || campi_personalizzati || [],
       attiva: true
     }
 

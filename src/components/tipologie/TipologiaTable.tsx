@@ -112,17 +112,12 @@ export default function TipologiaTable({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-900">
-                        {tipologia.campi_personalizzati?.length || 0}
-                      </span>
-                      <span className="ml-2 text-xs text-gray-500">campi</span>
-                      {tipologia.campi_personalizzati?.some(c => c.obbligatorio) && (
-                        <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                          obbligatori
-                        </span>
+                                          <div className="flex items-center gap-2">
+                        {tipologia.campi_richiesti?.length || 0}
+                      </div>
+                      {tipologia.campi_richiesti?.some(c => c.obbligatorio) && (
+                        <span className="text-red-500 text-xs">*</span>
                       )}
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
