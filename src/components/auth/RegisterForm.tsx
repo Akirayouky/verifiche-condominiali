@@ -267,7 +267,7 @@ export default function RegisterForm({ onBack, onSuccess }: RegisterFormProps) {
               <div className="mt-2 text-sm text-blue-700">
                 <p>
                   Dopo la registrazione, il tuo account sarà in attesa di approvazione 
-                  da parte dell'amministratore. Riceverai una notifica via email 
+                  da parte dell&apos;amministratore. Riceverai una notifica via email 
                   quando potrai accedere al sistema.
                 </p>
               </div>

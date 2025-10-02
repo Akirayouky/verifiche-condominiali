@@ -108,7 +108,7 @@ function MainApp() {
           )}
 
           {/* Sezioni Utente */}
-          {role === 'user' && (
+          {role === 'sopralluoghista' && (
             <>
               {activeSection === 'lavorazioni' && <PannelloUtente />}
               {activeSection === 'completate' && (
