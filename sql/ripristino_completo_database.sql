@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS public.verifiche (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     condominio_id uuid REFERENCES public.condomini(id) ON DELETE CASCADE,
     tipologia_id uuid REFERENCES public.tipologie_verifiche(id) ON DELETE CASCADE,
-    utente_id uuid REFERENCES public.users(id) ON DELETE SET NULL,
+    user_id uuid REFERENCES public.users(id) ON DELETE SET NULL,
     dati_verifica jsonb DEFAULT '{}'::jsonb,
     stato text DEFAULT 'bozza' CHECK (stato IN ('bozza', 'completata', 'archiviata')),
     data_creazione timestamp with time zone DEFAULT now(),
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS public.verifiche (
 CREATE TABLE IF NOT EXISTS public.lavorazioni (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     condominio_id uuid REFERENCES public.condomini(id) ON DELETE CASCADE,
-    utente_id uuid REFERENCES public.users(id) ON DELETE SET NULL,
+    user_id uuid REFERENCES public.users(id) ON DELETE SET NULL,
     titolo text NOT NULL,
     descrizione text,
     stato text DEFAULT 'aperta' CHECK (stato IN ('aperta', 'in_corso', 'completata', 'archiviata')),
@@ -102,11 +102,11 @@ CREATE INDEX IF NOT EXISTS idx_tipologie_attiva ON public.tipologie_verifiche(at
 
 CREATE INDEX IF NOT EXISTS idx_verifiche_condominio ON public.verifiche(condominio_id);
 CREATE INDEX IF NOT EXISTS idx_verifiche_tipologia ON public.verifiche(tipologia_id);
-CREATE INDEX IF NOT EXISTS idx_verifiche_utente ON public.verifiche(utente_id);
+CREATE INDEX IF NOT EXISTS idx_verifiche_user ON public.verifiche(user_id);
 CREATE INDEX IF NOT EXISTS idx_verifiche_stato ON public.verifiche(stato);
 
 CREATE INDEX IF NOT EXISTS idx_lavorazioni_condominio ON public.lavorazioni(condominio_id);
-CREATE INDEX IF NOT EXISTS idx_lavorazioni_utente ON public.lavorazioni(utente_id);
+CREATE INDEX IF NOT EXISTS idx_lavorazioni_user ON public.lavorazioni(user_id);
 CREATE INDEX IF NOT EXISTS idx_lavorazioni_stato ON public.lavorazioni(stato);
 
 -- 8. ABILITA ROW LEVEL SECURITY
