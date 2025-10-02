@@ -6,6 +6,44 @@ export interface Condominio {
   data_ultima_modifica: string
 }
 
+export interface User {
+  id: string
+  username: string
+  email: string
+  password_hash?: string // Non incluso nelle risposte API per sicurezza
+  role: 'admin' | 'sopralluoghista'
+  nome?: string
+  cognome?: string
+  telefono?: string
+  attivo: boolean
+  created_at: string
+  last_login?: string
+  approved_by?: string
+  approved_at?: string
+}
+
+export interface CreateUserRequest {
+  username: string
+  email: string
+  password: string
+  role: 'admin' | 'sopralluoghista'
+  nome?: string
+  cognome?: string
+  telefono?: string
+}
+
+export interface LoginRequest {
+  username: string
+  password: string
+}
+
+export interface LoginResponse {
+  success: boolean
+  user?: Omit<User, 'password_hash'>
+  token?: string
+  message?: string
+}
+
 export interface ApiResponse<T> {
   success: boolean
   data?: T
@@ -89,19 +127,8 @@ export interface Lavorazione {
 }
 
 // Sistema di autenticazione
-export interface User {
-  id: string
-  username: string
-  role: 'admin' | 'user'
-  nome: string
-  cognome: string
-  email?: string
-  attivo: boolean
-  data_creazione: string
-}
-
 export interface AuthState {
   isAuthenticated: boolean
   user: User | null
-  role: 'admin' | 'user' | null
+  role: 'admin' | 'sopralluoghista' | null
 }

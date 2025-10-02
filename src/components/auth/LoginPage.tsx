@@ -2,17 +2,19 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import RegisterForm from './RegisterForm'
 
 export default function LoginPage() {
-  const [loginType, setLoginType] = useState<'user' | 'admin'>('user')
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showRegister, setShowRegister] = useState(false)
+  const [registrationSuccess, setRegistrationSuccess] = useState(false)
   
-  const { login, loginAsAdmin } = useAuth()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,19 +22,10 @@ export default function LoginPage() {
     setError('')
 
     try {
-      let success = false
-
-      if (loginType === 'admin') {
-        success = loginAsAdmin(formData.password)
-      } else {
-        success = await login(formData.username, formData.password)
-      }
+      const success = await login(formData.username, formData.password)
 
       if (!success) {
-        setError(loginType === 'admin' 
-          ? 'Password amministratore non corretta' 
-          : 'Credenziali non valide'
-        )
+        setError('Credenziali non valide')
       }
     } catch (err) {
       setError('Errore durante il login')
@@ -46,7 +39,22 @@ export default function LoginPage() {
       ...prev,
       [e.target.name]: e.target.value
     }))
-    setError('') // Reset errore quando l'utente digita
+    setError('')
+  }
+
+  // Mostra form di registrazione
+  if (showRegister) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <RegisterForm 
+          onBack={() => setShowRegister(false)}
+          onSuccess={() => {
+            setRegistrationSuccess(true)
+            setShowRegister(false)
+          }}
+        />
+      </div>
+    )
   }
 
   return (
@@ -64,49 +72,21 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Switcher tipo login */}
-        <div className="flex rounded-md shadow-sm">
-          <button
-            type="button"
-            onClick={() => setLoginType('user')}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-l-md border ${
-              loginType === 'user' 
-                ? 'bg-blue-500 text-white border-blue-500' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            👷 Sopralluoghista
-          </button>
-          <button
-            type="button"
-            onClick={() => setLoginType('admin')}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-r-md border-t border-r border-b ${
-              loginType === 'admin' 
-                ? 'bg-red-500 text-white border-red-500' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            ⚙️ Amministratore
-          </button>
-        </div>
-
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
-            {loginType === 'user' && (
-              <div>
-                <label htmlFor="username" className="sr-only">Username</label>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Username (es: marco.rossi)"
-                />
-              </div>
-            )}
+            <div>
+              <label htmlFor="username" className="sr-only">Username</label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                value={formData.username}
+                onChange={handleInputChange}
+                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Username"
+              />
+            </div>
             
             <div>
               <label htmlFor="password" className="sr-only">Password</label>
@@ -117,13 +97,20 @@ export default function LoginPage() {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 ${
-                  loginType === 'user' ? 'rounded-b-md' : 'rounded-md'
-                } focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
-                placeholder={loginType === 'admin' ? 'Password amministratore' : 'Password'}
+                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
               />
             </div>
           </div>
+
+          {/* Messaggio di successo registrazione */}
+          {registrationSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-md p-3">
+              <div className="text-green-600 text-sm">
+                ✅ Registrazione completata! Il tuo account è in attesa di approvazione.
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-md p-3">
@@ -135,11 +122,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-                loginType === 'admin' 
-                  ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500' 
-                  : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center">
@@ -147,29 +130,31 @@ export default function LoginPage() {
                   Accesso...
                 </div>
               ) : (
-                <>
-                  {loginType === 'admin' ? '🔐' : '🚀'} Accedi
-                </>
+                <> Accedi</>
               )}
+            </button>
+          </div>
+
+          {/* Registrazione link */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowRegister(!showRegister)}
+              className="text-sm text-blue-600 hover:text-blue-500"
+            >
+              {showRegister ? 'Torna al login' : 'Non hai un account? Registrati'}
             </button>
           </div>
 
           {/* Info credenziali per test */}
           <div className="bg-gray-50 rounded-md p-4">
             <h4 className="text-sm font-medium text-gray-700 mb-2">
-              {loginType === 'admin' ? 'Credenziali Admin:' : 'Credenziali Test:'}
+              Credenziali Test:
             </h4>
-            {loginType === 'admin' ? (
-              <div className="text-xs text-gray-600">
-                <p>Password: <code className="bg-gray-200 px-1 rounded">admin123verifiche</code></p>
-              </div>
-            ) : (
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>👤 <code className="bg-gray-200 px-1 rounded">marco.rossi</code> / <code className="bg-gray-200 px-1 rounded">marco.rossi</code></p>
-                <p>👤 <code className="bg-gray-200 px-1 rounded">luca.bianchi</code> / <code className="bg-gray-200 px-1 rounded">luca.bianchi</code></p>
-                <p className="text-gray-500 mt-1">Password = Username</p>
-              </div>
-            )}
+            <div className="text-xs text-gray-600 space-y-1">
+              <p>� <strong>Admin:</strong> <code className="bg-gray-200 px-1 rounded">admin</code> / <code className="bg-gray-200 px-1 rounded">admin123</code></p>
+              <p className="text-gray-500 mt-1">Gli altri account devono essere registrati</p>
+            </div>
           </div>
         </form>
       </div>
