@@ -1,1 +1,3 @@
-{}
+{
+  "/api/condomini/route": "app/api/condomini/route.js"
+}

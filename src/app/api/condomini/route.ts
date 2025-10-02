@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Condominio } from '@/lib/types'
-import { executeQuery, executeQuerySingle, generateUUID, toCamelCase, currentMySQLTimestamp } from '@/lib/mysql'
+import { dbQuery } from '@/lib/supabase'
 
 // Utility per generare token unici
 async function generateUniqueToken(): Promise<string> {
@@ -14,12 +13,9 @@ async function generateUniqueToken(): Promise<string> {
       token += chars.charAt(Math.floor(Math.random() * chars.length))
     }
     
-    // Verifica se il token esiste già nel database
-    const existing = await executeQuerySingle(
-      'SELECT id FROM condomini WHERE token = ?',
-      [token]
-    )
-    exists = !!existing
+    // Verifica se il token esiste già nel database Supabase
+    const { data: existing } = await dbQuery.condomini.getAll()
+    exists = existing?.some(c => c.token === token) || false
   } while (exists)
   
   return token
@@ -28,16 +24,20 @@ async function generateUniqueToken(): Promise<string> {
 // GET - Ottieni tutti i condomini
 export async function GET() {
   try {
-    const rows = await executeQuery(
-      'SELECT id, nome, token, data_inserimento, data_ultima_modifica FROM condomini ORDER BY data_inserimento DESC'
-    )
+    const { data, error } = await dbQuery.condomini.getAll()
     
-    const condomini = toCamelCase(rows) as Condominio[]
+    if (error) {
+      console.error('Errore Supabase GET:', error)
+      return NextResponse.json(
+        { success: false, error: 'Errore nel recupero dei condomini' },
+        { status: 500 }
+      )
+    }
     
     return NextResponse.json({
       success: true,
-      data: condomini,
-      total: condomini.length
+      data: data || [],
+      total: data?.length || 0
     })
   } catch (error) {
     console.error('Errore GET condomini:', error)
@@ -64,28 +64,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Genera token e ID unici per il condominio
+    // Genera token unico per il condominio
     const token = await generateUniqueToken()
-    const id = generateUUID()
-    const now = currentMySQLTimestamp()
 
-    // Inserisci nel database MySQL
-    await executeQuery(
-      'INSERT INTO condomini (id, nome, token, data_inserimento, data_ultima_modifica) VALUES (?, ?, ?, ?, ?)',
-      [id, nome.trim(), token, now, now]
-    )
-
-    const nuovoCondominio: Condominio = {
-      id,
+    const condominioData = {
       nome: nome.trim(),
-      token,
-      dataInserimento: now,
-      dataUltimaModifica: now
+      token
+    }
+
+    const { data, error } = await dbQuery.condomini.create(condominioData)
+    
+    if (error) {
+      console.error('Errore Supabase create:', error)
+      return NextResponse.json(
+        { success: false, error: 'Errore nella creazione del condominio' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
       success: true,
-      data: nuovoCondominio,
+      data: data,
       message: 'Condominio creato con successo'
     }, { status: 201 })
 

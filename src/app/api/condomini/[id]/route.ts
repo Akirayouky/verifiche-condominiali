@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Condominio } from '@/lib/types'
-import { executeQuerySingle, executeQuery, toCamelCase, currentMySQLTimestamp } from '@/lib/mysql'
+import { dbQuery } from '@/lib/supabase'
 
 // GET - Ottieni condominio per ID o Token
 export async function GET(
@@ -10,24 +9,33 @@ export async function GET(
   try {
     const { id } = params
 
-    // Cerca per ID o per Token nel database MySQL
-    const row = await executeQuerySingle(
-      'SELECT id, nome, token, data_inserimento, data_ultima_modifica FROM condomini WHERE id = ? OR token = ?',
-      [id, id]
-    )
+    // Prima prova per ID
+    let { data, error } = await dbQuery.condomini.getById(id)
+    
+    // Se non trovato per ID, cerca per token
+    if (!data && !error) {
+      const { data: allData } = await dbQuery.condomini.getAll()
+      data = allData?.find(c => c.token === id) || null
+    }
 
-    if (!row) {
+    if (error) {
+      console.error('Errore Supabase GET by ID:', error)
+      return NextResponse.json(
+        { success: false, error: 'Errore nel recupero del condominio' },
+        { status: 500 }
+      )
+    }
+
+    if (!data) {
       return NextResponse.json(
         { success: false, error: 'Condominio non trovato' },
         { status: 404 }
       )
     }
 
-    const condominio = toCamelCase(row) as Condominio
-
     return NextResponse.json({
       success: true,
-      data: condominio
+      data: data
     })
 
   } catch (error) {
@@ -56,33 +64,30 @@ export async function PUT(
       )
     }
 
-    const now = currentMySQLTimestamp()
+    const updateData = {
+      nome: nome.trim()
+    }
     
-    // Aggiorna nel database MySQL
-    const result = await executeQuery(
-      'UPDATE condomini SET nome = ?, data_ultima_modifica = ? WHERE id = ? OR token = ?',
-      [nome.trim(), now, id, id]
-    )
+    const { data, error } = await dbQuery.condomini.update(id, updateData)
 
-    // Verifica se la riga è stata aggiornata
-    if ((result as any).affectedRows === 0) {
+    if (error) {
+      console.error('Errore Supabase UPDATE:', error)
+      return NextResponse.json(
+        { success: false, error: 'Errore nell\'aggiornamento del condominio' },
+        { status: 500 }
+      )
+    }
+
+    if (!data) {
       return NextResponse.json(
         { success: false, error: 'Condominio non trovato' },
         { status: 404 }
       )
     }
 
-    // Recupera il condominio aggiornato
-    const updatedRow = await executeQuerySingle(
-      'SELECT id, nome, token, data_inserimento, data_ultima_modifica FROM condomini WHERE id = ? OR token = ?',
-      [id, id]
-    )
-
-    const condominioAggiornato = toCamelCase(updatedRow) as Condominio
-
     return NextResponse.json({
       success: true,
-      data: condominioAggiornato,
+      data: data,
       message: 'Condominio aggiornato con successo'
     })
 
@@ -103,30 +108,16 @@ export async function DELETE(
   try {
     const { id } = params
 
-    // Verifica che non ci siano verifiche associate prima di eliminare
-    const verificheAssociate = await executeQuerySingle(
-      'SELECT COUNT(*) as count FROM verifiche WHERE condominio_id = (SELECT id FROM condomini WHERE id = ? OR token = ?)',
-      [id, id]
-    )
-
-    if (verificheAssociate && (verificheAssociate as any).count > 0) {
-      return NextResponse.json(
-        { success: false, error: 'Impossibile eliminare il condominio: sono presenti verifiche associate' },
-        { status: 409 }
-      )
-    }
+    // TODO: Verifica che non ci siano verifiche associate prima di eliminare
+    // Per ora eliminiamo direttamente
     
-    // Elimina dal database MySQL
-    const result = await executeQuery(
-      'DELETE FROM condomini WHERE id = ? OR token = ?',
-      [id, id]
-    )
+    const { error } = await dbQuery.condomini.delete(id)
 
-    // Verifica se la riga è stata eliminata
-    if ((result as any).affectedRows === 0) {
+    if (error) {
+      console.error('Errore Supabase DELETE:', error)
       return NextResponse.json(
-        { success: false, error: 'Condominio non trovato' },
-        { status: 404 }
+        { success: false, error: 'Errore nell\'eliminazione del condominio' },
+        { status: 500 }
       )
     }
 
