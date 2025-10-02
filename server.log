@@ -7,9 +7,204 @@
   - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 915ms
- ✓ Compiled /api/auth/login in 272ms (131 modules)
- POST /api/auth/login 401 in 552ms
-   Reload env: .env.local
- ✓ Compiled in 173ms (333 modules)
-[?25h
+ ✓ Ready in 1060ms
+ ✓ Compiled /api/dashboard/stats in 127ms (129 modules)
+ GET /api/dashboard/stats 200 in 681ms
+ ✓ Compiled /api/condomini in 42ms (131 modules)
+ GET /api/condomini 200 in 243ms
+ ✓ Compiled /api/tipologie in 25ms (133 modules)
+ GET /api/tipologie 200 in 200ms
+ ✓ Compiled /api/lavorazioni in 56ms (157 modules)
+ GET /api/lavorazioni 200 in 210ms
+ ✓ Compiled /api/users in 58ms (161 modules)
+Errore Supabase GET users: {
+  code: '42703',
+  details: null,
+  hint: 'Perhaps you meant to reference the column "users.role".',
+  message: 'column users.nome does not exist'
+}
+ GET /api/users 500 in 248ms
+ ○ Compiling / ...
+ ✓ Compiled / in 577ms (631 modules)
+ GET /?id=a369a36f-a191-4a4a-996b-4c247227cfc4&vscodeBrowserReqId=1759437499928 200 in 642ms
+ ✓ Compiled in 62ms (256 modules)
+ ⨯ ./src/components/Dashboard.tsx
+Error: 
+  [31mx[0m 'import', and 'export' cannot be used outside of module code
+    ,-[[36;1;4m/Users/akirayouky/Desktop/Siti/Condomini/src/components/Dashboard.tsx[0m:9:1]
+ [2m 9[0m | export default function Dashboard({ onNavigate }: DashboardProps) {
+ [2m10[0m |   const { condomini, loading } = useCondomini()
+ [2m11[0m | 
+ [2m12[0m |   export default function Dashboard() {
+    : [31;1m  ^^^^^^[0m
+ [2m13[0m |   const [stats, setStats] = useState({
+ [2m14[0m |     condomini: { totali: 0, attivi: 0, inattivi: 0 },
+ [2m15[0m |     tipologie: { totali: 0, attive: 0, inattive: 0 },
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/Dashboard.tsx
+./src/app/page.tsx
+ ⨯ ./src/components/Dashboard.tsx
+Error: 
+  [31mx[0m 'import', and 'export' cannot be used outside of module code
+    ,-[[36;1;4m/Users/akirayouky/Desktop/Siti/Condomini/src/components/Dashboard.tsx[0m:11:1]
+ [2m11[0m | 
+ [2m12[0m |   'use client'
+ [2m13[0m | 
+ [2m14[0m | import { useState, useEffect } from 'react'
+    : [31;1m^^^^^^[0m
+ [2m15[0m | 
+ [2m16[0m | export default function Dashboard() {
+ [2m17[0m |   const [stats, setStats] = useState({
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/Dashboard.tsx
+./src/app/page.tsx
+ ⨯ ./src/components/Dashboard.tsx
+Error: 
+  [31mx[0m 'import', and 'export' cannot be used outside of module code
+    ,-[[36;1;4m/Users/akirayouky/Desktop/Siti/Condomini/src/components/Dashboard.tsx[0m:11:1]
+ [2m11[0m | 
+ [2m12[0m |   'use client'
+ [2m13[0m | 
+ [2m14[0m | import React, { useState, useEffect } from 'react'
+    : [31;1m^^^^^^[0m
+ [2m15[0m | 
+ [2m16[0m | export default function Dashboard() {
+ [2m17[0m |   const [stats, setStats] = useState({
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/Dashboard.tsx
+./src/app/page.tsx
+ ⨯ ./src/components/Dashboard.tsx
+Error: 
+  [31mx[0m 'import', and 'export' cannot be used outside of module code
+    ,-[[36;1;4m/Users/akirayouky/Desktop/Siti/Condomini/src/components/Dashboard.tsx[0m:11:1]
+ [2m11[0m | 
+ [2m12[0m |   'use client'
+ [2m13[0m | 
+ [2m14[0m | import React, { useState, useEffect } from 'react'
+    : [31;1m^^^^^^[0m
+ [2m15[0m | 
+ [2m16[0m | export default function Dashboard() {
+ [2m17[0m |   const [stats, setStats] = useState({
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/Dashboard.tsx
+./src/app/page.tsx
+ ⨯ ./src/components/Dashboard.tsx
+Error: 
+  [31mx[0m 'import', and 'export' cannot be used outside of module code
+    ,-[[36;1;4m/Users/akirayouky/Desktop/Siti/Condomini/src/components/Dashboard.tsx[0m:11:1]
+ [2m11[0m | 
+ [2m12[0m |   'use client'
+ [2m13[0m | 
+ [2m14[0m | import { useState, useEffect } from 'react'
+    : [31;1m^^^^^^[0m
+ [2m15[0m | 
+ [2m16[0m | export default function Dashboard() {
+ [2m17[0m |   const [stats, setStats] = useState({
+    `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/Dashboard.tsx
+./src/app/page.tsx
+ ✓ Compiled in 63ms (256 modules)
+ ✓ Compiled in 55ms (256 modules)
+ ✓ Compiled in 52ms (256 modules)
+ ✓ Compiled in 42ms (256 modules)
+ ✓ Compiled in 58ms (256 modules)
+ ✓ Compiled in 41ms (256 modules)
+ ✓ Compiled in 40ms (256 modules)
+ ✓ Compiled / in 58ms (239 modules)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/akirayouky/Desktop/Siti/Condomini/.next/server/webpack-runtime.js:33:42)
+digest: "1750936877"
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/akirayouky/Desktop/Siti/Condomini/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/akirayouky/Desktop/Siti/Condomini/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458) {
+  page: '/'
+}
+ ✓ Compiled /_error in 355ms (707 modules)
+ GET / 500 in 514ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat '/Users/akirayouky/Desktop/Siti/Condomini/.next/server/pages'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/pages/_error' in /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server for build dependencies doesn't lead to expected result '/Users/akirayouky/Desktop/Siti/Condomini/.next/server/pages/_error.js', but to 'Error: Can't resolve '../../../../.next/server/pages/_error' in '/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/pages/_error (expected /Users/akirayouky/Desktop/Siti/Condomini/.next/server/pages/_error.js)
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/require.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/require.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/load-components.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/load-components.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/utils.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/utils.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w>  at resolve commonjs /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/pages/_app' in /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server for build dependencies doesn't lead to expected result '/Users/akirayouky/Desktop/Siti/Condomini/.next/server/pages/_app.js', but to 'Error: Can't resolve '../../../../.next/server/pages/_app' in '/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/pages/_app (expected /Users/akirayouky/Desktop/Siti/Condomini/.next/server/pages/_app.js)
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/require.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/require.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/load-components.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/load-components.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/utils.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/utils.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w>  at resolve commonjs /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../.next/server/pages/_document' in /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server for build dependencies doesn't lead to expected result '/Users/akirayouky/Desktop/Siti/Condomini/.next/server/pages/_document.js', but to 'Error: Can't resolve '../../../../.next/server/pages/_document' in '/Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../.next/server/pages/_document (expected /Users/akirayouky/Desktop/Siti/Condomini/.next/server/pages/_document.js)
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/require.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/require.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/load-components.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/server/load-components.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/utils.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/utils.js
+<w>  at file dependencies /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w>  at file /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+<w>  at resolve commonjs /Users/akirayouky/Desktop/Siti/Condomini/node_modules/next/dist/build/webpack/loaders/next-route-loader/index.js
+ ✓ Compiled in 117ms (488 modules)

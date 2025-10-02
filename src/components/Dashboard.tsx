@@ -1,28 +1,83 @@
 'use client'
 
-import { useCondomini } from '@/hooks/useCondomini'
+import { useState, useEffect } from 'react'
 
 interface DashboardProps {
   onNavigate?: (section: string) => void
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
-  const { condomini, loading } = useCondomini()
+  const [stats, setStats] = useState({
+    condomini: { totali: 0, attivi: 0, inattivi: 0 },
+    tipologie: { totali: 0, attive: 0, inattive: 0 },
+    verifiche: {
+      totali: 0,
+      verificheCompletate: 0,
+      inCorso: 0,
+      scadute: 0
+    },
+    lavorazioni: {
+      totali: 0,
+      da_eseguire: 0,
+      in_corso: 0,
+      completate: 0
+    }
+  })
+  const [loading, setLoading] = useState(true)
 
-  const stats = {
-    condomininiAttivi: condomini.length,
-    verificheCompletate: 85, // Mock per ora
-    inCorso: 7, // Mock per ora
-    scadute: 3 // Mock per ora
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard/stats')
+        const result = await response.json()
+        
+        if (result.success) {
+          setStats({
+            condomini: { 
+              totali: result.data.totali.condomini, 
+              attivi: result.data.totali.condomini, 
+              inattivi: 0 
+            },
+            tipologie: { 
+              totali: result.data.totali.tipologie, 
+              attive: result.data.totali.tipologie, 
+              inattive: 0 
+            },
+            verifiche: {
+              totali: result.data.totali.verifiche,
+              verificheCompletate: result.data.lavorazioni.completate || 0,
+              inCorso: result.data.lavorazioni.in_corso || 0,
+              scadute: 0
+            },
+            lavorazioni: {
+              totali: result.data.lavorazioni.totali,
+              da_eseguire: result.data.lavorazioni.da_eseguire,
+              in_corso: result.data.lavorazioni.in_corso,
+              completate: result.data.lavorazioni.completate
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Errore nel caricamento delle statistiche:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadStats()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+        <span className="ml-3 text-gray-600">Caricamento statistiche...</span>
+      </div>
+    )
   }
 
-  // Calcola condomini recenti (ultimi 7 giorni)
-  const condomininiRecenti = condomini.filter(c => {
-    const created = new Date(c.data_inserimento)
-    const weekAgo = new Date()
-    weekAgo.setDate(weekAgo.getDate() - 7)
-    return created >= weekAgo
-  }).length
+  // Calcola condomini recenti (ultimi 7 giorni) - rimosso per ora dato che condomini non è definito
+  const condomininiRecenti = 0
 
   return (
     <div>
@@ -35,7 +90,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <div>
               <h3 className="text-lg font-semibold text-blue-800">Condomini Attivi</h3>
               <p className="text-3xl font-bold text-blue-600 mt-2">
-                {loading ? '...' : stats.condomininiAttivi}
+                {loading ? '...' : stats.condomini.attivi}
               </p>
             </div>
             <div className="text-blue-400 text-3xl">🏢</div>
@@ -46,7 +101,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-green-800">Verifiche Completate</h3>
-              <p className="text-3xl font-bold text-green-600 mt-2">{stats.verificheCompletate}</p>
+              <p className="text-3xl font-bold text-green-600 mt-2">{stats.verifiche.verificheCompletate}</p>
             </div>
             <div className="text-green-400 text-3xl">✅</div>
           </div>
@@ -56,7 +111,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-yellow-800">In Corso</h3>
-              <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.inCorso}</p>
+              <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.verifiche.inCorso}</p>
             </div>
             <div className="text-yellow-400 text-3xl">⏳</div>
           </div>
@@ -66,7 +121,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-red-800">Scadute</h3>
-              <p className="text-3xl font-bold text-red-600 mt-2">{stats.scadute}</p>
+              <p className="text-3xl font-bold text-red-600 mt-2">{stats.verifiche.scadute}</p>
             </div>
             <div className="text-red-400 text-3xl">⚠️</div>
           </div>
@@ -80,7 +135,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Condomini Recenti
             <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              {condomininiRecenti}
+              {stats.condomini.totali}
             </span>
           </h3>
           
@@ -90,23 +145,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <div className="h-4 bg-gray-200 rounded w-1/2"></div>
               <div className="h-4 bg-gray-200 rounded w-5/6"></div>
             </div>
-          ) : condomini.length > 0 ? (
-            <div className="space-y-3">
-              {condomini.slice(-5).reverse().map((condominio) => (
-                <div key={condominio.id} className="flex items-center py-2 border-b border-gray-100 last:border-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-blue-600 font-medium text-sm">
-                      {condominio.nome.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{condominio.nome}</div>
-                    <div className="text-sm text-gray-500">
-                      Aggiunto il {new Date(condominio.data_inserimento).toLocaleDateString('it-IT')}
-                    </div>
-                  </div>
-                </div>
-              ))}
+          ) : stats.condomini.totali > 0 ? (
+            <div className="p-4 text-center">
+              <div className="text-2xl font-bold text-blue-600">{stats.condomini.totali}</div>
+              <div className="text-sm text-gray-500">condomini registrati</div>
             </div>
           ) : (
             <p className="text-gray-500 text-center py-4">
