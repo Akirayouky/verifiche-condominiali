@@ -114,10 +114,10 @@ export default function TipologiaTable({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <span className="text-sm font-medium text-gray-900">
-                        {tipologia.campi_personalizzati.length}
+                        {tipologia.campi_personalizzati?.length || 0}
                       </span>
                       <span className="ml-2 text-xs text-gray-500">campi</span>
-                      {tipologia.campi_personalizzati.some(c => c.obbligatorio) && (
+                      {tipologia.campi_personalizzati?.some(c => c.obbligatorio) && (
                         <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
                           obbligatori
                         </span>
