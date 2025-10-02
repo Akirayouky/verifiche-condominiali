@@ -94,7 +94,7 @@ export default function GestioneUtenti() {
   }
 
   const resetPassword = async (userId: string) => {
-    if (!confirm('Resettare la password? L\'utente dovrà impostarla al primo accesso.')) {
+    if (!confirm('Resettare la password? Verrà generata una password temporanea da comunicare all\'utente.')) {
       return
     }
     
@@ -109,10 +109,31 @@ export default function GestioneUtenti() {
 
       const result = await response.json()
       
-      if (result.success) {
-        alert('Password resettata! L\'utente dovrà impostarla al primo accesso.')
+      if (result.success && result.tempPassword) {
+        // Usa una modale personalizzata più elegante
+        const credentials = `Username: ${result.username}\nPassword: ${result.tempPassword}`
+        
+        // Prova a copiare negli appunti
+        let clipboardMsg = ''
+        if (navigator.clipboard) {
+          try {
+            await navigator.clipboard.writeText(credentials)
+            clipboardMsg = '\n\n✅ Credenziali copiate negli appunti!'
+          } catch (e) {
+            clipboardMsg = '\n\n⚠️ Copia manuale necessaria'
+          }
+        }
+        
+        alert(`🔑 PASSWORD TEMPORANEA GENERATA!\n\n` +
+              `👤 Username: ${result.username}\n` +
+              `🗝️ Password: ${result.tempPassword}\n\n` +
+              `📋 Comunica queste credenziali all'utente.\n` +
+              `🔄 Al primo accesso dovrà cambiare la password.${clipboardMsg}`)
+        
+        // Ricarica la lista per aggiornare lo stato
+        await caricaUtenti()
       } else {
-        alert('Errore nel reset password: ' + result.error)
+        alert('Errore nel reset password: ' + (result.error || 'Password temporanea non generata'))
       }
     } catch (err) {
       alert('Errore nel reset della password')

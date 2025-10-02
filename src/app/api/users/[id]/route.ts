@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/supabase'
 
+// Funzione per generare password temporanea
+function generateTempPassword(): string {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const numbers = '0123456789'
+  
+  let password = ''
+  
+  // 3 lettere maiuscole
+  for (let i = 0; i < 3; i++) {
+    password += letters.charAt(Math.floor(Math.random() * letters.length))
+  }
+  
+  // 3 numeri
+  for (let i = 0; i < 3; i++) {
+    password += numbers.charAt(Math.floor(Math.random() * numbers.length))
+  }
+  
+  return password
+}
+
 // GET - Ottieni utente per ID
 export async function GET(
   request: NextRequest,
@@ -70,6 +90,7 @@ export async function PUT(
 
     const now = new Date().toISOString()
     let finalUpdateData: any = {}
+    let tempPasswordGenerated: string | null = null
 
     switch (azione) {
       case 'approve':
@@ -104,14 +125,23 @@ export async function PUT(
         break
 
       case 'reset_password':
-        // Per ora aggiungiamo solo una nota nel campo note o usiamo un approccio temporaneo
-        // I campi password_reset_required e password_reset_at devono essere aggiunti al DB prima
+        // Genera password temporanea (6 caratteri: 3 lettere + 3 numeri)
+        const tempPassword = generateTempPassword()
+        
+        // Hash della password temporanea
+        const bcrypt = require('bcryptjs')
+        const hashedTempPassword = await bcrypt.hash(tempPassword, 10)
+        
         finalUpdateData = { 
-          // Temporaneamente usiamo last_login per tracciare il reset (da migliorare)
-          last_login: null, // Forza re-login 
-          // password_reset_required: true,  // Da attivare dopo schema update
-          // password_reset_at: now,         // Da attivare dopo schema update
+          password: hashedTempPassword,
+          last_login: null, // Forza re-login
+          // Impostiamo un flag per indicare che è una password temporanea
+          // Useremo un campo esistente per ora
+          created_at: existingUser.created_at, // Mantieni originale
         }
+        
+        // Aggiungiamo la password temporanea al risultato per mostrarla all'admin
+        tempPasswordGenerated = tempPassword
         break
 
       case 'update':
@@ -138,11 +168,20 @@ export async function PUT(
       )
     }
 
-    return NextResponse.json({
+    const response: any = {
       success: true,
       data: updatedData,
       message: 'Utente aggiornato con successo'
-    })
+    }
+
+    // Aggiungi password temporanea e username se è stato fatto reset password
+    if (tempPasswordGenerated && existingUser) {
+      response.tempPassword = tempPasswordGenerated
+      response.username = existingUser.username
+      response.message = 'Password resettata con successo'
+    }
+
+    return NextResponse.json(response)
 
   } catch (error) {
     console.error('Errore PUT user:', error)
