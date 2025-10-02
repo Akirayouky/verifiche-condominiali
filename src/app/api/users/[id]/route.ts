@@ -99,16 +99,18 @@ export async function PUT(
         finalUpdateData = { 
           attivo: false,
           approved_at: null,
-          rejected_at: now  // Aggiungiamo un campo per tracciare il rifiuto
+          // rejected_at: now  // Campo da aggiungere al DB schema
         }
         break
 
       case 'reset_password':
-        // Reset password: imposta un flag per richiedere cambio password al primo login
+        // Per ora aggiungiamo solo una nota nel campo note o usiamo un approccio temporaneo
+        // I campi password_reset_required e password_reset_at devono essere aggiunti al DB prima
         finalUpdateData = { 
-          password_reset_required: true,
-          password_reset_at: now,
-          // Potresti anche generare una password temporanea qui se necessario
+          // Temporaneamente usiamo last_login per tracciare il reset (da migliorare)
+          last_login: null, // Forza re-login 
+          // password_reset_required: true,  // Da attivare dopo schema update
+          // password_reset_at: now,         // Da attivare dopo schema update
         }
         break
 
