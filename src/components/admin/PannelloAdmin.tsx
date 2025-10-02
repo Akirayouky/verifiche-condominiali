@@ -232,12 +232,12 @@ export default function PannelloAdmin() {
                     </h3>
                     
                     <div className="text-sm text-gray-600 space-y-1 mb-3">
-                      <div><strong>Aperta:</strong> {formatDate(lavorazione.dataApertura)}</div>
-                      {lavorazione.dataChiusura && (
-                        <div><strong>Chiusa:</strong> {formatDate(lavorazione.dataChiusura)}</div>
+                      <div><strong>Aperta:</strong> {formatDate(lavorazione.data_apertura)}</div>
+                      {lavorazione.data_chiusura && (
+                        <div><strong>Chiusa:</strong> {formatDate(lavorazione.data_chiusura)}</div>
                       )}
-                      {lavorazione.dataRiapertura && (
-                        <div><strong>Riaperta:</strong> {formatDate(lavorazione.dataRiapertura)}</div>
+                      {lavorazione.data_riapertura && (
+                        <div><strong>Riaperta:</strong> {formatDate(lavorazione.data_riapertura)}</div>
                       )}
                     </div>
                     

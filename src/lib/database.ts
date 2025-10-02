@@ -15,15 +15,15 @@ export class LocalDatabase {
           id: '1',
           nome: 'Condominio Rossi',
           token: 'cond_abc123def456',
-          dataInserimento: '2024-01-15T10:30:00Z',
-          dataUltimaModifica: '2024-01-15T10:30:00Z'
+          data_inserimento: '2024-01-15T10:30:00Z',
+          data_ultima_modifica: '2024-01-15T10:30:00Z'
         },
         {
           id: '2',
           nome: 'Condominio Verde',
           token: 'cond_xyz789uvw012',
-          dataInserimento: '2024-02-20T14:15:00Z',
-          dataUltimaModifica: '2024-02-25T09:45:00Z'
+          data_inserimento: '2024-02-20T14:15:00Z',
+          data_ultima_modifica: '2024-02-25T09:45:00Z'
         }
       ]
       this.saveCondomini(sampleData)
@@ -67,7 +67,7 @@ export class LocalDatabase {
     condomini[index] = {
       ...condomini[index],
       ...updates,
-      dataUltimaModifica: new Date().toISOString()
+      data_ultima_modifica: new Date().toISOString()
     }
     
     this.saveCondomini(condomini)

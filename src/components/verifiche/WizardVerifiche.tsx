@@ -34,9 +34,9 @@ export default function WizardVerifiche() {
 
     try {
       const verificaData: CreateVerificaRequest = {
-        condominioId: selectedCondominio.id,
-        tipologiaId: selectedTipologia.id,
-        datiVerifica,
+        condominio_id: selectedCondominio.id,
+        tipologia_id: selectedTipologia.id,
+        dati_verifica: datiVerifica,
         note
       }
 

@@ -97,9 +97,9 @@ export default function LavorazioniList({ lavorazioni, onLavorazioneChange }: Pr
                   </h3>
                   
                   <div className="text-xs text-gray-600">
-                    Aperta: {formatDate(lavorazione.dataApertura)}
-                    {lavorazione.dataChiusura && (
-                      <span> • Chiusa: {formatDate(lavorazione.dataChiusura)}</span>
+                    Aperta: {formatDate(lavorazione.data_apertura)}
+                    {lavorazione.data_chiusura && (
+                      <span> • Chiusa: {formatDate(lavorazione.data_chiusura)}</span>
                     )}
                     {lavorazione.note.length > 0 && (
                       <span> • {lavorazione.note.length} nota/e</span>
@@ -220,24 +220,24 @@ function DettaglioLavorazioneModal({ lavorazione, onClose, onAzione }: ModalProp
               <div>
                 <label className="text-sm font-medium text-gray-700">Data Apertura</label>
                 <div className="text-sm text-gray-900">
-                  {formatDate(lavorazione.dataApertura)}
+                  {formatDate(lavorazione.data_apertura)}
                 </div>
               </div>
 
-              {lavorazione.dataChiusura && (
+              {lavorazione.data_chiusura && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Data Chiusura</label>
                   <div className="text-sm text-gray-900">
-                    {formatDate(lavorazione.dataChiusura)}
+                    {formatDate(lavorazione.data_chiusura)}
                   </div>
                 </div>
               )}
 
-              {lavorazione.dataRiapertura && (
+              {lavorazione.data_riapertura && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Data Riapertura</label>
                   <div className="text-sm text-gray-900">
-                    {formatDate(lavorazione.dataRiapertura)}
+                    {formatDate(lavorazione.data_riapertura)}
                   </div>
                 </div>
               )}

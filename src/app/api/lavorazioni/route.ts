@@ -6,7 +6,7 @@ import { Lavorazione } from '@/lib/types'
 let lavorazioniDB: Lavorazione[] = [
   {
     id: '1',
-    verificaId: '1',
+    verifica_id: '1',
     stato: 'chiusa',
     descrizione: 'Verifica antincendio completata - Sistema conforme',
     note: [
@@ -14,23 +14,23 @@ let lavorazioniDB: Lavorazione[] = [
       'Vie di fuga libere e segnalate correttamente',
       'Controlli periodici programmati per il prossimo trimestre'
     ],
-    dataApertura: '2024-02-01T09:00:00Z',
-    dataChiusura: '2024-02-01T11:30:00Z'
+    data_apertura: '2024-02-01T09:00:00Z',
+    data_chiusura: '2024-02-01T11:30:00Z'
   },
   {
     id: '2',
-    verificaId: '2', 
+    verifica_id: '2', 
     stato: 'aperta',
     descrizione: 'Controllo ascensore in corso',
     note: [
       'Iniziata verifica funzionamento meccanico',
       'Controllo sistemi di sicurezza previsto per domani'
     ],
-    dataApertura: '2024-02-05T14:00:00Z'
+    data_apertura: '2024-02-05T14:00:00Z'
   },
   {
     id: '3',
-    verificaId: '1',
+    verifica_id: '1',
     stato: 'riaperta',
     descrizione: 'Riapertura per controllo aggiuntivo estintore piano terra',
     note: [
@@ -38,9 +38,9 @@ let lavorazioniDB: Lavorazione[] = [
       'Necessaria sostituzione entro 7 giorni',
       'Contattato fornitore per preventivo'
     ],
-    dataApertura: '2024-02-01T09:00:00Z',
-    dataChiusura: '2024-02-01T11:30:00Z',
-    dataRiapertura: '2024-02-10T10:15:00Z'
+    data_apertura: '2024-02-01T09:00:00Z',
+    data_chiusura: '2024-02-01T11:30:00Z',
+    data_riapertura: '2024-02-10T10:15:00Z'
   }
 ]
 
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (verificaId) {
-      filteredLavorazioni = filteredLavorazioni.filter(l => l.verificaId === verificaId)
+      filteredLavorazioni = filteredLavorazioni.filter(l => l.verifica_id === verificaId)
     }
 
     return NextResponse.json({
@@ -91,11 +91,11 @@ export async function POST(request: NextRequest) {
 
     const nuovaLavorazione: Lavorazione = {
       id: uuidv4(),
-      verificaId,
+      verifica_id: verificaId,
       stato: 'aperta',
       descrizione: descrizione.trim(),
       note: note ? [note] : [],
-      dataApertura: now
+      data_apertura: now
     }
 
     lavorazioniDB.push(nuovaLavorazione)

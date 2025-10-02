@@ -5,15 +5,15 @@ import { Lavorazione } from '@/lib/types'
 let lavorazioniDB: Lavorazione[] = [
   {
     id: '1',
-    verificaId: '1',
+    verifica_id: '1',
     stato: 'chiusa',
     descrizione: 'Verifica antincendio completata - Sistema conforme',
     note: [
       'Tutti gli estintori controllati e funzionanti',
       'Vie di fuga libere e segnalate correttamente'
     ],
-    dataApertura: '2024-02-01T09:00:00Z',
-    dataChiusura: '2024-02-01T11:30:00Z'
+    data_apertura: '2024-02-01T09:00:00Z',
+    data_chiusura: '2024-02-01T11:30:00Z'
   }
 ]
 
@@ -77,7 +77,7 @@ export async function PUT(
           )
         }
         lavorazione.stato = 'chiusa'
-        lavorazione.dataChiusura = now
+        lavorazione.data_chiusura = now
         if (nota) lavorazione.note.push(nota)
         break
 
@@ -89,7 +89,7 @@ export async function PUT(
           )
         }
         lavorazione.stato = 'riaperta'
-        lavorazione.dataRiapertura = now
+        lavorazione.data_riapertura = now
         if (nota) lavorazione.note.push(nota)
         break
 
