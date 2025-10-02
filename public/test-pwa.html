@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PWA - Verifiche Condominiali</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-item {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test PWA - Verifiche Condominiali</h1>
+    <p>Questo strumento testa le funzionalità PWA dell'applicazione Verifiche Condominiali.</p>
+    
+    <div class="test-item">
+        <h3>📱 Test di Installabilità</h3>
+        <p>Verifica se l'app può essere installata come PWA</p>
+        <button onclick="testInstallability()">Test Installabilità</button>
+        <button onclick="promptInstall()" id="installBtn" style="display:none;">Installa PWA</button>
+    </div>
+
+    <div class="test-item">
+        <h3>🔧 Test Service Worker</h3>
+        <p>Controlla se il Service Worker è registrato e funzionante</p>
+        <button onclick="testServiceWorker()">Test Service Worker</button>
+    </div>
+
+    <div class="test-item">
+        <h3>📋 Test Manifest</h3>
+        <p>Verifica la configurazione del Web App Manifest</p>
+        <button onclick="testManifest()">Test Manifest</button>
+    </div>
+
+    <div class="test-item">
+        <h3>🖼️ Test Icone</h3>
+        <p>Controlla la disponibilità delle icone PWA</p>
+        <button onclick="testIcons()">Test Icone</button>
+    </div>
+
+    <div class="test-item">
+        <h3>🌐 Test Connettività</h3>
+        <p>Verifica il comportamento dell'app online/offline</p>
+        <button onclick="testConnectivity()">Test Connettività</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        let deferredPrompt;
+        const results = document.getElementById('results');
+
+        // Ascolta l'evento beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'inline-block';
+            addResult('✅ App installabile rilevata', 'success');
+        });
+
+        function addResult(message, type = 'test-item') {
+            const div = document.createElement('div');
+            div.className = `test-item ${type}`;
+            div.innerHTML = `<p><strong>${new Date().toLocaleTimeString()}</strong> - ${message}</p>`;
+            results.appendChild(div);
+        }
+
+        async function testInstallability() {
+            addResult('🔍 Testando installabilità...', 'warning');
+            
+            // Controlla se già installata
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                addResult('✅ App già installata e in modalità standalone', 'success');
+                return;
+            }
+
+            // Controlla il manifest
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            if (manifestLink) {
+                addResult('✅ Manifest collegato trovato', 'success');
+                
+                // Verifica se può essere installata
+                if (deferredPrompt) {
+                    addResult('✅ Evento beforeinstallprompt catturato - App installabile', 'success');
+                } else {
+                    addResult('⚠️ Evento beforeinstallprompt non ancora catturato - Prova ad aggiornare la pagina', 'warning');
+                }
+            } else {
+                addResult('❌ Manifest non trovato', 'error');
+            }
+        }
+
+        async function promptInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                addResult(`📱 Risultato installazione: ${outcome}`, outcome === 'accepted' ? 'success' : 'warning');
+                deferredPrompt = null;
+                document.getElementById('installBtn').style.display = 'none';
+            }
+        }
+
+        async function testServiceWorker() {
+            addResult('🔍 Testando Service Worker...', 'warning');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        addResult('✅ Service Worker registrato', 'success');
+                        addResult(`📍 Scope: ${registration.scope}`, 'success');
+                        
+                        if (registration.active) {
+                            addResult('✅ Service Worker attivo', 'success');
+                        } else {
+                            addResult('⚠️ Service Worker registrato ma non attivo', 'warning');
+                        }
+                    } else {
+                        addResult('❌ Service Worker non registrato', 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ Errore nel controllo Service Worker: ${error.message}`, 'error');
+                }
+            } else {
+                addResult('❌ Service Worker non supportato dal browser', 'error');
+            }
+        }
+
+        async function testManifest() {
+            addResult('🔍 Testando Web App Manifest...', 'warning');
+            
+            try {
+                const response = await fetch('/manifest.json');
+                if (response.ok) {
+                    const manifest = await response.json();
+                    addResult('✅ Manifest scaricato con successo', 'success');
+                    addResult(`📱 Nome: ${manifest.name}`, 'success');
+                    addResult(`🔤 Nome breve: ${manifest.short_name}`, 'success');
+                    addResult(`🎨 Colore tema: ${manifest.theme_color}`, 'success');
+                    addResult(`📱 Display: ${manifest.display}`, 'success');
+                    addResult(`🖼️ Icone trovate: ${manifest.icons?.length || 0}`, 'success');
+                } else {
+                    addResult('❌ Impossibile scaricare il manifest', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Errore nel test manifest: ${error.message}`, 'error');
+            }
+        }
+
+        async function testIcons() {
+            addResult('🔍 Testando icone PWA...', 'warning');
+            
+            const icons = [
+                { url: '/icon-192.png', size: '192x192' },
+                { url: '/icon-512.png', size: '512x512' },
+                { url: '/apple-icon.png', size: '180x180 (Apple)' }
+            ];
+
+            for (const icon of icons) {
+                try {
+                    const response = await fetch(icon.url, { method: 'HEAD' });
+                    if (response.ok) {
+                        addResult(`✅ Icona ${icon.size} disponibile`, 'success');
+                    } else {
+                        addResult(`❌ Icona ${icon.size} non trovata`, 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ Errore nel test icona ${icon.size}: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testConnectivity() {
+            addResult('🔍 Testando connettività...', 'warning');
+            
+            // Test connessione online
+            if (navigator.onLine) {
+                addResult('✅ Connessione online attiva', 'success');
+            } else {
+                addResult('⚠️ Connessione offline', 'warning');
+            }
+
+            // Test API endpoint
+            try {
+                const response = await fetch('/api/condomini', { method: 'HEAD' });
+                if (response.ok) {
+                    addResult('✅ API endpoint raggiungibile', 'success');
+                } else {
+                    addResult('❌ API endpoint non raggiungibile', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Errore nel test API: ${error.message}`, 'error');
+            }
+
+            // Listener per cambi di connettività
+            window.addEventListener('online', () => {
+                addResult('🌐 Connessione ripristinata', 'success');
+            });
+
+            window.addEventListener('offline', () => {
+                addResult('📱 Modalità offline attivata', 'warning');
+            });
+        }
+
+        // Test automatico all'avvio
+        window.addEventListener('load', () => {
+            addResult('🚀 Pagina di test caricata', 'success');
+            
+            // Mostra informazioni del browser
+            addResult(`🌐 User Agent: ${navigator.userAgent}`, 'test-item');
+            addResult(`📱 Platform: ${navigator.platform}`, 'test-item');
+            
+            // Test rapido automatico
+            setTimeout(() => {
+                addResult('🔄 Avvio test automatici...', 'warning');
+                testServiceWorker();
+                testManifest();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
