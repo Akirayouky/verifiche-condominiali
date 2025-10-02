@@ -1,0 +1,39 @@
+{
+  "name": "Verifiche Condominiali",
+  "short_name": "Verifiche",
+  "description": "App PWA per gestione verifiche condominiali",
+  "theme_color": "#3b82f6",
+  "background_color": "#f9fafb",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
