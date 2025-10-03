@@ -46,6 +46,9 @@
         #results {
             margin-top: 20px;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -56,7 +59,7 @@
         <h3>📱 Test di Installabilità</h3>
         <p>Verifica se l'app può essere installata come PWA</p>
         <button onclick="testInstallability()">Test Installabilità</button>
-        <button onclick="promptInstall()" id="installBtn" style="display:none;">Installa PWA</button>
+        <button onclick="promptInstall()" id="installBtn" class="hidden">Installa PWA</button>
     </div>
 
     <div class="test-item">

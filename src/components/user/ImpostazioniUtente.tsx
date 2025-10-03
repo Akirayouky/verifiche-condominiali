@@ -159,46 +159,54 @@ function ModalCambioPassword({ isOpen, onClose, onSuccess }: ModalCambioPassword
           <div className="space-y-4">
             {/* Password Attuale */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="vecchia-password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password Attuale *
               </label>
               <input
+                id="vecchia-password"
                 type="password"
                 value={passwords.vecchiaPassword}
                 onChange={(e) => setPasswords(prev => ({ ...prev, vecchiaPassword: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Inserisci la password attuale"
+                aria-describedby="vecchia-password-help"
+                title="Inserisci la tua password attuale"
               />
             </div>
 
             {/* Nuova Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="nuova-password" className="block text-sm font-medium text-gray-700 mb-2">
                 Nuova Password *
               </label>
               <input
+                id="nuova-password"
                 type="password"
                 value={passwords.nuovaPassword}
                 onChange={(e) => setPasswords(prev => ({ ...prev, nuovaPassword: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Inserisci la nuova password"
+                aria-describedby="nuova-password-help"
+                title="Inserisci la nuova password (min 8 caratteri, maiuscole, minuscole e numeri)"
               />
-              <div className="text-xs text-gray-500 mt-1">
+              <div id="nuova-password-help" className="text-xs text-gray-500 mt-1">
                 Min 8 caratteri, maiuscole, minuscole e numeri
               </div>
             </div>
 
             {/* Conferma Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="conferma-password" className="block text-sm font-medium text-gray-700 mb-2">
                 Conferma Nuova Password *
               </label>
               <input
+                id="conferma-password"
                 type="password"
                 value={passwords.confermaPassword}
                 onChange={(e) => setPasswords(prev => ({ ...prev, confermaPassword: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Conferma la nuova password"
+                title="Conferma inserendo nuovamente la nuova password"
               />
             </div>
           </div>
@@ -339,50 +347,62 @@ export default function ImpostazioniUtente() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="user-nome" className="block text-sm font-medium text-gray-700 mb-2">
                       Nome
                     </label>
                     <input
+                      id="user-nome"
                       type="text"
                       value={userData.nome}
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                      title="Nome dell'utente (sola lettura)"
+                      placeholder="Nome non disponibile"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="user-cognome" className="block text-sm font-medium text-gray-700 mb-2">
                       Cognome
                     </label>
                     <input
+                      id="user-cognome"
                       type="text"
                       value={userData.cognome}
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                      title="Cognome dell'utente (sola lettura)"
+                      placeholder="Cognome non disponibile"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="user-email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email
                   </label>
                   <input
+                    id="user-email"
                     type="email"
                     value={userData.email}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    title="Indirizzo email dell'utente (sola lettura)"
+                    placeholder="Email non disponibile"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="user-telefono" className="block text-sm font-medium text-gray-700 mb-2">
                     Telefono
                   </label>
                   <input
+                    id="user-telefono"
                     type="tel"
                     value={userData.telefono || ''}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    title="Numero di telefono dell'utente (sola lettura)"
+                    placeholder="Telefono non disponibile"
                   />
                 </div>
               </div>
@@ -397,26 +417,32 @@ export default function ImpostazioniUtente() {
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="user-username" className="block text-sm font-medium text-gray-700 mb-2">
                     Username
                   </label>
                   <input
+                    id="user-username"
                     type="text"
                     value={userData.username}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    title="Nome utente (sola lettura)"
+                    placeholder="Username non disponibile"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="user-ruolo" className="block text-sm font-medium text-gray-700 mb-2">
                     Ruolo
                   </label>
                   <input
+                    id="user-ruolo"
                     type="text"
                     value={getRoleName(userData.role)}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    title="Ruolo dell'utente nel sistema (sola lettura)"
+                    placeholder="Ruolo non disponibile"
                   />
                 </div>
 
@@ -436,27 +462,33 @@ export default function ImpostazioniUtente() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="user-created" className="block text-sm font-medium text-gray-700 mb-2">
                     Registrato il
                   </label>
                   <input
+                    id="user-created"
                     type="text"
                     value={new Date(userData.created_at).toLocaleDateString()}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    title="Data di registrazione dell'account (sola lettura)"
+                    placeholder="Data non disponibile"
                   />
                 </div>
 
                 {userData.last_login && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="user-last-login" className="block text-sm font-medium text-gray-700 mb-2">
                       Ultimo accesso
                     </label>
                     <input
+                      id="user-last-login"
                       type="text"
                       value={new Date(userData.last_login).toLocaleString()}
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                      title="Data e ora dell'ultimo accesso (sola lettura)"
+                      placeholder="Ultimo accesso non disponibile"
                     />
                   </div>
                 )}
