@@ -1,8 +1,8 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/api/lavorazioni/[id]/route": "app/api/lavorazioni/[id]/route.js",
-  "/api/condomini/[id]/route": "app/api/condomini/[id]/route.js",
+  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
   "/api/lavorazioni/route": "app/api/lavorazioni/route.js",
-  "/api/tipologie/[id]/route": "app/api/tipologie/[id]/route.js"
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/users/route": "app/api/users/route.js",
+  "/api/condomini/route": "app/api/condomini/route.js"
 }

@@ -81,14 +81,53 @@ export async function PUT(
         }
 
         updateData = {
-          stato: 'completata',
-          data_chiusura: now,
-          // Gestione note compatibile con nuovo schema (string) e vecchio (array)
-          note: (dati && dati.note) ? 
-            (typeof lavorazioneEsistente.note === 'string' 
-              ? (lavorazioneEsistente.note + '\n' + dati.note) 
-              : [...(lavorazioneEsistente.note || []), dati.note].join('\n')
-            ) : lavorazioneEsistente.note
+          stato: 'completata'
+          // Rimosso data_chiusura perché non esiste nella tabella
+        }
+        
+        // Aggiungi note se presenti
+        if (dati && dati.note) {
+          const noteEsistenti = lavorazioneEsistente.note || ''
+          updateData.note = noteEsistenti ? `${noteEsistenti}\n${dati.note}` : dati.note
+        }
+        
+        // Salva dati verifica nei metadati se presenti
+        if (dati && dati.dati_verifica) {
+          try {
+            const metadataEsistenti = lavorazioneEsistente.allegati ? 
+              JSON.parse(lavorazioneEsistente.allegati) : {}
+            
+            updateData.allegati = JSON.stringify({
+              ...metadataEsistenti,
+              dati_verifica_completamento: dati.dati_verifica,
+              data_completamento: now
+            })
+          } catch (e) {
+            // Se i metadati esistenti non sono JSON valido, crea nuovi
+            updateData.allegati = JSON.stringify({
+              dati_verifica_completamento: dati.dati_verifica,
+              data_completamento: now
+            })
+          }
+        }
+        break
+
+      case 'inizia':
+        if (lavorazioneEsistente.stato !== 'aperta') {
+          return NextResponse.json(
+            { success: false, error: 'Solo le lavorazioni aperte possono essere iniziate' },
+            { status: 400 }
+          )
+        }
+
+        updateData = {
+          stato: 'in_corso'
+          // Rimosso data_inizio perché non esiste nella tabella
+        }
+        
+        if (dati && dati.nota) {
+          const noteEsistenti = lavorazioneEsistente.note || ''
+          updateData.note = noteEsistenti ? `${noteEsistenti}\n${dati.nota}` : dati.nota
         }
         break
 
@@ -101,13 +140,14 @@ export async function PUT(
         }
 
         updateData = {
-          stato: 'riaperta',
-          data_riapertura: now,
-          note: (dati && dati.motivo) ? 
-            (typeof lavorazioneEsistente.note === 'string'
-              ? (lavorazioneEsistente.note + '\n' + `Riapertura: ${dati.motivo}`)
-              : [...(lavorazioneEsistente.note || []), `Riapertura: ${dati.motivo}`].join('\n')
-            ) : lavorazioneEsistente.note
+          stato: 'riaperta'
+          // Rimosso data_riapertura perché non esiste nella tabella
+        }
+        
+        // Aggiungi nota di riapertura se presente motivo
+        if (dati && dati.motivo) {
+          const noteEsistenti = lavorazioneEsistente.note || ''
+          updateData.note = noteEsistenti ? `${noteEsistenti}\nRiapertura: ${dati.motivo}` : `Riapertura: ${dati.motivo}`
         }
         break
 
@@ -121,8 +161,8 @@ export async function PUT(
         updateData = {
           // Compatibilità con nuovo schema (user_id) e vecchio (utente_assegnato)
           user_id: dati.utenteAssegnato,
-          utente_assegnato: dati.utenteAssegnato, // Retrocompatibilità
-          data_assegnazione: now
+          utente_assegnato: dati.utenteAssegnato // Retrocompatibilità
+          // Rimosso data_assegnazione perché non esiste nella tabella
         }
         break
 
@@ -142,8 +182,8 @@ export async function PUT(
 
       case 'aggiorna':
         updateData = {
-          ...dati,
-          data_ultima_modifica: now
+          ...dati
+          // Rimosso data_ultima_modifica perché non esiste nella tabella
         }
         break
 
@@ -154,15 +194,21 @@ export async function PUT(
         )
     }
 
+    console.log('Tentativo di aggiornamento lavorazione ID:', id)
+    console.log('Dati di aggiornamento:', JSON.stringify(updateData, null, 2))
+    
     const { data: updatedData, error: updateError } = await dbQuery.lavorazioni.update(id, updateData)
 
     if (updateError) {
       console.error('Errore Supabase UPDATE lavorazione:', updateError)
+      console.error('Dettagli errore:', JSON.stringify(updateError, null, 2))
       return NextResponse.json(
-        { success: false, error: 'Errore nell\'aggiornamento della lavorazione' },
+        { success: false, error: `Errore nell'aggiornamento della lavorazione: ${updateError.message}` },
         { status: 500 }
       )
     }
+    
+    console.log('Aggiornamento completato con successo:', updatedData)
 
     return NextResponse.json({
       success: true,

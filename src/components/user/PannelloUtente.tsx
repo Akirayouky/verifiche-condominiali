@@ -106,6 +106,12 @@ export default function PannelloUtente() {
     })
   }
 
+  // Filtri per le lavorazioni
+  const lavorazioniDaFare = lavorazioni.filter(l => 
+    l.stato === 'aperta' || l.stato === 'in_corso' || l.stato === 'riaperta'
+  )
+  const lavorazioniCompletate = lavorazioni.filter(l => l.stato === 'completata')
+
   // Statistiche per l'utente
   const stats = {
     totali: lavorazioni.length,
@@ -234,23 +240,23 @@ export default function PannelloUtente() {
         </div>
       )}
 
-      {/* Lista Lavorazioni */}
+      {/* Sezione: Lavorazioni da Fare */}
       <div className="bg-white rounded-lg shadow-sm border">
-        {lavorazioni.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <div className="text-4xl mb-2">📋</div>
-            <h3 className="text-lg font-medium mb-2">Nessuna lavorazione assegnata</h3>
-            <p>Al momento non hai verifiche da completare.</p>
-            <p className="text-sm mt-2">Le nuove lavorazioni appariranno qui quando verranno assegnate dall&apos;amministratore.</p>
-          </div>
-        ) : (
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Le tue Verifiche ({lavorazioni.length})
-            </h3>
-            
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            🔧 Le mie lavorazioni ({lavorazioniDaFare.length})
+          </h3>
+          
+          {lavorazioniDaFare.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <div className="text-4xl mb-2">📋</div>
+              <h3 className="text-lg font-medium mb-2">Nessuna lavorazione da completare</h3>
+              <p>Al momento non hai verifiche in sospeso.</p>
+              <p className="text-sm mt-2">Le nuove lavorazioni appariranno qui quando verranno assegnate dall&apos;amministratore.</p>
+            </div>
+          ) : (
             <div className="space-y-4">
-              {lavorazioni.map((lavorazione) => {
+              {lavorazioniDaFare.map((lavorazione) => {
                 const statoInfo = getStatoInfo(lavorazione.stato)
                 
                 return (
@@ -383,8 +389,95 @@ export default function PannelloUtente() {
                 )
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
+
+      {/* Sezione: Lavorazioni Completate */}
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            ✅ Lavorazioni completate ({lavorazioniCompletate.length})
+          </h3>
+          
+          {lavorazioniCompletate.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <div className="text-4xl mb-2">✅</div>
+              <h3 className="text-lg font-medium mb-2">Nessuna lavorazione completata</h3>
+              <p>Le lavorazioni completate appariranno qui.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {lavorazioniCompletate.map((lavorazione) => {
+                const statoInfo = getStatoInfo(lavorazione.stato)
+                
+                return (
+                  <div
+                    key={lavorazione.id}
+                    className="bg-green-50 border border-green-200 rounded-lg p-6"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        {/* Header con stato */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <span className="text-2xl mr-3">{statoInfo.icon}</span>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${statoInfo.color}`}>
+                              {statoInfo.label}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {lavorazione.id.substring(0, 8)}...
+                          </div>
+                        </div>
+
+                        {/* Titolo/Descrizione */}
+                        <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                          {lavorazione.titolo || lavorazione.descrizione}
+                        </h4>
+                        
+                        {lavorazione.titolo && lavorazione.descrizione && lavorazione.titolo !== lavorazione.descrizione && (
+                          <p className="text-sm text-gray-600 mb-3">
+                            {lavorazione.descrizione}
+                          </p>
+                        )}
+
+                        {/* Dati del condominio */}
+                        {lavorazione.condomini && (
+                          <div className="bg-white p-2 rounded mb-3">
+                            <strong>🏢 Condominio:</strong> {lavorazione.condomini.nome}
+                            {lavorazione.condomini.indirizzo && (
+                              <div className="text-sm text-gray-600 mt-1">
+                                📍 {lavorazione.condomini.indirizzo}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Note e data completamento */}
+                        {lavorazione.note && (
+                          <div className="bg-white p-2 rounded mb-3">
+                            <strong>📝 Note:</strong>
+                            <div className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
+                              {lavorazione.note}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                          {lavorazione.data_apertura && (
+                            <div>📅 Aperta: {formatDate(lavorazione.data_apertura)}</div>
+                          )}
+                          <div>✅ Completata</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
