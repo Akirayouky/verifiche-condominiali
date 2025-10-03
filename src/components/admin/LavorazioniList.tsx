@@ -31,10 +31,13 @@ export default function LavorazioniList({ lavorazioni, onLavorazioneChange }: Pr
 
   const getStatoIcon = (stato: string) => {
     switch (stato) {
-      case 'aperta': return '📂'
-      case 'chiusa': return '✅'
+      case 'aperta':
+      case 'da_eseguire': return '�'
+      case 'in_corso': return '⏳'
+      case 'chiusa':
+      case 'completata': return '✅'
       case 'riaperta': return '🔄'
-      default: return '❓'
+      default: return '📄'
     }
   }
 
@@ -164,10 +167,13 @@ function DettaglioLavorazioneModal({ lavorazione, onClose, onAzione }: ModalProp
 
   const getStatoIcon = (stato: string) => {
     switch (stato) {
-      case 'aperta': return '📂'
-      case 'chiusa': return '✅'
+      case 'aperta':
+      case 'da_eseguire': return '�'
+      case 'in_corso': return '⏳'
+      case 'chiusa':
+      case 'completata': return '✅'
       case 'riaperta': return '🔄'
-      default: return '❓'
+      default: return '📄'
     }
   }
 

@@ -48,10 +48,21 @@ export const dbQuery = {
     getAll: () => supabase.from('users').select('id, username, email, role, nome, cognome, telefono, attivo, created_at, last_login, approved_at').order('created_at', { ascending: false }),
     create: (data: any) => supabase.from('users').insert([data]).select('id, username, email, role, nome, cognome, telefono, attivo, created_at').single(),
     getById: (id: string) => supabase.from('users').select('id, username, email, role, nome, cognome, telefono, attivo, created_at, last_login, approved_at').eq('id', id).single(),
+    getByIdFull: (id: string) => supabase.from('users').select('*').eq('id', id).single(),
     getByUsername: (username: string) => supabase.from('users').select('*').eq('username', username).single(),
     getByEmail: (email: string) => supabase.from('users').select('*').eq('email', email).single(),
     update: (id: string, data: any) => supabase.from('users').update(data).eq('id', id).select('id, username, email, role, nome, cognome, telefono, attivo, created_at, last_login, approved_at').single(),
     updateLastLogin: (id: string) => supabase.from('users').update({ last_login: new Date().toISOString() }).eq('id', id),
     delete: (id: string) => supabase.from('users').delete().eq('id', id)
+  },
+
+  // Note Personali
+  note_personali: {
+    getAll: () => supabase.from('note_personali').select('*').order('data_creazione', { ascending: false }),
+    getAllByUser: (utente_id: string) => supabase.from('note_personali').select('*').eq('utente_id', utente_id).order('data_creazione', { ascending: false }),
+    create: (data: any) => supabase.from('note_personali').insert([data]).select().single(),
+    getById: (id: string) => supabase.from('note_personali').select('*').eq('id', id).single(),
+    update: (id: string, data: any) => supabase.from('note_personali').update(data).eq('id', id).select().single(),
+    delete: (id: string) => supabase.from('note_personali').delete().eq('id', id)
   }
 }

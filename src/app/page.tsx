@@ -8,6 +8,8 @@ import GestioneTipologie from '@/components/tipologie/GestioneTipologie'
 import WizardVerifiche from '@/components/verifiche/WizardVerifiche'
 import PannelloAdmin from '@/components/admin/PannelloAdmin'
 import PannelloUtente from '@/components/user/PannelloUtente'
+import NotePersonali from '@/components/user/NotePersonali'
+import ImpostazioniUtente from '@/components/user/ImpostazioniUtente'
 import Dashboard from '@/components/Dashboard'
 
 function MainApp() {
@@ -25,7 +27,8 @@ function MainApp() {
 
   const userSections = [
     { id: 'lavorazioni', name: 'Le Mie Lavorazioni', icon: '📋' },
-    { id: 'completate', name: 'Completate', icon: '✅' },
+    { id: 'note', name: 'Note Personali', icon: '📝' },
+    { id: 'impostazioni', name: 'Impostazioni', icon: '⚙️' },
   ]
 
   const sections = role === 'admin' ? adminSections : userSections
@@ -111,16 +114,8 @@ function MainApp() {
           {role === 'sopralluoghista' && (
             <>
               {activeSection === 'lavorazioni' && <PannelloUtente />}
-              {activeSection === 'completate' && (
-                <div className="bg-white rounded-lg shadow-sm border p-8">
-                  <div className="text-center text-gray-500">
-                    <div className="text-4xl mb-4">✅</div>
-                    <h3 className="text-xl font-medium mb-2">Lavorazioni Completate</h3>
-                    <p>Qui vedrai lo storico delle verifiche che hai completato.</p>
-                    <p className="text-sm mt-2 text-gray-400">Funzionalità in sviluppo...</p>
-                  </div>
-                </div>
-              )}
+              {activeSection === 'note' && <NotePersonali />}
+              {activeSection === 'impostazioni' && <ImpostazioniUtente />}
             </>
           )}
         </div>

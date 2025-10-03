@@ -179,11 +179,11 @@ export default function PannelloAdmin() {
 
   const getStatoIcon = (stato: string) => {
     switch (stato) {
-      case 'da_eseguire': return '📋'
+      case 'da_eseguire': return '�'
       case 'in_corso': return '⏳'
       case 'completata': return '✅'
       case 'riaperta': return '🔄'
-      default: return '❓'
+      default: return '📄'
     }
   }
 
