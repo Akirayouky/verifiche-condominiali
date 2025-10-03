@@ -6,6 +6,7 @@ import FotoViewer from '@/components/ui/FotoViewer'
 import GestioneUtenti from './GestioneUtenti'
 import GestioneAssegnazioni from './GestioneAssegnazioni'
 import WizardLavorazioni from './WizardLavorazioni'
+import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 
 // Hook per evitare hydration errors
 function useIsClient() {
@@ -30,6 +31,8 @@ export default function PannelloAdmin() {
   const [showWizardLavorazioni, setShowWizardLavorazioni] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [lavorazioneCreata, setLavorazioneCreata] = useState<any>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [detailLavorazione, setDetailLavorazione] = useState<Lavorazione | null>(null)
 
   const caricaLavorazioni = useCallback(async () => {
     setLoading(true)
@@ -169,21 +172,21 @@ export default function PannelloAdmin() {
 
   const getStatoColor = (stato: string) => {
     switch (stato) {
-      case 'da_eseguire': return 'bg-blue-100 text-blue-800'
-      case 'in_corso': return 'bg-yellow-100 text-yellow-800'
-      case 'completata': return 'bg-green-100 text-green-800'
-      case 'riaperta': return 'bg-orange-100 text-orange-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'da_eseguire': return '🔴'
+      case 'in_corso': return '🔴'
+      case 'completata': return '🔴'
+      case 'riaperta': return '🔴'
+      default: return '🔴'
     }
   }
 
   const getStatoIcon = (stato: string) => {
     switch (stato) {
-      case 'da_eseguire': return '�'
+      case 'da_eseguire': return '🔴'
       case 'in_corso': return '⏳'
       case 'completata': return '✅'
-      case 'riaperta': return '🔄'
-      default: return '📄'
+      case 'riaperta': return '�'
+      default: return '�'
     }
   }
 
@@ -197,6 +200,11 @@ export default function PannelloAdmin() {
     setLavorazioneSelezionata(lavorazione)
     setAzione('elimina')
     setShowModal(true)
+  }
+
+  const mostraDettaglio = (lavorazione: Lavorazione) => {
+    setDetailLavorazione(lavorazione)
+    setShowDetailModal(true)
   }
 
   const confermaEliminazione = async () => {
@@ -235,6 +243,295 @@ export default function PannelloAdmin() {
     in_corso: lavorazioni.filter(l => l.stato === 'in_corso').length,
     completata: lavorazioni.filter(l => l.stato === 'completata').length,
     riaperte: lavorazioni.filter(l => l.stato === 'riaperta').length
+  }
+
+  // Componente Modale Dettaglio Lavorazione
+  const ModalDettaglioLavorazione = ({ lavorazione }: { lavorazione: Lavorazione }) => {
+    const generaPDF = () => {
+      const pdfGenerator = new PDFGenerator()
+      
+      // Converti la lavorazione nel formato richiesto
+      const lavorazionePDF: LavorazionePDF = {
+        id: lavorazione.id,
+        titolo: lavorazione.titolo || lavorazione.descrizione,
+        descrizione: lavorazione.descrizione,
+        stato: lavorazione.stato,
+        priorita: lavorazione.priorita || 'media',
+        data_apertura: lavorazione.data_apertura,
+        data_completamento: (lavorazione as any).data_completamento || undefined,
+        condominio: lavorazione.condomini ? {
+          nome: lavorazione.condomini.nome,
+          indirizzo: lavorazione.condomini.indirizzo || undefined
+        } : undefined,
+        utente: lavorazione.users ? {
+          nome: lavorazione.users.nome,
+          cognome: lavorazione.users.cognome,
+          email: lavorazione.users.email
+        } : undefined,
+        note: typeof lavorazione.note === 'string' ? lavorazione.note : 
+               Array.isArray(lavorazione.note) ? lavorazione.note.join('\n') : undefined,
+        allegati: lavorazione.allegati || undefined
+      }
+      
+      // Scarica il PDF
+      pdfGenerator.downloadPDF(lavorazionePDF)
+    }
+
+    const getStatoInfo = (stato: string) => {
+      switch (stato) {
+        case 'aperta':
+        case 'da_eseguire':
+          return { 
+            icon: '🔴', 
+            color: 'bg-red-100 text-red-800',
+            label: 'DA ESEGUIRE'
+          }
+        case 'in_corso':
+          return { 
+            icon: '⏳', 
+            color: 'bg-yellow-100 text-yellow-800',
+            label: 'IN CORSO'
+          }
+        case 'completata':
+          return { 
+            icon: '✅', 
+            color: 'bg-green-100 text-green-800',
+            label: 'COMPLETATA'
+          }
+        case 'riaperta':
+          return { 
+            icon: '🔄', 
+            color: 'bg-orange-100 text-orange-800',
+            label: 'RIAPERTA'
+          }
+        default:
+          return { 
+            icon: '📄', 
+            color: 'bg-gray-100 text-gray-800',
+            label: 'ALTRO'
+          }
+      }
+    }
+
+    const formatDetailDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString('it-IT', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    const statoInfo = getStatoInfo(lavorazione.stato)
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          {/* Header */}
+          <div className="bg-blue-600 text-white p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <span className="text-3xl mr-4">{statoInfo.icon}</span>
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {lavorazione.titolo || lavorazione.descrizione}
+                  </h2>
+                  <div className="flex items-center mt-2">
+                    <span className="px-3 py-1 text-sm font-medium rounded-full bg-white/20 text-white">
+                      {statoInfo.label}
+                    </span>
+                    <span className="ml-3 text-blue-100">ID: {lavorazione.id.substring(0, 8)}...</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false)
+                  setDetailLavorazione(null)
+                }}
+                className="text-white hover:text-gray-200 text-2xl p-2"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Informazioni Principali */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Informazioni Principali</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <span className="font-medium text-gray-700">Descrizione:</span>
+                      <div className="text-right max-w-sm">
+                        <span className="text-gray-900">{lavorazione.descrizione}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-gray-700">Priorità:</span>
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                        lavorazione.priorita === 'alta' ? 'bg-red-100 text-red-800' :
+                        lavorazione.priorita === 'media' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {(lavorazione.priorita || 'media').toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Condominio */}
+                {lavorazione.condomini && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🏢 Condominio</h3>
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <div className="font-semibold text-blue-900">{lavorazione.condomini.nome}</div>
+                      {lavorazione.condomini.indirizzo && (
+                        <div className="text-blue-700 text-sm mt-1">📍 {lavorazione.condomini.indirizzo}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assegnazione */}
+                {lavorazione.users && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">👤 Assegnazione</h3>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <div className="font-semibold text-green-900">
+                        {lavorazione.users.nome} {lavorazione.users.cognome}
+                      </div>
+                      <div className="text-green-700 text-sm mt-1">📧 {lavorazione.users.email}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Date e Timeline */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">📅 Timeline</h3>
+                  <div className="space-y-3">
+                    {lavorazione.data_apertura && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <div>
+                          <div className="font-medium">Creazione</div>
+                          <div className="text-sm text-gray-600">{formatDetailDate(lavorazione.data_apertura)}</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {lavorazione.data_assegnazione && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div>
+                          <div className="font-medium">Assegnazione</div>
+                          <div className="text-sm text-gray-600">{formatDetailDate(lavorazione.data_assegnazione)}</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {lavorazione.stato === 'completata' && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div>
+                          <div className="font-medium">Completamento</div>
+                          <div className="text-sm text-gray-600">Completata</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tipologia Lavorazione */}
+                {lavorazione.allegati && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🔧 Tipologia</h3>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="font-semibold text-yellow-900">
+                        {
+                          (() => {
+                            try {
+                              const metadata = JSON.parse(lavorazione.allegati)
+                              if (metadata.tipologia === 'manutenzione') return '🔴'
+                              if (metadata.tipologia === 'riparazione') return '🔴'
+                              if (metadata.tipologia === 'verifica') return '🔴'
+                              if (metadata.tipologia === 'sicurezza') return '🔴'
+                              if (metadata.tipologia === 'pulizia') return '🔴'
+                              return metadata.tipologia || 'Altro'
+                            } catch {
+                              return '🔴'
+                            }
+                          })()
+                        }
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Note */}
+                {lavorazione.note && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">📝 Note</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="text-gray-800 whitespace-pre-wrap">
+                        {typeof lavorazione.note === 'string' 
+                          ? lavorazione.note 
+                          : Array.isArray(lavorazione.note) 
+                            ? (lavorazione.note as string[]).join('\n• ')
+                            : 'Nessuna nota disponibile'
+                        }
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* PDF Report per lavorazioni completate */}
+                {lavorazione.stato === 'completata' && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">📄 Report</h3>
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 text-center">
+                      <div className="text-4xl mb-4">📋</div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">Report PDF Dettagliato</h4>
+                      <p className="text-gray-600 mb-4">Scarica il report completo con tutti i dettagli della verifica</p>
+                      <button 
+                        onClick={generaPDF}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        📥 Scarica Report PDF
+                      </button>
+                      <div className="text-xs text-gray-500 mt-2">
+                        Report automatico con tutti i dettagli della verifica
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-gray-50 px-6 py-4 flex justify-end">
+            <button
+              onClick={() => {
+                setShowDetailModal(false)
+                setDetailLavorazione(null)
+              }}
+              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Chiudi
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -559,6 +856,13 @@ export default function PannelloAdmin() {
                     
                     {/* Pulsanti CRUD */}
                     <button
+                      onClick={() => mostraDettaglio(lavorazione)}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm px-3 py-1 border border-indigo-200 rounded"
+                    >
+                      👁️ Dettagli
+                    </button>
+                    
+                    <button
                       onClick={() => handleModifica(lavorazione)}
                       className="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 border border-blue-200 rounded"
                     >
@@ -753,6 +1057,11 @@ export default function PannelloAdmin() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Dettaglio Lavorazione */}
+      {showDetailModal && detailLavorazione && (
+        <ModalDettaglioLavorazione lavorazione={detailLavorazione} />
       )}
     </div>
   )
