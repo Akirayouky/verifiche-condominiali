@@ -331,6 +331,18 @@ export default function ImpostazioniUtente() {
     )
   }
 
+  // Verifica extra per evitare errori di hydration su oggetti vuoti
+  if (!userData.id || !userData.username || !userData.email) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-8 text-center">
+          <div className="text-red-500 mb-2">⚠️</div>
+          <p className="text-gray-500">Errore nel caricamento dei dati utente</p>
+        </div>
+      </div>
+    )
+  }
+
   const getRoleName = (role: string) => {
     switch (role) {
       case 'admin': return 'Amministratore'
@@ -383,7 +395,7 @@ export default function ImpostazioniUtente() {
                     <input
                       id="user-nome"
                       type="text"
-                      value={userData.nome}
+                      value={userData.nome || ''}
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                       title="Nome dell'utente (sola lettura)"
@@ -397,7 +409,7 @@ export default function ImpostazioniUtente() {
                     <input
                       id="user-cognome"
                       type="text"
-                      value={userData.cognome}
+                      value={userData.cognome || ''}
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                       title="Cognome dell'utente (sola lettura)"
@@ -413,7 +425,7 @@ export default function ImpostazioniUtente() {
                   <input
                     id="user-email"
                     type="email"
-                    value={userData.email}
+                    value={userData.email || ''}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                     title="Indirizzo email dell'utente (sola lettura)"
@@ -453,7 +465,7 @@ export default function ImpostazioniUtente() {
                   <input
                     id="user-username"
                     type="text"
-                    value={userData.username}
+                    value={userData.username || ''}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                     title="Nome utente (sola lettura)"
@@ -468,7 +480,7 @@ export default function ImpostazioniUtente() {
                   <input
                     id="user-ruolo"
                     type="text"
-                    value={getRoleName(userData.role)}
+                    value={getRoleName(userData.role || '')}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                     title="Ruolo dell'utente nel sistema (sola lettura)"
@@ -498,7 +510,7 @@ export default function ImpostazioniUtente() {
                   <input
                     id="user-created"
                     type="text"
-                    value={formatDateForDisplay(userData.created_at)}
+                    value={formatDateForDisplay(userData.created_at || '')}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                     title="Data di registrazione dell'account (sola lettura)"
