@@ -25,15 +25,62 @@ export default function WizardVerifiche({
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [completata, setCompletata] = useState(false)
+  const [errorModal, setErrorModal] = useState<string | null>(null)
 
   // Carica i dati preconfigurati dalla lavorazione
   useEffect(() => {
     const caricaDatiLavorazione = async () => {
-      if (lavorazione && lavorazione.verifica) {
-        const verifica = lavorazione.verifica
-        setLoading(true)
-        
-        try {
+      if (!lavorazione) return
+      
+      setLoading(true)
+      
+      try {
+        // NUOVO SCHEMA: Lavorazione creata dall'admin
+        if (lavorazione.condominio_id) {
+          console.log('Caricando lavorazione nuovo schema:', lavorazione)
+          
+          // Carica condominio
+          const condominioResponse = await fetch(`/api/condomini/${lavorazione.condominio_id}`)
+          if (condominioResponse.ok) {
+            const condominioResult = await condominioResponse.json()
+            if (condominioResult.success) {
+              setSelectedCondominio(condominioResult.data)
+            }
+          }
+
+          // Carica tipologia dai metadata
+          if (lavorazione.allegati) {
+            try {
+              const metadata = JSON.parse(lavorazione.allegati)
+              if (metadata.tipologia_verifica_id) {
+                const tipologiaResponse = await fetch(`/api/tipologie/${metadata.tipologia_verifica_id}`)
+                if (tipologiaResponse.ok) {
+                  const tipologiaResult = await tipologiaResponse.json()
+                  if (tipologiaResult.success) {
+                    setSelectedTipologia(tipologiaResult.data)
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Errore parsing metadata:', e)
+            }
+          }
+
+          // Note generali
+          if (lavorazione.note) {
+            setNote(typeof lavorazione.note === 'string' 
+              ? lavorazione.note 
+              : Array.isArray(lavorazione.note) 
+                ? lavorazione.note.join('\n') 
+                : ''
+            )
+          }
+        }
+        // SCHEMA LEGACY: Verifica esistente  
+        else if (lavorazione.verifica) {
+          console.log('Caricando lavorazione schema legacy:', lavorazione)
+          const verifica = lavorazione.verifica
+          
           // Carica condominio
           if (verifica.condominio_id) {
             const condominioResponse = await fetch(`/api/condomini/${verifica.condominio_id}`)
@@ -63,11 +110,11 @@ export default function WizardVerifiche({
           if (verifica.note) {
             setNote(verifica.note)
           }
-        } catch (error) {
-          console.error('Errore nel caricamento dei dati della lavorazione:', error)
-        } finally {
-          setLoading(false)
         }
+      } catch (error) {
+        console.error('Errore nel caricamento dei dati della lavorazione:', error)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -81,8 +128,8 @@ export default function WizardVerifiche({
   }
 
   const handleStep2Next = async () => {
-    // Se siamo in modalità lavorazione e la lavorazione è "da_eseguire", iniziala
-    if (isLavorazioneMode && lavorazione && lavorazione.stato === 'da_eseguire') {
+    // Se siamo in modalità lavorazione e la lavorazione non è in corso, iniziala
+    if (isLavorazioneMode && lavorazione && lavorazione.stato === 'aperta') {
       try {
         await fetch(`/api/lavorazioni/${lavorazione.id}`, {
           method: 'PUT',
@@ -124,8 +171,10 @@ export default function WizardVerifiche({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             azione: 'completa',
-            dati_verifica: datiVerifica,
-            nota: note
+            dati: {
+              dati_verifica: datiVerifica,
+              note: note
+            }
           })
         })
 
@@ -140,7 +189,7 @@ export default function WizardVerifiche({
             }
           }, 2000)
         } else {
-          alert('Errore nel completamento della lavorazione: ' + result.error)
+          setErrorModal('Errore nel completamento della lavorazione: ' + result.error)
         }
       } else {
         // Modalità normale: crea nuova verifica
@@ -172,7 +221,7 @@ export default function WizardVerifiche({
             setCompletata(false)
           }, 3000)
         } else {
-          alert('Errore nel completamento della verifica: ' + result.error)
+          setErrorModal('Errore nel completamento della verifica: ' + result.error)
         }
       }
     } catch (error) {
@@ -339,6 +388,35 @@ export default function WizardVerifiche({
           💡 I dati vengono salvati automaticamente ad ogni passaggio
         </div>
       </div>
+
+      {/* Modal di errore */}
+      {errorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-t-xl">
+              <div className="flex items-center">
+                <div className="text-3xl mr-3">❌</div>
+                <h2 className="text-xl font-bold">Errore</h2>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-700 mb-6">
+                {errorModal}
+              </p>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setErrorModal(null)}
+                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors duration-200"
+                >
+                  Chiudi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -85,7 +85,12 @@ export default function PannelloAdmin() {
       
       if (result.success) {
         console.log('Lavorazione creata con successo:', result.data)
-        setLavorazioneCreata(result.data)
+        
+        // Arricchisce i dati con i nomi per la modale di successo
+        setLavorazioneCreata({
+          ...result.data,
+          ...lavorazioneData // Include tutti i dati del form per il riepilogo
+        })
         setShowWizardLavorazioni(false)
         setShowSuccessModal(true)
         
@@ -486,7 +491,7 @@ export default function PannelloAdmin() {
                           {typeof lavorazione.note === 'string' 
                             ? lavorazione.note 
                             : Array.isArray(lavorazione.note) 
-                              ? lavorazione.note.map((nota, index) => (
+                              ? (lavorazione.note as string[]).map((nota: string, index: number) => (
                                   <div key={index} className="flex items-start mb-1">
                                     <span className="text-blue-500 mr-2">•</span>
                                     {nota}
@@ -663,16 +668,29 @@ export default function PannelloAdmin() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Condominio:</span>
-                      <span className="font-medium">{lavorazioneCreata.condominio_id}</span>
+                      <span className="font-medium">{
+                        // Cerca il nome del condominio dalla lista caricata
+                        lavorazioni.length > 0 
+                          ? lavorazioni.find(l => l.condomini)?.condomini?.nome || lavorazioneCreata.condominio_id
+                          : lavorazioneCreata.condominio_id
+                      }</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tipologia:</span>
-                      <span className="font-medium">{lavorazioneCreata.tipologia}</span>
+                      <span className="font-medium">{
+                        // Mappa la tipologia con il nome user-friendly
+                        lavorazioneCreata.tipologia === 'manutenzione' ? 'Manutenzione Ordinaria' :
+                        lavorazioneCreata.tipologia === 'riparazione' ? 'Riparazione Urgente' :
+                        lavorazioneCreata.tipologia === 'verifica' ? 'Verifica Tecnica' :
+                        lavorazioneCreata.tipologia === 'sicurezza' ? 'Sicurezza e Conformità' :
+                        lavorazioneCreata.tipologia === 'pulizia' ? 'Pulizia Straordinaria' :
+                        lavorazioneCreata.tipologia || 'Altro'
+                      }</span>
                     </div>
-                    {lavorazioneCreata.tipologia_verifica_id && (
+                    {lavorazioneCreata.tipologia_verifica_nome && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Verifica:</span>
-                        <span className="font-medium text-blue-600">{lavorazioneCreata.tipologia_verifica_id}</span>
+                        <span className="text-gray-600">Verifica Specifica:</span>
+                        <span className="font-medium text-blue-600">{lavorazioneCreata.tipologia_verifica_nome}</span>
                       </div>
                     )}
                     <div className="flex justify-between">

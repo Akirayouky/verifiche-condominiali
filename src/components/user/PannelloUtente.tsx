@@ -23,13 +23,13 @@ export default function PannelloUtente() {
       const result = await response.json()
       
       if (result.success) {
-        // Filtra solo lavorazioni assegnate all'utente corrente
-        const lavorazioniUtente = result.data.filter((l: Lavorazione) => 
-          l.utente_assegnato === user.id || 
-          l.stato === 'da_eseguire' || 
-          l.stato === 'riaperta'
-        )
-        setLavorazioni(lavorazioniUtente)
+        // L'API con parametro ?utente= già filtra per user_id, 
+        // quindi tutti i dati restituiti sono per l'utente corrente
+        console.log('Lavorazioni ricevute dall\'API:', result.data.length)
+        console.log('User ID corrente:', user.id)
+        console.log('Prima lavorazione (sample):', result.data[0])
+        
+        setLavorazioni(result.data)
       } else {
         setError(result.error)
       }
@@ -50,6 +50,7 @@ export default function PannelloUtente() {
 
   const getStatoInfo = (stato: string) => {
     switch (stato) {
+      case 'aperta':
       case 'da_eseguire':
         return { 
           icon: '📋', 
@@ -78,12 +79,19 @@ export default function PannelloUtente() {
           label: 'COMPLETATA',
           description: 'Verifica terminata con successo'
         }
+      case 'archiviata':
+        return { 
+          icon: '📁', 
+          color: 'bg-gray-100 text-gray-800',
+          label: 'ARCHIVIATA',
+          description: 'Verifica archiviata'
+        }
       default:
         return { 
-          icon: '❓', 
+          icon: '📄', 
           color: 'bg-gray-100 text-gray-800',
-          label: 'SCONOSCIUTO',
-          description: 'Stato non definito'
+          label: 'ALTRO',
+          description: 'Lavorazione generica'
         }
     }
   }
@@ -241,54 +249,134 @@ export default function PannelloUtente() {
               Le tue Verifiche ({lavorazioni.length})
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {lavorazioni.map((lavorazione) => {
                 const statoInfo = getStatoInfo(lavorazione.stato)
                 
                 return (
                   <div
                     key={lavorazione.id}
-                    className="border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+                    className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => iniziaLavorazione(lavorazione)}
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center">
-                        <span className="text-3xl mr-3">{statoInfo.icon}</span>
-                        <div>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${statoInfo.color}`}>
-                            {statoInfo.label}
-                          </span>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        {/* Header con stato */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <span className="text-2xl mr-3">{statoInfo.icon}</span>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${statoInfo.color}`}>
+                              {statoInfo.label}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {lavorazione.id.substring(0, 8)}...
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    
-                    <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {lavorazione.descrizione}
-                    </h4>
-                    
-                    <p className="text-sm text-gray-600 mb-4">
-                      {statoInfo.description}
-                    </p>
-                    
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <div>
-                        <strong>Assegnata:</strong> {
-                          lavorazione.data_assegnazione 
-                            ? formatDate(lavorazione.data_assegnazione)
-                            : formatDate(lavorazione.data_apertura)
-                        }
-                      </div>
-                      <div>
-                        <strong>ID:</strong> {lavorazione.id.substring(0, 8)}...
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          Clicca per {lavorazione.stato === 'completata' ? 'visualizzare' : 'iniziare'}
-                        </span>
-                        <span className="text-blue-500">→</span>
+
+                        {/* Titolo/Descrizione */}
+                        <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                          {lavorazione.titolo || lavorazione.descrizione}
+                        </h4>
+                        
+                        {lavorazione.titolo && lavorazione.descrizione && lavorazione.titolo !== lavorazione.descrizione && (
+                          <p className="text-sm text-gray-600 mb-3">
+                            {lavorazione.descrizione}
+                          </p>
+                        )}
+
+                        {/* Dati del condominio */}
+                        {lavorazione.condomini && (
+                          <div className="bg-blue-50 p-2 rounded mb-3">
+                            <strong>🏢 Condominio:</strong> {lavorazione.condomini.nome}
+                            {lavorazione.condomini.indirizzo && (
+                              <div className="text-sm text-gray-600 mt-1">
+                                📍 {lavorazione.condomini.indirizzo}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Assegnato a */}
+                        {lavorazione.users && (
+                          <div className="bg-green-50 p-2 rounded mb-3">
+                            <strong>👤 Assegnato a:</strong> {lavorazione.users.nome} {lavorazione.users.cognome}
+                            <div className="text-sm text-gray-600">
+                              📧 {lavorazione.users.email}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Tipologia lavorazione */}
+                        {lavorazione.allegati && (
+                          <div className="bg-yellow-50 p-2 rounded mb-3">
+                            <strong>🔧 Tipo:</strong> {
+                              (() => {
+                                try {
+                                  const metadata = JSON.parse(lavorazione.allegati)
+                                  if (metadata.tipologia === 'manutenzione') return 'Manutenzione Ordinaria'
+                                  if (metadata.tipologia === 'riparazione') return 'Riparazione Urgente'
+                                  if (metadata.tipologia === 'verifica') return 'Verifica Tecnica'
+                                  if (metadata.tipologia === 'sicurezza') return 'Sicurezza e Conformità'
+                                  if (metadata.tipologia === 'pulizia') return 'Pulizia Straordinaria'
+                                  return metadata.tipologia || 'Altro'
+                                } catch {
+                                  return 'Altro'
+                                }
+                              })()
+                            }
+                          </div>
+                        )}
+
+                        {/* Date */}
+                        <div className="text-sm text-gray-600 space-y-1 mb-3">
+                          <div><strong>📅 Aperta:</strong> {formatDate(lavorazione.data_apertura)}</div>
+                          {lavorazione.data_scadenza && (
+                            <div><strong>⏰ Scadenza:</strong> {formatDate(lavorazione.data_scadenza)}</div>
+                          )}
+                          <div><strong>Assegnata:</strong> {
+                            lavorazione.data_assegnazione 
+                              ? formatDate(lavorazione.data_assegnazione)
+                              : formatDate(lavorazione.data_apertura)
+                          }</div>
+                        </div>
+
+                        {/* Note */}
+                        {lavorazione.note && (
+                          <div className="bg-gray-50 p-3 rounded-md mb-3">
+                            <div className="text-sm font-medium text-gray-700 mb-2">
+                              Note:
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {typeof lavorazione.note === 'string' 
+                                ? lavorazione.note 
+                                : Array.isArray(lavorazione.note) 
+                                  ? (lavorazione.note as string[]).map((nota: string, index: number) => (
+                                      <div key={index} className="flex items-start mb-1">
+                                        <span className="text-blue-500 mr-2">•</span>
+                                        {nota}
+                                      </div>
+                                    ))
+                                  : 'Nessuna nota disponibile'
+                              }
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Footer con azione */}
+                        <div className="pt-4 border-t border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-blue-600">
+                              {lavorazione.stato === 'completata' 
+                                ? '👁️ Visualizza dettagli' 
+                                : lavorazione.stato === 'in_corso'
+                                  ? '🔄 Continua lavorazione'
+                                  : '▶️ Inizia lavorazione'
+                              }
+                            </span>
+                            <span className="text-blue-500 text-lg">→</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

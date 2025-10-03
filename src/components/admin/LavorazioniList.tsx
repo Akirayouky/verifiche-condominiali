@@ -101,8 +101,10 @@ export default function LavorazioniList({ lavorazioni, onLavorazioneChange }: Pr
                     {lavorazione.data_chiusura && (
                       <span> • Chiusa: {formatDate(lavorazione.data_chiusura)}</span>
                     )}
-                    {lavorazione.note.length > 0 && (
-                      <span> • {lavorazione.note.length} nota/e</span>
+                    {lavorazione.note && (
+                      Array.isArray(lavorazione.note) 
+                        ? lavorazione.note.length > 0 && <span> • {lavorazione.note.length} nota/e</span>
+                        : lavorazione.note.length > 0 && <span> • 1 nota</span>
                     )}
                   </div>
                 </div>
@@ -247,22 +249,33 @@ function DettaglioLavorazioneModal({ lavorazione, onClose, onAzione }: ModalProp
           {/* Note */}
           <div className="mb-6">
             <label className="text-sm font-medium text-gray-700 mb-3 block">
-              Note ({lavorazione.note.length})
+              Note ({lavorazione.note 
+                ? Array.isArray(lavorazione.note) 
+                  ? lavorazione.note.length 
+                  : 1
+                : 0
+              })
             </label>
             
-            {lavorazione.note.length > 0 ? (
-              <div className="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
-                <div className="space-y-2">
-                  {lavorazione.note.map((nota, index) => (
-                    <div key={index} className="flex items-start text-sm">
-                      <span className="text-blue-500 mr-2 mt-0.5">•</span>
-                      <span className="text-gray-700">{nota}</span>
-                    </div>
-                  ))}
+            {lavorazione.note && (
+              typeof lavorazione.note === 'string' ? (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-sm text-gray-700">{lavorazione.note}</div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500 italic">Nessuna nota presente</div>
+              ) : Array.isArray(lavorazione.note) && lavorazione.note.length > 0 ? (
+                <div className="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
+                  <div className="space-y-2">
+                    {lavorazione.note.map((nota: string, index: number) => (
+                      <div key={index} className="flex items-start text-sm">
+                        <span className="text-blue-500 mr-2 mt-0.5">•</span>
+                        <span className="text-gray-700">{nota}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 italic">Nessuna nota presente</div>
+              )
             )}
           </div>
 

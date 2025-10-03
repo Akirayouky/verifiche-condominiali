@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const stato = searchParams.get('stato')
     const verificaId = searchParams.get('verifica_id')
-    const utenteAssegnato = searchParams.get('utente_assegnato')
+    const utenteAssegnato = searchParams.get('utente_assegnato') || searchParams.get('utente')
 
     let query = supabase
       .from('lavorazioni')

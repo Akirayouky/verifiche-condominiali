@@ -83,7 +83,12 @@ export async function PUT(
         updateData = {
           stato: 'completata',
           data_chiusura: now,
-          note: (dati && dati.note) ? [...(lavorazioneEsistente.note || []), dati.note] : lavorazioneEsistente.note
+          // Gestione note compatibile con nuovo schema (string) e vecchio (array)
+          note: (dati && dati.note) ? 
+            (typeof lavorazioneEsistente.note === 'string' 
+              ? (lavorazioneEsistente.note + '\n' + dati.note) 
+              : [...(lavorazioneEsistente.note || []), dati.note].join('\n')
+            ) : lavorazioneEsistente.note
         }
         break
 
@@ -98,7 +103,11 @@ export async function PUT(
         updateData = {
           stato: 'riaperta',
           data_riapertura: now,
-          note: (dati && dati.motivo) ? [...(lavorazioneEsistente.note || []), `Riapertura: ${dati.motivo}`] : lavorazioneEsistente.note
+          note: (dati && dati.motivo) ? 
+            (typeof lavorazioneEsistente.note === 'string'
+              ? (lavorazioneEsistente.note + '\n' + `Riapertura: ${dati.motivo}`)
+              : [...(lavorazioneEsistente.note || []), `Riapertura: ${dati.motivo}`].join('\n')
+            ) : lavorazioneEsistente.note
         }
         break
 
@@ -110,7 +119,9 @@ export async function PUT(
           )
         }
         updateData = {
-          utente_assegnato: dati.utenteAssegnato,
+          // Compatibilità con nuovo schema (user_id) e vecchio (utente_assegnato)
+          user_id: dati.utenteAssegnato,
+          utente_assegnato: dati.utenteAssegnato, // Retrocompatibilità
           data_assegnazione: now
         }
         break
@@ -123,7 +134,9 @@ export async function PUT(
           )
         }
         updateData = {
-          note: [...(lavorazioneEsistente.note || []), dati.nota]
+          note: typeof lavorazioneEsistente.note === 'string'
+            ? (lavorazioneEsistente.note + '\n' + dati.nota)
+            : [...(lavorazioneEsistente.note || []), dati.nota].join('\n')
         }
         break
 

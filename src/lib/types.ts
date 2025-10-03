@@ -119,18 +119,39 @@ export interface CreateVerificaRequest {
 
 export interface Lavorazione {
   id: string
-  verifica_id: string
-  stato: 'da_eseguire' | 'in_corso' | 'completata' | 'riaperta'
-  descrizione: string
-  note: string[]
-  data_apertura: string
-  data_chiusura?: string
-  data_riapertura?: string
-  // Assegnazione all'utente
-  utente_assegnato?: string
-  data_assegnazione?: string
-  // Dati della verifica associata (se presenti)
-  verifica?: Verifica
+  // Nuovo schema database
+  user_id: string                    // ID utente assegnato (sostituisce utente_assegnato)
+  condominio_id: string             // ID condominio
+  titolo: string                    // Titolo automatico
+  descrizione: string               // Descrizione della lavorazione
+  stato: 'aperta' | 'in_corso' | 'completata' | 'archiviata' | 'da_eseguire' | 'riaperta'  // Stati unificati (nuovo + legacy)
+  priorita: 'bassa' | 'media' | 'alta' | 'critica'            // Priorità
+  data_apertura: string             // Data apertura
+  data_scadenza?: string            // Data scadenza (opzionale)
+  data_assegnazione?: string        // Data assegnazione (per compatibilità UI)
+  note?: string | string[]          // Note generali (string o array per compatibilità)
+  allegati?: string                 // Metadata JSON (tipologia, etc)
+  
+  // Relazioni (quando popolate dall'API)
+  condomini?: {
+    id: string
+    nome: string
+    indirizzo: string
+  }
+  users?: {
+    id: string
+    username: string
+    nome: string
+    cognome: string
+    email: string
+  }
+  
+  // Retrocompatibilità (per codice esistente)
+  verifica_id?: string              // Legacy
+  utente_assegnato?: string         // Legacy - ora user_id
+  data_chiusura?: string            // Legacy
+  data_riapertura?: string          // Legacy
+  verifica?: Verifica              // Legacy relation
 }
 
 // Sistema di autenticazione
