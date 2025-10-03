@@ -1,8 +1,5 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/condomini/route": "app/api/condomini/route.js",
-  "/api/tipologie/route": "app/api/tipologie/route.js",
   "/page": "app/page.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/api/fix-admin-password/route": "app/api/fix-admin-password/route.js"
+  "/api/lavorazioni/route": "app/api/lavorazioni/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js"
 }

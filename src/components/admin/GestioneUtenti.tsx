@@ -110,24 +110,22 @@ export default function GestioneUtenti() {
       const result = await response.json()
       
       if (result.success && result.tempPassword) {
-        // Usa una modale personalizzata più elegante
-        const credentials = `Username: ${result.username}\nPassword: ${result.tempPassword}`
-        
-        // Prova a copiare negli appunti
+        // Copia solo la password temporanea negli appunti
         let clipboardMsg = ''
         if (navigator.clipboard) {
           try {
-            await navigator.clipboard.writeText(credentials)
-            clipboardMsg = '\n\n✅ Credenziali copiate negli appunti!'
+            await navigator.clipboard.writeText(result.tempPassword)
+            clipboardMsg = '\n\n✅ Password temporanea copiata negli appunti!'
           } catch (e) {
             clipboardMsg = '\n\n⚠️ Copia manuale necessaria'
           }
         }
         
-        alert(`🔑 PASSWORD TEMPORANEA GENERATA!\n\n` +
-              `👤 Username: ${result.username}\n` +
-              `🗝️ Password: ${result.tempPassword}\n\n` +
-              `📋 Comunica queste credenziali all'utente.\n` +
+        alert(`🔑 PASSWORD RESETTATA!\n\n` +
+              `👤 Username: ${result.username} (invariato)\n` +
+              `🗝️ Nuova password temporanea: ${result.tempPassword}\n\n` +
+              `📋 Comunica SOLO la nuova password all'utente.\n` +
+              `✅ L'username rimane lo stesso di prima.\n` +
               `🔄 Al primo accesso dovrà cambiare la password.${clipboardMsg}`)
         
         // Ricarica la lista per aggiornare lo stato

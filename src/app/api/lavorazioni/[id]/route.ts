@@ -83,7 +83,7 @@ export async function PUT(
         updateData = {
           stato: 'completata',
           data_chiusura: now,
-          note: dati.note ? [...(lavorazioneEsistente.note || []), dati.note] : lavorazioneEsistente.note
+          note: (dati && dati.note) ? [...(lavorazioneEsistente.note || []), dati.note] : lavorazioneEsistente.note
         }
         break
 
@@ -98,11 +98,17 @@ export async function PUT(
         updateData = {
           stato: 'riaperta',
           data_riapertura: now,
-          note: dati.motivo ? [...(lavorazioneEsistente.note || []), `Riapertura: ${dati.motivo}`] : lavorazioneEsistente.note
+          note: (dati && dati.motivo) ? [...(lavorazioneEsistente.note || []), `Riapertura: ${dati.motivo}`] : lavorazioneEsistente.note
         }
         break
 
       case 'assegna':
+        if (!dati || !dati.utenteAssegnato) {
+          return NextResponse.json(
+            { success: false, error: 'Utente assegnato obbligatorio per questa azione' },
+            { status: 400 }
+          )
+        }
         updateData = {
           utente_assegnato: dati.utenteAssegnato,
           data_assegnazione: now
@@ -110,6 +116,12 @@ export async function PUT(
         break
 
       case 'aggiungi_nota':
+        if (!dati || !dati.nota) {
+          return NextResponse.json(
+            { success: false, error: 'Nota obbligatoria per questa azione' },
+            { status: 400 }
+          )
+        }
         updateData = {
           note: [...(lavorazioneEsistente.note || []), dati.nota]
         }
