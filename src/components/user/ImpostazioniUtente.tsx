@@ -241,6 +241,40 @@ function ModalCambioPassword({ isOpen, onClose, onSuccess }: ModalCambioPassword
   )
 }
 
+// Helper per formattazione date consistente tra server e client
+const formatDateForDisplay = (dateString: string): string => {
+  if (!dateString) return 'Data non disponibile'
+  
+  try {
+    const date = new Date(dateString)
+    // Usa formato fisso per consistenza tra server e client
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    
+    return `${day}/${month}/${year}`
+  } catch {
+    return 'Data non valida'
+  }
+}
+
+const formatDateTimeForDisplay = (dateString: string): string => {
+  if (!dateString) return 'Data non disponibile'
+  
+  try {
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`
+  } catch {
+    return 'Data non valida'
+  }
+}
+
 export default function ImpostazioniUtente() {
   const { user } = useAuth()
   const [userData, setUserData] = useState<User | null>(null)
@@ -468,7 +502,7 @@ export default function ImpostazioniUtente() {
                   <input
                     id="user-created"
                     type="text"
-                    value={new Date(userData.created_at).toLocaleDateString()}
+                    value={formatDateForDisplay(userData.created_at)}
                     readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                     title="Data di registrazione dell'account (sola lettura)"
@@ -484,7 +518,7 @@ export default function ImpostazioniUtente() {
                     <input
                       id="user-last-login"
                       type="text"
-                      value={new Date(userData.last_login).toLocaleString()}
+                      value={formatDateTimeForDisplay(userData.last_login)}
                       readOnly
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
                       title="Data e ora dell'ultimo accesso (sola lettura)"
