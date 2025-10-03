@@ -475,7 +475,7 @@ export default function ImpostazioniUtente() {
               <div>
                 <h4 className="font-medium text-gray-900">Password</h4>
                 <p className="text-sm text-gray-600">
-                  Cambia la password del tuo account per mantenere sicuro l'accesso
+                  Cambia la password del tuo account per mantenere sicuro l&apos;accesso
                 </p>
               </div>
               <button
@@ -502,9 +502,9 @@ export default function ImpostazioniUtente() {
                 </h4>
                 <div className="mt-2 text-sm text-blue-700">
                   <ul className="list-disc list-inside space-y-1">
-                    <li>I dati personali possono essere modificati solo dall'amministratore</li>
+                    <li>I dati personali possono essere modificati solo dall&apos;amministratore</li>
                     <li>È possibile cambiare autonomamente solo la password</li>
-                    <li>Per modifiche ai dati personali, contatta l'amministratore</li>
+                    <li>Per modifiche ai dati personali, contatta l&apos;amministratore</li>
                   </ul>
                 </div>
               </div>
