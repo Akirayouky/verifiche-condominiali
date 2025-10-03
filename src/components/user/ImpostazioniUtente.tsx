@@ -281,12 +281,18 @@ export default function ImpostazioniUtente() {
   const [loading, setLoading] = useState(true)
   const [modalPassword, setModalPassword] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [mounted, setMounted] = useState(false)
+
+  // Assicura che il componente sia montato lato client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
-    if (user?.id) {
+    if (mounted && user?.id) {
       caricaDatiUtente()
     }
-  }, [user?.id])
+  }, [mounted, user?.id])
 
   const caricaDatiUtente = async () => {
     if (!user?.id) return
@@ -313,23 +319,13 @@ export default function ImpostazioniUtente() {
     setTimeout(() => setSuccessMessage(''), 5000)
   }
 
-  if (loading) {
+  // Prevent hydration mismatch - mostra loading fino a mount completo
+  if (!mounted || loading || !userData) {
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-500">Caricamento impostazioni...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!userData) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border p-8">
-        <div className="text-center text-red-600">
-          <div className="text-4xl mb-4">⚠️</div>
-          <p>Errore nel caricamento dei dati utente</p>
         </div>
       </div>
     )
