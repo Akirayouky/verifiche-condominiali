@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { CreateVerificaRequest } from '@/lib/types'
 import { dbQuery } from '@/lib/supabase'
+import { NotificationManager } from '@/lib/notifications'
 
 // GET - Ottieni tutte le verifiche
 export async function GET(request: NextRequest) {
@@ -79,6 +81,27 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Errore nella creazione della verifica' },
         { status: 500 }
       )
+    }
+
+    // Carica dati aggiuntivi per la notifica
+    const { data: condominio } = await dbQuery.condomini.getById(condominio_id)
+    const { data: tipologia } = await dbQuery.tipologie.getById(tipologia_id)
+
+    // Crea notifica automatica per nuova verifica
+    try {
+      const notificationManager = new NotificationManager()
+      await notificationManager.creaNotifica({
+        tipo: 'nuova_assegnazione', // Temporaneamente usiamo tipo esistente
+        titolo: '📝 Nuova Verifica Creata',
+        messaggio: `Verifica ${tipologia?.nome || 'sconosciuta'} creata per ${condominio?.nome || 'condominio'}`,
+        utente_id: '', // Notifica generale per admin (string vuota per notifica globale)
+        priorita: 'media',
+        condominio_id: condominio_id
+      })
+      console.log('✅ Notifica creata per nuova verifica:', data.id)
+    } catch (notifError) {
+      console.error('⚠️ Errore nella creazione della notifica:', notifError)
+      // Non bloccare l'operazione principale
     }
 
     return NextResponse.json({

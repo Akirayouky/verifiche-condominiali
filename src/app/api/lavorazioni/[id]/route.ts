@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/supabase'
+import { NotificationManager } from '@/lib/notifications'
 
 // GET - Ottieni lavorazione per ID
 export async function GET(
@@ -110,6 +111,25 @@ export async function PUT(
             })
           }
         }
+        
+        // Crea notifica per completamento lavorazione
+        try {
+          const { data: condominio } = await dbQuery.condomini.getById(lavorazioneEsistente.condominio_id)
+          const notificationManager = new NotificationManager()
+          await notificationManager.creaNotifica({
+            tipo: 'lavorazione_completata',
+            titolo: 'Lavorazione Completata',
+            messaggio: `Lavorazione completata per ${condominio?.nome || 'condominio'}: ${lavorazioneEsistente.descrizione}`,
+            utente_id: '', // Notifica generale per admin
+            priorita: 'alta',
+            lavorazione_id: lavorazioneEsistente.id,
+            condominio_id: lavorazioneEsistente.condominio_id
+          })
+          console.log('✅ Notifica creata per completamento lavorazione:', id)
+        } catch (notifError) {
+          console.error('⚠️ Errore nella creazione della notifica di completamento:', notifError)
+        }
+        
         break
 
       case 'inizia':

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { Lavorazione } from '@/lib/types'
 import { dbQuery, supabase } from '@/lib/supabase'
+import { NotificationManager } from '@/lib/notifications'
 
 // GET - Ottieni tutte le lavorazioni
 export async function GET(request: NextRequest) {
@@ -142,6 +143,29 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Errore nella creazione della lavorazione' },
         { status: 500 }
       )
+    }
+
+    // Crea notifica per nuova lavorazione se assegnata a un utente
+    if (data && (assegnato_a || utente_assegnato)) {
+      try {
+        const { data: condominio } = await dbQuery.condomini.getById(condominio_id)
+        const { data: utente } = await dbQuery.users.getById(assegnato_a || utente_assegnato)
+        
+        const notificationManager = new NotificationManager()
+        await notificationManager.creaNotifica({
+          tipo: 'nuova_assegnazione',
+          titolo: 'Nuova Lavorazione Assegnata',
+          messaggio: `Ti è stata assegnata una nuova lavorazione nel ${condominio?.nome || 'condominio'}: ${descrizione}`,
+          utente_id: assegnato_a || utente_assegnato,
+          priorita: priorita === 'urgente' ? 'urgente' : priorita === 'alta' ? 'alta' : 'media',
+          lavorazione_id: data.id,
+          condominio_id: condominio_id,
+          data_scadenza: data_scadenza || undefined
+        })
+        console.log('✅ Notifica creata per nuova assegnazione lavorazione:', data.id)
+      } catch (notifError) {
+        console.error('⚠️ Errore nella creazione della notifica di assegnazione:', notifError)
+      }
     }
 
     return NextResponse.json({

@@ -74,22 +74,7 @@ export class NotificationManager {
       lavorazione_id: lavorazione.id,
       condominio_id: lavorazione.condominio_id,
       priorita: giorniAnticipo <= 1 ? 'urgente' : giorniAnticipo <= 3 ? 'alta' : 'media',
-      data_scadenza: lavorazione.data_scadenza,
-      azioni: [
-        {
-          id: 'apri_lavorazione',
-          label: 'Apri Lavorazione',
-          action: 'navigate',
-          tipo: 'primary',
-          url: `/lavorazioni/${lavorazione.id}`
-        },
-        {
-          id: 'completa_ora',
-          label: 'Completa Ora',
-          action: 'complete',
-          tipo: 'secondary'
-        }
-      ]
+      data_scadenza: lavorazione.data_scadenza
     })
   }
 
@@ -104,22 +89,7 @@ export class NotificationManager {
       utente_id: utenteAssegnato,
       lavorazione_id: lavorazione.id,
       condominio_id: lavorazione.condominio_id,
-      priorita: lavorazione.priorita === 'urgente' ? 'urgente' : 'alta',
-      azioni: [
-        {
-          id: 'accetta_lavorazione',
-          label: 'Accetta e Inizia',
-          action: 'accept',
-          tipo: 'primary',
-          url: `/lavorazioni/${lavorazione.id}`
-        },
-        {
-          id: 'visualizza_dettagli',
-          label: 'Visualizza Dettagli',
-          action: 'view',
-          tipo: 'secondary'
-        }
-      ]
+      priorita: lavorazione.priorita === 'urgente' ? 'urgente' : 'alta'
     })
   }
 
@@ -137,22 +107,7 @@ export class NotificationManager {
         utente_id: adminId,
         lavorazione_id: lavorazione.id,
         condominio_id: lavorazione.condominio_id,
-        priorita: 'media',
-        azioni: [
-          {
-            id: 'visualizza_report',
-            label: 'Visualizza Report',
-            action: 'view_report',
-            tipo: 'primary',
-            url: `/admin/lavorazioni/${lavorazione.id}/report`
-          },
-          {
-            id: 'approva',
-            label: 'Approva',
-            action: 'approve',
-            tipo: 'secondary'
-          }
-        ]
+        priorita: 'media'
       })
 
       if (notifica) notifiche.push(notifica)
@@ -170,16 +125,7 @@ export class NotificationManager {
       titolo: `🔔 ${config.nome}`,
       messaggio,
       utente_id: config.utente_id,
-      priorita: 'media',
-      azioni: [
-        {
-          id: 'gestisci_reminder',
-          label: 'Gestisci Reminder',
-          action: 'manage_reminders',
-          tipo: 'secondary',
-          url: '/impostazioni/reminder'
-        }
-      ]
+      priorita: 'media'
     })
   }
 

@@ -117,6 +117,7 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
       case 'sistema': return '🔔'
       case 'lavorazione_completata': return '✅'
       case 'nuova_assegnazione': return '📋'
+      case 'nuova_verifica': return '📝'
       default: return '💬'
     }
   }
