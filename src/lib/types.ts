@@ -5,6 +5,8 @@ export interface Condominio {
   data_inserimento: string
   data_ultima_modifica: string
   assigned_to?: string | null // ID del sopralluoghista assegnato (opzionale/nullable)
+  qr_code?: string | null // Codice QR univoco per identificazione rapida
+  indirizzo?: string | null // Indirizzo del condominio
 }
 
 export interface User {
