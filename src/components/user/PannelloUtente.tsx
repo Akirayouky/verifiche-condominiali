@@ -326,6 +326,9 @@ export default function PannelloUtente() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLavorazione, setDetailLavorazione] = useState<Lavorazione | null>(null)
   const [showQrScanner, setShowQrScanner] = useState(false)
+  const [showLavorazioniModal, setShowLavorazioniModal] = useState(false)
+  const [lavorazioniCondominio, setLavorazioniCondominio] = useState<Lavorazione[]>([])
+  const [condominioSelezionato, setCondominioSelezionato] = useState<Condominio | null>(null)
 
   const caricaLavorazioni = useCallback(async () => {
     if (!user?.id) return
@@ -380,20 +383,29 @@ export default function PannelloUtente() {
         return
       }
       
-      // Trova una lavorazione aperta per questo condominio e questo utente
-      const lavorazioneAperta = lavorazioni.find(l => 
+      // Trova TUTTE le lavorazioni aperte per questo condominio e questo utente
+      const lavorazioniAperte = lavorazioni.filter(l => 
         l.condominio_id === condominio.id && 
         (l.stato === 'aperta' || l.stato === 'in_corso' || l.stato === 'riaperta')
       )
       
-      if (!lavorazioneAperta) {
+      if (lavorazioniAperte.length === 0) {
         alert(`❌ Nessuna lavorazione aperta trovata per il condominio "${condominio.nome}".\n\nVerifica che ti sia stata assegnata una lavorazione per questo condominio.`)
         return
       }
       
-      // Apri direttamente il wizard con questa lavorazione
+      // Chiudi lo scanner
       setShowQrScanner(false)
-      iniziaLavorazione(lavorazioneAperta)
+      
+      // Se c'è UNA SOLA lavorazione, apri direttamente il wizard
+      if (lavorazioniAperte.length === 1) {
+        iniziaLavorazione(lavorazioniAperte[0])
+      } else {
+        // Se ci sono MULTIPLE lavorazioni, mostra il modal di selezione
+        setCondominioSelezionato(condominio)
+        setLavorazioniCondominio(lavorazioniAperte)
+        setShowLavorazioniModal(true)
+      }
       
     } catch (error) {
       console.error('Errore durante la ricerca della lavorazione:', error)
@@ -909,6 +921,130 @@ export default function PannelloUtente() {
             setDetailLavorazione(null)
           }}
         />
+      )}
+
+      {/* Modal Selezione Lavorazioni per Condominio */}
+      {showLavorazioniModal && condominioSelezionato && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6 rounded-t-lg">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-2xl font-bold mb-2">
+                    🏢 {condominioSelezionato.nome}
+                  </h3>
+                  <p className="text-purple-100 text-sm">
+                    {condominioSelezionato.indirizzo || 'Indirizzo non specificato'}
+                  </p>
+                  <p className="text-white mt-3 font-medium">
+                    📋 {lavorazioniCondominio.length} lavorazion{lavorazioniCondominio.length === 1 ? 'e' : 'i'} aperte
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowLavorazioniModal(false)
+                    setLavorazioniCondominio([])
+                    setCondominioSelezionato(null)
+                  }}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
+                >
+                  <span className="text-2xl leading-none">×</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Lista Lavorazioni */}
+            <div className="p-6 space-y-4">
+              <p className="text-gray-600 mb-4">
+                Seleziona la lavorazione da iniziare:
+              </p>
+              
+              {lavorazioniCondominio.map((lavorazione) => {
+                const statoInfo = getStatoInfo(lavorazione.stato)
+                
+                return (
+                  <div
+                    key={lavorazione.id}
+                    className="border-2 border-gray-200 rounded-lg p-4 hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer"
+                    onClick={() => {
+                      setShowLavorazioniModal(false)
+                      setLavorazioniCondominio([])
+                      setCondominioSelezionato(null)
+                      iniziaLavorazione(lavorazione)
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statoInfo.color}`}>
+                            {statoInfo.icon} {statoInfo.label}
+                          </span>
+                          {lavorazione.priorita && (
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              lavorazione.priorita === 'alta' ? 'bg-red-100 text-red-700' :
+                              lavorazione.priorita === 'media' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {lavorazione.priorita === 'alta' ? '🔴 Alta' :
+                               lavorazione.priorita === 'media' ? '🟡 Media' :
+                               '⚪ Bassa'}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <h4 className="font-semibold text-gray-900 mb-1">
+                          {lavorazione.titolo || lavorazione.descrizione}
+                        </h4>
+                        
+                        {lavorazione.descrizione && lavorazione.titolo !== lavorazione.descrizione && (
+                          <p className="text-sm text-gray-600 mb-2">
+                            {lavorazione.descrizione}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                      {lavorazione.data_apertura && (
+                        <div className="flex items-center gap-1">
+                          <span>📅</span>
+                          <span>Aperta: {formatDate(lavorazione.data_apertura)}</span>
+                        </div>
+                      )}
+                      {lavorazione.data_scadenza && (
+                        <div className="flex items-center gap-1">
+                          <span>⏰</span>
+                          <span>Scadenza: {new Date(lavorazione.data_scadenza).toLocaleDateString('it-IT')}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <button className="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center gap-1">
+                        ▶️ Inizia Verifica
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setShowLavorazioniModal(false)
+                  setLavorazioniCondominio([])
+                  setCondominioSelezionato(null)
+                }}
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Wizard Lavorazione */}
