@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Crea una lavorazione semplificata per test
     const lavorazioneTest = {
-      condominio_id: condominio_id || '00000000-0000-0000-0000-000000000000', // NULL UUID per test
+      condominio_id: null, // NULL per evitare foreign key constraint
       user_id: sopralluoghista_id || null,
       titolo: 'Test Lavorazione',
       descrizione: descrizione,
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       allegati: JSON.stringify({
         tipologia: 'test',
         tipologia_id: tipologia_id || null,
+        condominio_test: condominio_id || 'test-condo-123', // Salviamo l'ID nel JSON
         test: true
       })
     }
