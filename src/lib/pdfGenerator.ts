@@ -296,6 +296,12 @@ export class PDFGenerator {
           const dati = metadata.dati_verifica_completamento
           
           Object.entries(dati).forEach(([key, value]) => {
+            // Salta i campi foto (array di URL Vercel Blob)
+            if (Array.isArray(value) && value.length > 0 && 
+                typeof value[0] === 'string' && value[0].includes('blob.vercel-storage.com')) {
+              return // Non mostrare array foto come testo
+            }
+            
             if (typeof value === 'boolean') {
               this.addKeyValue(key, value ? '✓ Conforme' : '✗ Non conforme')
             } else {
