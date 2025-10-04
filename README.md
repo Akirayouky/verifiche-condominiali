@@ -37,8 +37,11 @@ Una Progressive Web App moderna per la gestione delle verifiche condominiali, ot
 - **UI Framework**: React 18 con TypeScript
 - **Styling**: Tailwind CSS
 - **PWA**: Service Worker con funzionalità offline
-- **Database**: LocalStorage (espandibile con SQLite/IndexedDB)
-- **Ottimizzazioni**: Responsive design per tablet
+- **Database**: Supabase (PostgreSQL)
+- **Storage Foto**: Microsoft OneDrive (1TB via Microsoft 365)
+- **Notifiche**: Web Push API (Android/Desktop)
+- **PDF Generation**: jsPDF con foto cloud
+- **API Integration**: Microsoft Graph API per OneDrive
 
 ## 🛠️ Installazione e Avvio
 
@@ -64,6 +67,23 @@ npm run start
 
 L'applicazione sarà disponibile su `http://localhost:3000`
 
+### Configurazione OneDrive per Foto
+
+Le foto delle lavorazioni vengono salvate su **OneDrive** (1TB incluso con Microsoft 365 Family).
+
+**Setup completo**:
+1. Segui la guida dettagliata in **[SETUP_ONEDRIVE.md](./SETUP_ONEDRIVE.md)**
+2. Registra un'app su Azure Portal (15 minuti)
+3. Configura credenziali in `.env.local`
+4. Testa connessione: `http://localhost:3000/api/test-onedrive`
+
+**Vantaggi OneDrive**:
+- ✅ 1 TB storage incluso (vs 25 GB Cloudinary gratis)
+- ✅ Sync automatico su tutti i dispositivi
+- ✅ Backup integrato Microsoft
+- ✅ CDN globale per velocità
+- ✅ Zero costi aggiuntivi
+
 ## 📱 Funzionalità PWA
 
 ### Installazione su dispositivo
@@ -85,23 +105,27 @@ L'applicazione sarà disponibile su `http://localhost:3000`
 - [x] Interfaccia base responsive
 - [x] Configurazione PWA
 
-### Fase 2 - Funzionalità Core
-- [ ] Sistema di autenticazione
-- [ ] Gestione condomini con API
-- [ ] Database locale (IndexedDB/SQLite)
-- [ ] CRUD tipologie verifiche
+### Fase 2 - Funzionalità Core ✅
+- [x] Sistema di autenticazione
+- [x] Gestione condomini con API
+- [x] Database Supabase (PostgreSQL)
+- [x] CRUD tipologie verifiche
 
-### Fase 3 - Wizard e Lavorazioni  
-- [ ] Wizard verifiche multi-step
-- [ ] Sistema email e notifiche
-- [ ] Pannello amministratore
-- [ ] Gestione note e commenti
+### Fase 3 - Wizard e Lavorazioni ✅
+- [x] Wizard verifiche multi-step
+- [x] Sistema email e notifiche
+- [x] Pannello amministratore
+- [x] Gestione note e commenti
+- [x] Upload foto su OneDrive
+- [x] Generazione PDF con foto
 
-### Fase 4 - Ottimizzazioni
-- [ ] Sincronizzazione dati offline/online
+### Fase 4 - Ottimizzazioni ✅
+- [x] Notifiche push Android/Desktop
+- [x] Storage foto cloud (OneDrive)
+- [x] Sistema backup integrato
+- [ ] Sincronizzazione offline avanzata
 - [ ] Report e analytics
-- [ ] Esportazione dati
-- [ ] Backup automatici
+- [ ] Esportazione dati Excel
 
 ## 🤝 Contribuire
 

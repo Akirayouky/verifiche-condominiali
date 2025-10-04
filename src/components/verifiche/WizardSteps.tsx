@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useCondomini } from '@/hooks/useCondomini'
 import { useTipologie } from '@/hooks/useTipologie'
 import { Condominio, TipologiaVerifica, CampoPersonalizzato } from '@/lib/types'
-import FotoUploadCloud from '@/components/ui/FotoUploadCloud'
+import FotoUploadVercel from '@/components/ui/FotoUploadVercel'
 
 interface Step1Props {
   selectedCondominio: Condominio | null
@@ -344,7 +344,7 @@ export function Step2({
 
       case 'foto':
         return (
-          <FotoUploadCloud
+          <FotoUploadVercel
             value={value || []}
             onChange={(foto) => handleFieldChange(campo, foto)}
             lavorazioneId={lavorazioneId || `temp-${Date.now()}`}
