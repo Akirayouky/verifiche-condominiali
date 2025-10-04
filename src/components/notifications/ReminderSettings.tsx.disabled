@@ -1,0 +1,516 @@
+/**
+ * Component per gestione configurazione reminder utente
+ * Pannello di controllo per impostazioni personalizzate notifiche
+ */
+
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { toast } from 'react-hot-toast'
+import { 
+  Bell, 
+  Clock, 
+  Calendar, 
+  Settings, 
+  Plus, 
+  Trash2, 
+  Save,
+  AlertCircle,
+  CheckCircle
+} from 'lucide-react'
+
+interface ReminderConfig {
+  id: string
+  nome: string
+  descrizione: string
+  tipo: 'scadenza_lavorazioni' | 'controllo_giornaliero' | 'report_settimanale' | 'personalizzato'
+  frequenza: 'giornaliera' | 'settimanale' | 'mensile'
+  ora_invio: string
+  giorni_settimana: number[]
+  giorni_anticipo?: number
+  attivo: boolean
+  utente_id: string
+  ultima_esecuzione?: string
+  prossima_esecuzione?: string
+}
+
+interface ReminderSettingsProps {
+  userId: string
+}
+
+const giorni = [
+  { value: 0, label: 'Domenica' },
+  { value: 1, label: 'Lunedì' },
+  { value: 2, label: 'Martedì' },
+  { value: 3, label: 'Mercoledì' },
+  { value: 4, label: 'Giovedì' },
+  { value: 5, label: 'Venerdì' },
+  { value: 6, label: 'Sabato' }
+]
+
+const tipiReminder = [
+  {
+    value: 'scadenza_lavorazioni',
+    label: 'Scadenze lavorazioni',
+    description: 'Notifica per lavorazioni in scadenza'
+  },
+  {
+    value: 'controllo_giornaliero',
+    label: 'Controllo giornaliero',
+    description: 'Riepilogo giornaliero delle attività'
+  },
+  {
+    value: 'report_settimanale',
+    label: 'Report settimanale',
+    description: 'Report delle attività completate'
+  },
+  {
+    value: 'personalizzato',
+    label: 'Personalizzato',
+    description: 'Reminder personalizzabile'
+  }
+]
+
+export default function ReminderSettings({ userId }: ReminderSettingsProps) {
+  const [reminders, setReminders] = useState<ReminderConfig[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showNewReminder, setShowNewReminder] = useState(false)
+  const [newReminder, setNewReminder] = useState<Partial<ReminderConfig>>({
+    nome: '',
+    descrizione: '',
+    tipo: 'personalizzato',
+    frequenza: 'giornaliera',
+    ora_invio: '09:00',
+    giorni_settimana: [1, 2, 3, 4, 5], // Lun-Ven default
+    attivo: true,
+    utente_id: userId
+  })
+
+  // Carica reminders esistenti
+  useEffect(() => {
+    caricaReminders()
+  }, [userId])
+
+  const caricaReminders = async () => {
+    try {
+      setIsLoading(true)
+      
+      const { data, error } = await supabase
+        .from('reminder_configs')
+        .select('*')
+        .eq('utente_id', userId)
+        .order('nome')
+
+      if (error) throw error
+
+      setReminders(data || [])
+      
+    } catch (error) {
+      console.error('Errore caricamento reminders:', error)
+      toast.error('Errore nel caricamento delle impostazioni')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const salvaReminder = async (reminder: Partial<ReminderConfig>, isNew = false) => {
+    try {
+      setIsSaving(true)
+
+      if (isNew) {
+        const { data, error } = await supabase
+          .from('reminder_configs')
+          .insert([{
+            ...reminder,
+            utente_id: userId
+          }])
+          .select()
+
+        if (error) throw error
+        
+        if (data) {
+          setReminders(prev => [...prev, data[0]])
+          setNewReminder({
+            nome: '',
+            descrizione: '',
+            tipo: 'personalizzato',
+            frequenza: 'giornaliera',
+            ora_invio: '09:00',
+            giorni_settimana: [1, 2, 3, 4, 5],
+            attivo: true,
+            utente_id: userId
+          })
+          setShowNewReminder(false)
+          toast.success('Reminder creato con successo')
+        }
+      } else {
+        const { error } = await supabase
+          .from('reminder_configs')
+          .update(reminder)
+          .eq('id', reminder.id)
+
+        if (error) throw error
+
+        setReminders(prev => 
+          prev.map(r => 
+            r.id === reminder.id 
+              ? { ...r, ...reminder } 
+              : r
+          )
+        )
+        
+        toast.success('Reminder aggiornato')
+      }
+      
+    } catch (error) {
+      console.error('Errore salvataggio reminder:', error)
+      toast.error('Errore nel salvataggio')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const eliminaReminder = async (id: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questo reminder?')) return
+
+    try {
+      const { error } = await supabase
+        .from('reminder_configs')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      setReminders(prev => prev.filter(r => r.id !== id))
+      toast.success('Reminder eliminato')
+      
+    } catch (error) {
+      console.error('Errore eliminazione reminder:', error)
+      toast.error('Errore nell\'eliminazione')
+    }
+  }
+
+  const toggleReminder = async (id: string, attivo: boolean) => {
+    await salvaReminder({ id, attivo })
+  }
+
+  const formatProssimaEsecuzione = (prossima?: string) => {
+    if (!prossima) return 'Non pianificata'
+    return new Date(prossima).toLocaleString('it-IT')
+  }
+
+  const getBadgeColor = (tipo: string) => {
+    switch (tipo) {
+      case 'scadenza_lavorazioni': return 'destructive'
+      case 'controllo_giornaliero': return 'default'
+      case 'report_settimanale': return 'secondary'
+      case 'personalizzato': return 'outline'
+      default: return 'default'
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Impostazioni Reminder
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-20 bg-gray-100 rounded animate-pulse" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header con statistiche */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Impostazioni Reminder
+          </CardTitle>
+          <CardDescription>
+            Configura notifiche automatiche per le tue lavorazioni
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{reminders.length}</div>
+              <div className="text-sm text-gray-500">Reminder configurati</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {reminders.filter(r => r.attivo).length}
+              </div>
+              <div className="text-sm text-gray-500">Attivi</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {reminders.filter(r => r.tipo === 'scadenza_lavorazioni').length}
+              </div>
+              <div className="text-sm text-gray-500">Controllo scadenze</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lista reminders esistenti */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>I tuoi Reminder</CardTitle>
+            <Button 
+              onClick={() => setShowNewReminder(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Nuovo Reminder
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {reminders.map(reminder => (
+              <div 
+                key={reminder.id} 
+                className="border rounded-lg p-4 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={reminder.attivo}
+                      onCheckedChange={(checked) => toggleReminder(reminder.id, checked)}
+                    />
+                    <div>
+                      <h4 className="font-medium">{reminder.nome}</h4>
+                      <p className="text-sm text-gray-500">{reminder.descrizione}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={getBadgeColor(reminder.tipo)}>
+                      {tipiReminder.find(t => t.value === reminder.tipo)?.label}
+                    </Badge>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => eliminaReminder(reminder.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{reminder.ora_invio}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{reminder.frequenza}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {reminder.attivo ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-gray-400" />
+                    )}
+                    <span>
+                      {reminder.attivo ? 'Attivo' : 'Disattivato'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Prossima: {formatProssimaEsecuzione(reminder.prossima_esecuzione)}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                  {reminder.giorni_settimana.map(giorno => (
+                    <Badge key={giorno} variant="outline" className="text-xs">
+                      {giorni.find(g => g.value === giorno)?.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {reminders.length === 0 && (
+              <div className="text-center py-8">
+                <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">Nessun reminder configurato</p>
+                <Button 
+                  onClick={() => setShowNewReminder(true)}
+                  className="mt-4"
+                >
+                  Crea il tuo primo reminder
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Form nuovo reminder */}
+      {showNewReminder && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Nuovo Reminder</CardTitle>
+            <CardDescription>
+              Configura un nuovo reminder personalizzato
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input
+                  value={newReminder.nome}
+                  onChange={(e) => setNewReminder(prev => ({ ...prev, nome: e.target.value }))}
+                  placeholder="Nome del reminder"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select
+                  value={newReminder.tipo}
+                  onValueChange={(value) => setNewReminder(prev => ({ ...prev, tipo: value as any }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tipiReminder.map(tipo => (
+                      <SelectItem key={tipo.value} value={tipo.value}>
+                        {tipo.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Frequenza</Label>
+                <Select
+                  value={newReminder.frequenza}
+                  onValueChange={(value) => setNewReminder(prev => ({ ...prev, frequenza: value as any }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="giornaliera">Giornaliera</SelectItem>
+                    <SelectItem value="settimanale">Settimanale</SelectItem>
+                    <SelectItem value="mensile">Mensile</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Ora invio</Label>
+                <Input
+                  type="time"
+                  value={newReminder.ora_invio}
+                  onChange={(e) => setNewReminder(prev => ({ ...prev, ora_invio: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {newReminder.tipo === 'scadenza_lavorazioni' && (
+              <div className="space-y-2">
+                <Label>Giorni di anticipo</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={newReminder.giorni_anticipo || 3}
+                  onChange={(e) => setNewReminder(prev => ({ 
+                    ...prev, 
+                    giorni_anticipo: parseInt(e.target.value) 
+                  }))}
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Descrizione</Label>
+              <Textarea
+                value={newReminder.descrizione}
+                onChange={(e) => setNewReminder(prev => ({ ...prev, descrizione: e.target.value }))}
+                placeholder="Descrizione opzionale"
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Giorni della settimana</Label>
+              <div className="flex flex-wrap gap-2">
+                {giorni.map(giorno => (
+                  <label key={giorno.value} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newReminder.giorni_settimana?.includes(giorno.value)}
+                      onChange={(e) => {
+                        const giorni_settimana = newReminder.giorni_settimana || []
+                        if (e.target.checked) {
+                          setNewReminder(prev => ({
+                            ...prev,
+                            giorni_settimana: [...giorni_settimana, giorno.value].sort()
+                          }))
+                        } else {
+                          setNewReminder(prev => ({
+                            ...prev,
+                            giorni_settimana: giorni_settimana.filter(g => g !== giorno.value)
+                          }))
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm">{giorno.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowNewReminder(false)}
+              >
+                Annulla
+              </Button>
+              <Button
+                onClick={() => salvaReminder(newReminder, true)}
+                disabled={!newReminder.nome || isSaving}
+                className="flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isSaving ? 'Salvataggio...' : 'Salva Reminder'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}

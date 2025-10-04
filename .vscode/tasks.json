@@ -28,6 +28,27 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "test-notification-system",
+			"type": "shell",
+			"command": "cd /Users/akirayouky/Desktop/Siti/Condomini && echo '=== Test Sistema Notifiche ===' && echo '1. Verifica API endpoints...' && curl -s -X GET http://localhost:3000/api/notifications/scheduler && echo -e '\\n\\n2. Test controllo scadenze...' && curl -s -X POST http://localhost:3000/api/notifications/scheduler -H 'Content-Type: application/json' -d '{\"action\":\"check-scadenze\"}' && echo -e '\\n\\n3. Test reminder giornalieri...' && curl -s -X POST http://localhost:3000/api/notifications/scheduler -H 'Content-Type: application/json' -d '{\"action\":\"send-daily-reminders\"}' && echo -e '\\n\\nTest completati!'",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "run-dev-server",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "test-build-notifiche",
+			"type": "shell",
+			"command": "npm run build && echo '\\n✅ Build completato con successo!\\n🎉 Sistema notifiche integrato nel PannelloAdmin' && echo '📋 Funzionalità disponibili:' && echo '  - Tab notifiche nel pannello admin' && echo '  - Controlli sistema (scadenze, reminder, cleanup)' && echo '  - Notifiche automatiche per azioni admin' && echo '  - API scheduler per automazione' && echo '\\n🚀 Per testare: npm run dev e aprire /admin'",
+			"isBackground": false,
+			"group": "test"
 		}
 	]
 }

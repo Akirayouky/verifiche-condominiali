@@ -132,7 +132,10 @@ export async function PUT(
         break
 
       case 'riapri':
+        console.log('🔄 API Riapertura - Stato attuale:', lavorazioneEsistente.stato)
+        
         if (lavorazioneEsistente.stato !== 'completata') {
+          console.log('❌ Errore riapertura: stato non è completata')
           return NextResponse.json(
             { success: false, error: 'Solo le lavorazioni completate possono essere riaperte' },
             { status: 400 }
@@ -144,11 +147,16 @@ export async function PUT(
           // Rimosso data_riapertura perché non esiste nella tabella
         }
         
+        console.log('📝 Motivo riapertura:', dati?.motivo)
+        
         // Aggiungi nota di riapertura se presente motivo
         if (dati && dati.motivo) {
           const noteEsistenti = lavorazioneEsistente.note || ''
           updateData.note = noteEsistenti ? `${noteEsistenti}\nRiapertura: ${dati.motivo}` : `Riapertura: ${dati.motivo}`
+          console.log('✅ Note aggiornate:', updateData.note)
         }
+        
+        console.log('🔄 UpdateData riapertura:', updateData)
         break
 
       case 'assegna':

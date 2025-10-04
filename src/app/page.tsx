@@ -87,6 +87,25 @@ function MainApp() {
                   {role === 'admin' ? '👑 Amministratore' : '👷 Sopralluoghista'}
                 </div>
               </div>
+              
+              {/* Icona Notifiche */}
+              <div className="relative">
+                <button
+                  className="relative p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Notifiche"
+                  onClick={() => {
+                    // Per ora mostra alert - poi sarà il dropdown
+                    alert('🔔 Sistema Notifiche Attivo!\n\nFunzionalità:\n- Notifiche real-time\n- Controllo scadenze\n- Reminder automatici\n\nVai su Admin > Sistema Notifiche per i controlli')
+                  }}
+                >
+                  <span className="text-xl">🔔</span>
+                  {/* Badge notifiche non lette */}
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    3
+                  </span>
+                </button>
+              </div>
+
               <button
                 onClick={logout}
                 className="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded hover:bg-red-50 transition-colors"

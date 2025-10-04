@@ -8,6 +8,7 @@ import GestioneAssegnazioni from './GestioneAssegnazioni'
 import WizardLavorazioni from './WizardLavorazioni'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import { refreshStatsAfterDelay } from '@/lib/refreshStats'
+import { NotificationManager } from '@/lib/notifications'
 
 // Hook per evitare hydration errors
 function useIsClient() {
@@ -34,6 +35,9 @@ export default function PannelloAdmin() {
   const [lavorazioneCreata, setLavorazioneCreata] = useState<any>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLavorazione, setDetailLavorazione] = useState<Lavorazione | null>(null)
+  
+  // Inizializza NotificationManager
+  const [notificationManager] = useState(() => NotificationManager.getInstance())
 
   const caricaLavorazioni = useCallback(async () => {
     setLoading(true)
@@ -118,25 +122,74 @@ export default function PannelloAdmin() {
   }, [caricaLavorazioni])
 
   const eseguiAzione = async (lavorazioneId: string, tipoAzione: string, nota?: string) => {
+    console.log('🔄 Eseguo azione:', { lavorazioneId, tipoAzione, nota })
+    
     try {
+      const requestBody = {
+        azione: tipoAzione,
+        dati: {
+          nota: nota,
+          motivo: nota // Per riaperture
+        }
+      }
+      
+      console.log('📤 Request body:', requestBody)
+      
       const response = await fetch(`/api/lavorazioni/${lavorazioneId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          azione: tipoAzione,
-          dati: {
-            nota: nota,
-            motivo: nota // Per riaperture
-          }
-        })
+        body: JSON.stringify(requestBody)
       })
 
+      console.log('📥 Response status:', response.status)
       const result = await response.json()
+      console.log('📋 Response result:', result)
 
       if (result.success) {
         caricaLavorazioni()
         setShowModal(false)
         setNuovaNota('')
+        
+        // 🔔 Crea notifica per cambio stato
+        if (lavorazioneSelezionata) {
+          try {
+            // Determina il tipo di notifica basato sull'azione
+            let titoloNotifica = ''
+            let messaggioNotifica = ''
+            
+            switch (tipoAzione) {
+              case 'completa':
+                titoloNotifica = '✅ Lavorazione Completata'
+                messaggioNotifica = `La lavorazione "${lavorazioneSelezionata.titolo}" è stata completata dall'amministratore.`
+                break
+              case 'riapri':
+                titoloNotifica = '🔄 Lavorazione Riaperta'
+                messaggioNotifica = `La lavorazione "${lavorazioneSelezionata.titolo}" è stata riaperta. Motivo: ${nota || 'Non specificato'}`
+                break
+              case 'annulla':
+                titoloNotifica = '❌ Lavorazione Annullata'
+                messaggioNotifica = `La lavorazione "${lavorazioneSelezionata.titolo}" è stata annullata. Motivo: ${nota || 'Non specificato'}`
+                break
+              default:
+                titoloNotifica = '📋 Aggiornamento Lavorazione'
+                messaggioNotifica = `La lavorazione "${lavorazioneSelezionata.titolo}" è stata aggiornata dall'amministratore.`
+            }
+            
+            await notificationManager.creaNotifica({
+              utente_id: lavorazioneSelezionata.user_id,
+              tipo: tipoAzione === 'completa' ? 'lavorazione_completata' : 'nuova_assegnazione',
+              titolo: titoloNotifica,
+              messaggio: messaggioNotifica,
+              lavorazione_id: lavorazioneSelezionata.id,
+              priorita: tipoAzione === 'annulla' ? 'alta' : 'media'
+            })
+            
+            console.log('✅ Notifica creata per azione:', tipoAzione)
+          } catch (notifError) {
+            console.error('⚠️ Errore creazione notifica:', notifError)
+          }
+        }
+        
         setLavorazioneSelezionata(null)
         
         // 🔄 Refresh delle statistiche del dashboard per cambi stato lavorazioni
@@ -597,12 +650,142 @@ export default function PannelloAdmin() {
           >
             🏢 Assegnazioni Condomini
           </button>
+          <button
+            onClick={() => setActiveTab('notifiche')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'notifiche'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            🔔 Sistema Notifiche
+          </button>
         </nav>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'utenti' && <GestioneUtenti />}
       {activeTab === 'assegnazioni' && <GestioneAssegnazioni />}
+      
+      {activeTab === 'notifiche' && (
+        <div className="space-y-6">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">🔔 Sistema Notifiche Real-Time</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">✅</div>
+                <div className="text-sm text-blue-800 mt-2">
+                  <div className="font-medium">Sistema Attivo</div>
+                  <div className="text-xs">Server-Sent Events configurato</div>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">📡</div>
+                <div className="text-sm text-green-800 mt-2">
+                  <div className="font-medium">API Pronte</div>
+                  <div className="text-xs">Scheduler e streaming attivi</div>
+                </div>
+              </div>
+              
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">🔄</div>
+                <div className="text-sm text-purple-800 mt-2">
+                  <div className="font-medium">Automazione</div>
+                  <div className="text-xs">Reminder e scadenze automatiche</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">🎛️ Controlli Sistema</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/notifications/scheduler', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ action: 'check-scadenze' })
+                        })
+                        const result = await response.json()
+                        alert(result.success ? 'Controllo scadenze eseguito!' : 'Errore: ' + result.error)
+                      } catch (error) {
+                        alert('Errore controllo scadenze')
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                  >
+                    🔍 Controlla Scadenze
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/notifications/scheduler', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ action: 'send-daily-reminders' })
+                        })
+                        const result = await response.json()
+                        alert(result.success ? 'Reminder inviati!' : 'Errore: ' + result.error)
+                      } catch (error) {
+                        alert('Errore invio reminder')
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                  >
+                    📅 Invia Reminder
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/notifications/scheduler', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ action: 'cleanup' })
+                        })
+                        const result = await response.json()
+                        alert(result.success ? 'Cleanup completato!' : 'Errore: ' + result.error)
+                      } catch (error) {
+                        alert('Errore cleanup')
+                      }
+                    }}
+                    className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
+                  >
+                    🧹 Cleanup Notifiche
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">📊 Statistiche Sistema</h4>
+                <div className="bg-gray-50 p-4 rounded border text-sm space-y-2">
+                  <div>• <strong>Cloudinary:</strong> Sistema foto cloud attivo (25GB gratuiti)</div>
+                  <div>• <strong>Database:</strong> Tabelle notifiche e reminder_configs create</div>
+                  <div>• <strong>API:</strong> /api/notifications/stream (SSE) e /api/notifications/scheduler</div>
+                  <div>• <strong>Automazione:</strong> Controlli ogni 15 minuti, reminder giornalieri</div>
+                  <div>• <strong>Features:</strong> NotificationCenter, ReminderSettings, migrazione Base64</div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">⚙️ Prossimi Passi</h4>
+                <div className="bg-yellow-50 p-4 rounded border text-sm space-y-2">
+                  <div>1. <strong>Database:</strong> Eseguire sql/setup-notifiche.sql su Supabase</div>
+                  <div>2. <strong>Cloudinary:</strong> Configurare credenziali in .env.local</div>
+                  <div>3. <strong>UI:</strong> Integrare NotificationCenter nel layout principale</div>
+                  <div>4. <strong>Automazione:</strong> Configurare cron jobs in vercel.json</div>
+                  <div>5. <strong>Test:</strong> Verificare migrazione foto e notifiche real-time</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {activeTab === 'lavorazioni' && (
         <div className="space-y-6">

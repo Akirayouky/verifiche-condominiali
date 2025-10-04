@@ -160,3 +160,73 @@ export interface AuthState {
   user: User | null
   role: 'admin' | 'sopralluoghista' | null
 }
+
+// Gestione foto cloud (Cloudinary)
+export interface FotoCloud {
+  url: string          // URL pubblico Cloudinary
+  publicId: string     // ID interno Cloudinary per gestione
+  thumbnailUrl?: string // URL thumbnail ottimizzato
+  createdAt?: string   // Timestamp creazione
+}
+
+// Interfaccia per componente FotoUpload aggiornato
+export interface FotoUploadCloudProps {
+  value: FotoCloud[]   // Array di foto cloud invece di Base64
+  onChange: (foto: FotoCloud[]) => void
+  lavorazioneId: string // Necessario per organizzazione Cloudinary
+  maxFoto?: number
+  required?: boolean
+  nome: string
+}
+
+// Sistema Notifiche Real-Time
+export interface Notifica {
+  id: string
+  tipo: 'scadenza_imminente' | 'nuova_assegnazione' | 'lavorazione_completata' | 'reminder_personalizzato' | 'urgente'
+  titolo: string
+  messaggio: string
+  utente_id: string
+  lavorazione_id?: string
+  condominio_id?: string
+  priorita: 'bassa' | 'media' | 'alta' | 'urgente'
+  letta: boolean
+  data_creazione: string
+  data_scadenza?: string
+  azioni?: NotificaAzione[]
+}
+
+export interface NotificaAzione {
+  id: string
+  label: string
+  action: string
+  tipo: 'primary' | 'secondary' | 'danger'
+  url?: string
+}
+
+// Configurazione Reminder Personalizzabili
+export interface ReminderConfig {
+  id: string
+  utente_id: string
+  nome: string
+  descrizione: string
+  tipo: 'scadenza_lavorazioni' | 'controllo_giornaliero' | 'report_settimanale' | 'personalizzato'
+  frequenza: 'giornaliera' | 'settimanale' | 'mensile' | 'custom'
+  giorni_anticipo?: number
+  ora_invio: string // HH:MM format
+  giorni_settimana?: number[] // 0=domenica, 1=lunedì, etc.
+  attivo: boolean
+  ultima_esecuzione?: string
+  prossima_esecuzione?: string
+  canali: ('app' | 'email' | 'sms')[]
+}
+
+// Event Types per Server-Sent Events
+export interface NotificationEvent {
+  type: 'notification' | 'reminder' | 'scadenza' | 'heartbeat' | 'existing_notification'
+  data: {
+    notifica?: Notifica
+    timestamp: string
+    utente_id: string
+    message?: string
+  }
+}
