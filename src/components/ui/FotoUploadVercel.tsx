@@ -110,9 +110,30 @@ export default function FotoUploadVercel({
       if (data.success) {
         console.log('✅ Foto uploaded successfully to Vercel Blob:', data.foto)
         
-        // Estrai solo gli URL dalle foto (compatibilità con database)
+        // Estrai URL e dati GPS dalle foto
         const fotoUrls = data.foto.map((f: FotoVercel) => f.url)
+        const fotoConGeo = data.foto
+          .filter((f: FotoVercel) => f.geo)
+          .map((f: FotoVercel) => ({
+            fotoUrl: f.url,
+            latitude: f.geo!.latitude,
+            longitude: f.geo!.longitude,
+            accuracy: f.geo!.accuracy
+          }))
+        
+        // Salva URL foto (compatibilità)
         onChange([...value, ...fotoUrls])
+        
+        // Salva dati GPS in localStorage temporaneo (saranno raccolti dal wizard)
+        if (fotoConGeo.length > 0) {
+          try {
+            const existing = JSON.parse(localStorage.getItem('foto_geo_temp') || '[]')
+            localStorage.setItem('foto_geo_temp', JSON.stringify([...existing, ...fotoConGeo]))
+            console.log('📍 GPS salvato per', fotoConGeo.length, 'foto')
+          } catch (e) {
+            console.error('Errore salvataggio GPS temp:', e)
+          }
+        }
         
         if (data.errori && data.errori.length > 0) {
           setError(`${data.errori.length} foto non caricate correttamente`)

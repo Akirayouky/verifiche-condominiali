@@ -198,6 +198,20 @@ export default function WizardVerifiche({
       if (isLavorazioneMode && lavorazione) {
         // Modalità lavorazione: aggiorna la lavorazione esistente
         
+        // Raccogli dati GPS da localStorage
+        let fotoGeo: Array<{fotoUrl: string, latitude: number, longitude: number, accuracy?: number}> = []
+        try {
+          const geoTemp = localStorage.getItem('foto_geo_temp')
+          if (geoTemp) {
+            fotoGeo = JSON.parse(geoTemp)
+            console.log('📍 Recuperati dati GPS da localStorage:', fotoGeo.length, 'foto')
+            // Pulisci localStorage dopo l'uso
+            localStorage.removeItem('foto_geo_temp')
+          }
+        } catch (e) {
+          console.error('Errore recupero GPS temp:', e)
+        }
+        
         // Estrai TUTTE le foto da TUTTI i campi di datiVerifica, preservando la sezione
         const fotoDaSezioni: Record<string, string[]> = {}
         let totaleFoto = 0
@@ -212,6 +226,7 @@ export default function WizardVerifiche({
         
         console.log('📸 Completamento lavorazione - Foto per sezione:', fotoDaSezioni)
         console.log('📸 Totale foto trovate:', totaleFoto)
+        console.log('📍 Foto con GPS:', fotoGeo.length)
         
         const response = await fetch(`/api/lavorazioni/${lavorazione.id}`, {
           method: 'PUT',
@@ -221,6 +236,7 @@ export default function WizardVerifiche({
             dati: {
               dati_verifica: datiVerifica,
               foto: fotoDaSezioni, // Oggetto con foto per sezione
+              foto_geo: fotoGeo.length > 0 ? fotoGeo : undefined, // GPS metadata
               firma: firmaUrl, // URL firma digitale
               note: note
             }

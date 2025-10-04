@@ -20,6 +20,13 @@ export interface LavorazionePDF {
   note?: string
   allegati?: string
   dati_completamento?: any
+  firma?: string  // URL firma digitale
+  geolocations?: Array<{  // GPS metadata per foto
+    fotoUrl: string
+    latitude: number
+    longitude: number
+    accuracy?: number
+  }>
 }
 
 export class PDFGenerator {
@@ -342,6 +349,29 @@ export class PDFGenerator {
                     if (!successo) {
                       console.error(`❌ Impossibile aggiungere foto da ${titoloSezione}`)
                     }
+                    
+                    // Aggiungi mappa GPS se disponibile per questa foto
+                    const geoData = lavorazione.geolocations?.find(g => g.fotoUrl === fotoUrl)
+                    if (geoData) {
+                      this.doc.setFontSize(9)
+                      this.doc.setTextColor(100, 100, 100)
+                      this.doc.text(`📍 GPS: ${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`, this.margin, this.currentY)
+                      this.currentY += 5
+                      
+                      // Aggiungi mini mappa (usando OpenStreetMap Static)
+                      try {
+                        const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${geoData.latitude},${geoData.longitude}&zoom=16&size=300x150&maptype=mapnik&markers=${geoData.latitude},${geoData.longitude},red`
+                        const mapSuccess = await this.addImage(mapUrl, 80, 40)
+                        if (mapSuccess) {
+                          console.log('🗺️ Mappa GPS aggiunta al PDF')
+                        }
+                      } catch (error) {
+                        console.error('❌ Errore aggiunta mappa GPS:', error)
+                      }
+                      
+                      this.doc.setTextColor(0, 0, 0)
+                      this.doc.setFontSize(10)
+                    }
                   }
                 }
                 
@@ -362,6 +392,29 @@ export class PDFGenerator {
                 if (!successo) {
                   console.error(`❌ Impossibile aggiungere foto`)
                 }
+                
+                // Aggiungi mappa GPS se disponibile per questa foto
+                const geoData = lavorazione.geolocations?.find(g => g.fotoUrl === fotoUrl)
+                if (geoData) {
+                  this.doc.setFontSize(9)
+                  this.doc.setTextColor(100, 100, 100)
+                  this.doc.text(`📍 GPS: ${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`, this.margin, this.currentY)
+                  this.currentY += 5
+                  
+                  // Aggiungi mini mappa
+                  try {
+                    const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${geoData.latitude},${geoData.longitude}&zoom=16&size=300x150&maptype=mapnik&markers=${geoData.latitude},${geoData.longitude},red`
+                    const mapSuccess = await this.addImage(mapUrl, 80, 40)
+                    if (mapSuccess) {
+                      console.log('🗺️ Mappa GPS aggiunta al PDF')
+                    }
+                  } catch (error) {
+                    console.error('❌ Errore aggiunta mappa GPS:', error)
+                  }
+                  
+                  this.doc.setTextColor(0, 0, 0)
+                  this.doc.setFontSize(10)
+                }
               }
             }
           }
@@ -380,12 +433,28 @@ export class PDFGenerator {
       this.addSeparator()
     }
     
-    // Firma digitale (placeholder)
+    // Firma digitale
     this.addSubtitle('VALIDAZIONE')
     this.addText('Questo documento è stato generato automaticamente dal sistema di gestione verifiche condominiali.')
     this.addText(`Data generazione: ${new Date().toLocaleString('it-IT')}`)
     if (lavorazione.stato === 'completata') {
       this.addText('✓ Verifica completata e validata dal sopralluoghista assegnato')
+      
+      // Aggiungi firma digitale se presente
+      if (lavorazione.firma) {
+        this.currentY += 10
+        this.addText('Firma digitale del sopralluoghista:')
+        this.currentY += 5
+        
+        try {
+          // Carica e inserisci la firma nel PDF (dimensioni ridotte per firma)
+          await this.addImage(lavorazione.firma, 100, 40)
+          console.log('✍️ Firma aggiunta al PDF')
+        } catch (error) {
+          console.error('❌ Errore aggiunta firma al PDF:', error)
+          this.addText('[Firma digitale non disponibile]')
+        }
+      }
     }
     
     // Footer
