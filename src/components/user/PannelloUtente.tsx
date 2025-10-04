@@ -5,6 +5,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Lavorazione, Condominio, TipologiaVerifica } from '@/lib/types'
 import WizardVerifiche from '@/components/verifiche/WizardVerifiche'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
+import dynamic from 'next/dynamic'
+
+// Carica QrScanner solo lato client
+const QrScanner = dynamic(() => import('@/components/ui/QrScanner'), { ssr: false })
 
 interface ModalDettaglioProps {
   lavorazione: Lavorazione
@@ -321,6 +325,7 @@ export default function PannelloUtente() {
   const [showWizard, setShowWizard] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLavorazione, setDetailLavorazione] = useState<Lavorazione | null>(null)
+  const [showQrScanner, setShowQrScanner] = useState(false)
 
   const caricaLavorazioni = useCallback(async () => {
     if (!user?.id) return
@@ -355,6 +360,45 @@ export default function PannelloUtente() {
   const iniziaLavorazione = (lavorazione: Lavorazione) => {
     setSelectedLavorazione(lavorazione)
     setShowWizard(true)
+  }
+
+  const handleQrScan = async (qrCode: string) => {
+    try {
+      // Trova il condominio dal QR code
+      const condominioResponse = await fetch(`/api/condomini`)
+      const condominioResult = await condominioResponse.json()
+      
+      if (!condominioResult.success) {
+        alert('❌ Errore nel caricamento dei condomini')
+        return
+      }
+      
+      const condominio = condominioResult.data.find((c: Condominio) => c.qr_code === qrCode)
+      
+      if (!condominio) {
+        alert('❌ QR Code non riconosciuto. Assicurati di scansionare un QR code valido.')
+        return
+      }
+      
+      // Trova una lavorazione aperta per questo condominio e questo utente
+      const lavorazioneAperta = lavorazioni.find(l => 
+        l.condominio_id === condominio.id && 
+        (l.stato === 'aperta' || l.stato === 'in_corso' || l.stato === 'riaperta')
+      )
+      
+      if (!lavorazioneAperta) {
+        alert(`❌ Nessuna lavorazione aperta trovata per il condominio "${condominio.nome}".\n\nVerifica che ti sia stata assegnata una lavorazione per questo condominio.`)
+        return
+      }
+      
+      // Apri direttamente il wizard con questa lavorazione
+      setShowQrScanner(false)
+      iniziaLavorazione(lavorazioneAperta)
+      
+    } catch (error) {
+      console.error('Errore durante la ricerca della lavorazione:', error)
+      alert('❌ Errore durante la ricerca della lavorazione')
+    }
   }
 
   const mostraDettaglio = (lavorazione: Lavorazione) => {
@@ -483,6 +527,14 @@ export default function PannelloUtente() {
 
   return (
     <div className="space-y-6">
+      {/* QR Scanner Modal */}
+      {showQrScanner && (
+        <QrScanner
+          onScan={handleQrScan}
+          onClose={() => setShowQrScanner(false)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -495,32 +547,42 @@ export default function PannelloUtente() {
           </p>
         </div>
         
-        <button
-          onClick={async () => {
-            if (window.confirm('Sei sicuro di voler pulire tutte le notifiche lette? Questa azione non può essere annullata.')) {
-              try {
-                const response = await fetch(`/api/notifications/cleanup?userId=${user?.id}`, {
-                  method: 'POST'
-                })
-                
-                if (response.ok) {
-                  alert('✅ Notifiche pulite con successo!')
-                  // Ricarica la pagina per aggiornare il contatore notifiche
-                  window.location.reload()
-                } else {
-                  throw new Error('Errore durante la pulizia')
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowQrScanner(true)}
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-6 py-2 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-2 font-medium"
+            title="Scansiona QR Code per aprire verifica"
+          >
+            📷 Scansiona QR
+          </button>
+          
+          <button
+            onClick={async () => {
+              if (window.confirm('Sei sicuro di voler pulire tutte le notifiche lette? Questa azione non può essere annullata.')) {
+                try {
+                  const response = await fetch(`/api/notifications/cleanup?userId=${user?.id}`, {
+                    method: 'POST'
+                  })
+                  
+                  if (response.ok) {
+                    alert('✅ Notifiche pulite con successo!')
+                    // Ricarica la pagina per aggiornare il contatore notifiche
+                    window.location.reload()
+                  } else {
+                    throw new Error('Errore durante la pulizia')
+                  }
+                } catch (error) {
+                  console.error('Errore pulizia notifiche:', error)
+                  alert('❌ Errore durante la pulizia delle notifiche')
                 }
-              } catch (error) {
-                console.error('Errore pulizia notifiche:', error)
-                alert('❌ Errore durante la pulizia delle notifiche')
               }
-            }
-          }}
-          className="bg-orange-100 hover:bg-orange-200 text-orange-800 px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
-          title="Elimina tutte le notifiche lette"
-        >
-          🧹 Pulisci Notifiche
-        </button>
+            }}
+            className="bg-orange-100 hover:bg-orange-200 text-orange-800 px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+            title="Elimina tutte le notifiche lette"
+          >
+            🧹 Pulisci Notifiche
+          </button>
+        </div>
       </div>
 
       {/* Statistiche */}
