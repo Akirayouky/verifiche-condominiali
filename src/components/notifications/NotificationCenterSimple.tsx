@@ -25,6 +25,68 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
   const [notifiche, setNotifiche] = useState<NotificaSimple[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [sseConnected, setSseConnected] = useState(false)
+
+  // Connessione SSE per notifiche real-time
+  useEffect(() => {
+    if (!userId) return
+
+    console.log(`🔗 NotificationCenter: Avvio SSE per user ${userId}`)
+    
+    const eventSource = new EventSource(`/api/notifications/stream?userId=${userId}`)
+    
+    eventSource.onopen = () => {
+      console.log('✅ NotificationCenter: SSE connesso')
+      setSseConnected(true)
+    }
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        console.log('📨 NotificationCenter: Messaggio SSE ricevuto:', data.type)
+        
+        if (data.type === 'notification' || data.type === 'existing_notification') {
+          const notifica = data.data.notifica
+          
+          // Aggiungi o aggiorna notifica
+          setNotifiche(prev => {
+            const exists = prev.find(n => n.id === notifica.id)
+            if (exists) {
+              return prev.map(n => n.id === notifica.id ? {
+                ...n,
+                ...notifica,
+                data_creazione: notifica.data_creazione,
+                stato: notifica.letta ? 'letta' : 'non_letta'
+              } : n)
+            } else {
+              return [{
+                id: notifica.id,
+                titolo: notifica.titolo,
+                messaggio: notifica.messaggio,
+                tipo: notifica.tipo,
+                priorita: notifica.priorita,
+                data_creazione: notifica.data_creazione,
+                stato: notifica.letta ? 'letta' : 'non_letta'
+              }, ...prev]
+            }
+          })
+        }
+      } catch (error) {
+        console.error('❌ NotificationCenter: Errore parsing SSE:', error)
+      }
+    }
+    
+    eventSource.onerror = (error) => {
+      console.error('❌ NotificationCenter: Errore SSE:', error)
+      setSseConnected(false)
+    }
+
+    return () => {
+      console.log('🔌 NotificationCenter: Chiudo SSE')
+      eventSource.close()
+      setSseConnected(false)
+    }
+  }, [userId])
 
   // Carica notifiche quando si apre il dropdown
   const caricaNotifiche = async () => {
@@ -137,11 +199,15 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
     <div className="relative">
       {/* Icona Campanella */}
       <button
-        className="relative p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-        title="Notifiche"
+        className={`relative p-2 transition-colors rounded-lg ${
+          sseConnected 
+            ? 'text-green-600 hover:text-blue-600 hover:bg-blue-50' 
+            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+        }`}
+        title={sseConnected ? "Notifiche (Real-time attivo)" : "Notifiche (Connessione...)"}
         onClick={() => {
           setShowDropdown(!showDropdown)
-          if (!showDropdown) {
+          if (!showDropdown && !sseConnected) {
             caricaNotifiche()
           }
         }}
@@ -171,11 +237,17 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
                 ✕
               </button>
             </div>
-            {nonLette > 0 && (
-              <p className="text-xs text-gray-500 mt-1">
-                {nonLette} non {nonLette === 1 ? 'letta' : 'lette'}
-              </p>
-            )}
+            <div className="flex items-center justify-between mt-1">
+              {nonLette > 0 && (
+                <p className="text-xs text-gray-500">
+                  {nonLette} non {nonLette === 1 ? 'letta' : 'lette'}
+                </p>
+              )}
+              <div className={`text-xs flex items-center ${sseConnected ? 'text-green-600' : 'text-orange-600'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${sseConnected ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+                {sseConnected ? 'Real-time' : 'Offline'}
+              </div>
+            </div>
           </div>
 
           {/* Loading */}
