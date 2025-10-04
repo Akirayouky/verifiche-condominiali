@@ -484,14 +484,43 @@ export default function PannelloUtente() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          👷 Pannello Sopralluoghista
-        </h2>
-        <p className="text-gray-600">
-          Benvenuto <strong>{user?.nome} {user?.cognome}</strong>! 
-          Qui trovi tutte le verifiche assegnate da completare.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            👷 Pannello Sopralluoghista
+          </h2>
+          <p className="text-gray-600">
+            Benvenuto <strong>{user?.nome} {user?.cognome}</strong>! 
+            Qui trovi tutte le verifiche assegnate da completare.
+          </p>
+        </div>
+        
+        <button
+          onClick={async () => {
+            if (window.confirm('Sei sicuro di voler pulire tutte le notifiche lette? Questa azione non può essere annullata.')) {
+              try {
+                const response = await fetch(`/api/notifications/cleanup?userId=${user?.id}`, {
+                  method: 'POST'
+                })
+                
+                if (response.ok) {
+                  alert('✅ Notifiche pulite con successo!')
+                  // Ricarica la pagina per aggiornare il contatore notifiche
+                  window.location.reload()
+                } else {
+                  throw new Error('Errore durante la pulizia')
+                }
+              } catch (error) {
+                console.error('Errore pulizia notifiche:', error)
+                alert('❌ Errore durante la pulizia delle notifiche')
+              }
+            }
+          }}
+          className="bg-orange-100 hover:bg-orange-200 text-orange-800 px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+          title="Elimina tutte le notifiche lette"
+        >
+          🧹 Pulisci Notifiche
+        </button>
       </div>
 
       {/* Statistiche */}

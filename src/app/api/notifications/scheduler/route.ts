@@ -83,16 +83,10 @@ async function inviaReminderGiornalieri() {
     const oraAttuale = oggi.toTimeString().slice(0, 5) // HH:MM
     const giornoSettimana = oggi.getDay() // 0=domenica, 1=lunedì, etc.
 
-    const { data: reminders, error } = await supabase
-      .from('reminder_configs')
-      .select(`
-        *, 
-        users!inner(id, nome, cognome, email, role)
-      `)
-      .eq('attivo', true)
-      .contains('giorni_settimana', [giornoSettimana])
-      .lte('ora_invio', oraAttuale)
-      .or(`ultima_esecuzione.is.null,ultima_esecuzione.lt.${oggi.toISOString().slice(0, 10)}T00:00:00`)
+    // Per ora disabiliamo i reminder configurabili dato che la tabella non esiste
+    // TODO: Implementare reminder_configs se necessario
+    const reminders: any[] = []
+    const error = null
 
     if (error) {
       throw error
@@ -301,7 +295,15 @@ async function processaNotificheInCoda() {
  * Cleanup notifiche vecchie
  */
 async function cleanupNotificheVecchie() {
-  const { error } = await supabase.rpc('cleanup_old_notifications')
+  // Elimina notifiche lette più vecchie di 30 giorni
+  const trentaGiorniFa = new Date()
+  trentaGiorniFa.setDate(trentaGiorniFa.getDate() - 30)
+
+  const { error } = await supabase
+    .from('notifiche')
+    .delete()
+    .eq('letta', true)
+    .lt('data_creazione', trentaGiorniFa.toISOString())
   
   if (error) {
     console.error('❌ Errore cleanup:', error)
