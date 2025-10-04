@@ -76,7 +76,10 @@ VALUES
 ('urgente', 'Test Notifica Urgente', 'Test notifica urgente', gen_random_uuid(), 'urgente', true);
 
 -- 9. Verifica struttura finale
-\d notifiche;
+SELECT column_name, data_type, column_default, is_nullable 
+FROM information_schema.columns 
+WHERE table_name = 'notifiche' 
+ORDER BY ordinal_position;
 
 -- 10. Conta record inseriti
 SELECT COUNT(*) as total_notifiche FROM notifiche;
