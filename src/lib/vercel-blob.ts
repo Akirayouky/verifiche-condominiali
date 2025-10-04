@@ -1,22 +1,26 @@
 import { put, del, list } from '@vercel/blob'
+import { GeoLocation } from './geolocation'
 
 export interface FotoBlob {
   url: string
   pathname: string
   downloadUrl: string
+  geo?: GeoLocation
 }
 
 /**
- * Upload foto su Vercel Blob Storage
+ * Upload foto su Vercel Blob Storage con metadata GPS
  * @param base64 - Foto in formato base64
  * @param lavorazioneId - ID della lavorazione
  * @param index - Indice della foto
- * @returns URL pubblico della foto
+ * @param geo - Coordinate GPS (opzionale)
+ * @returns URL pubblico della foto con metadata
  */
 export async function uploadFotoVercelBlob(
   base64: string,
   lavorazioneId: string,
-  index: number
+  index: number,
+  geo?: GeoLocation
 ): Promise<FotoBlob> {
   try {
     // Rimuovi prefix "data:image/...;base64," se presente
@@ -39,7 +43,8 @@ export async function uploadFotoVercelBlob(
       lavorazioneId, 
       index, 
       size: buffer.length,
-      pathname 
+      pathname,
+      hasGeo: !!geo
     })
 
     // Upload su Vercel Blob
@@ -51,10 +56,12 @@ export async function uploadFotoVercelBlob(
 
     console.log('✅ Foto uploaded to Vercel Blob:', blob.url)
 
+    // Restituisci URL con metadata GPS
     return {
       url: blob.url,
       pathname: blob.pathname,
       downloadUrl: blob.downloadUrl,
+      geo: geo || undefined,
     }
 
   } catch (error) {

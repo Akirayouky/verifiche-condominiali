@@ -1,0 +1,1 @@
+{"success":false,"configuration":{"cloud_name":"✅ condomini-app","api_key":"✅ your-a...","api_secret":"✅ SET (hidden)"},"connection":{"configured":"your-api-secret-here","ping_success":false,"error":"Errore ping Cloudinary"},"message":"⚠️ Configurato ma errore connessione: Errore ping Cloudinary"}

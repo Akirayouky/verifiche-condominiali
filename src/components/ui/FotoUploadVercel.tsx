@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
+import { getCurrentPosition, GeoLocation } from '@/lib/geolocation'
 
 export interface FotoVercel {
   url: string
   pathname: string
+  geo?: GeoLocation
 }
 
 interface FotoUploadVercelProps {
@@ -56,6 +58,16 @@ export default function FotoUploadVercel({
     setUploading(true)
 
     try {
+      // 📍 Cattura posizione GPS prima di caricare le foto
+      console.log('📍 Richiedendo posizione GPS...')
+      const geoLocation = await getCurrentPosition()
+      
+      if (geoLocation) {
+        console.log('✅ GPS catturato:', geoLocation)
+      } else {
+        console.warn('⚠️ GPS non disponibile, foto senza geolocalizzazione')
+      }
+
       // Converti file in base64
       const base64Promises = files.map(file => 
         new Promise<string>((resolve, reject) => {
@@ -74,16 +86,18 @@ export default function FotoUploadVercel({
 
       console.log('📤 Uploading foto to Vercel Blob...', { 
         lavorazioneId, 
-        count: fotoBase64.length 
+        count: fotoBase64.length,
+        hasGeo: !!geoLocation
       })
 
-      // Upload su Vercel Blob
+      // Upload su Vercel Blob con metadata GPS
       const response = await fetch('/api/upload-foto-vercel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           foto: fotoBase64,
-          lavorazioneId
+          lavorazioneId,
+          geo: geoLocation // Invia dati GPS con ogni foto
         })
       })
 

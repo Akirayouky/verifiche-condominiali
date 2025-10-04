@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
 import { uploadFotoVercelBlob } from '@/lib/vercel-blob'
+import { GeoLocation } from '@/lib/geolocation'
 
 /**
- * API per upload foto su Vercel Blob Storage
+ * API per upload foto su Vercel Blob Storage con geolocalizzazione
  * POST /api/upload-foto-vercel
- * Body: { foto: string[], lavorazioneId: string }
+ * Body: { foto: string[], lavorazioneId: string, geo?: GeoLocation }
  */
 export async function POST(request: Request) {
   try {
-    const { foto, lavorazioneId } = await request.json()
+    const { foto, lavorazioneId, geo } = await request.json()
 
     if (!foto || !Array.isArray(foto) || foto.length === 0) {
       return NextResponse.json(
@@ -24,11 +25,15 @@ export async function POST(request: Request) {
       )
     }
 
-    console.log(`📤 Uploading ${foto.length} foto to Vercel Blob...`, { lavorazioneId })
+    console.log(`📤 Uploading ${foto.length} foto to Vercel Blob...`, { 
+      lavorazioneId,
+      hasGeo: !!geo,
+      geo: geo ? `${geo.latitude}, ${geo.longitude}` : null
+    })
 
-    // Upload foto in parallelo
+    // Upload foto in parallelo con metadata GPS
     const uploadPromises = foto.map((fotoBase64, index) =>
-      uploadFotoVercelBlob(fotoBase64, lavorazioneId, index)
+      uploadFotoVercelBlob(fotoBase64, lavorazioneId, index, geo as GeoLocation | undefined)
         .catch(error => ({ error: error.message, index }))
     )
 
