@@ -48,28 +48,30 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
         if (data.type === 'notification' || data.type === 'existing_notification') {
           const notifica = data.data.notifica
           
-          // Aggiungi o aggiorna notifica
-          setNotifiche(prev => {
-            const exists = prev.find(n => n.id === notifica.id)
-            if (exists) {
-              return prev.map(n => n.id === notifica.id ? {
-                ...n,
-                ...notifica,
-                data_creazione: notifica.data_creazione,
-                stato: notifica.letta ? 'letta' : 'non_letta'
-              } : n)
-            } else {
-              return [{
-                id: notifica.id,
-                titolo: notifica.titolo,
-                messaggio: notifica.messaggio,
-                tipo: notifica.tipo,
-                priorita: notifica.priorita,
-                data_creazione: notifica.data_creazione,
-                stato: notifica.letta ? 'letta' : 'non_letta'
-              }, ...prev]
-            }
-          })
+          // Solo notifiche non lette vengono mostrate
+          if (!notifica.letta) {
+            setNotifiche(prev => {
+              const exists = prev.find(n => n.id === notifica.id)
+              if (exists) {
+                return prev.map(n => n.id === notifica.id ? {
+                  ...n,
+                  ...notifica,
+                  data_creazione: notifica.data_creazione,
+                  stato: 'non_letta'
+                } : n)
+              } else {
+                return [{
+                  id: notifica.id,
+                  titolo: notifica.titolo,
+                  messaggio: notifica.messaggio,
+                  tipo: notifica.tipo,
+                  priorita: notifica.priorita,
+                  data_creazione: notifica.data_creazione,
+                  stato: 'non_letta'
+                }, ...prev]
+              }
+            })
+          }
         }
       } catch (error) {
         console.error('❌ NotificationCenter: Errore parsing SSE:', error)
@@ -88,13 +90,13 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
     }
   }, [userId])
 
-  // Carica notifiche quando si apre il dropdown
+  // Carica notifiche quando si apre il dropdown (solo non lette)
   const caricaNotifiche = async () => {
     if (!userId) return
     
     try {
       setLoading(true)
-      const response = await fetch(`/api/notifications?userId=${userId}`)
+      const response = await fetch(`/api/notifications?userId=${userId}&onlyUnread=true`)
       
       if (response.ok) {
         const result = await response.json()
@@ -143,18 +145,17 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
   // Conta notifiche non lette
   const nonLette = notifiche.filter(n => n.stato === 'non_letta').length
 
-  // Marca come letta
+  // Marca come letta e rimuovi dalla lista
   const marcaComeLetta = async (id: string) => {
     try {
       await fetch(`/api/notifications/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stato: 'letta' })
+        body: JSON.stringify({ letta: true })
       })
       
-      setNotifiche(prev => 
-        prev.map(n => n.id === id ? { ...n, stato: 'letta' } : n)
-      )
+      // Rimuovi dalla lista dato che mostriamo solo non lette
+      setNotifiche(prev => prev.filter(n => n.id !== id))
     } catch (error) {
       console.error('Errore aggiornamento notifica:', error)
     }
@@ -316,11 +317,24 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
           {notifiche.length > 0 && (
             <div className="px-4 py-3 border-t border-gray-100 text-center">
               <button 
-                onClick={() => {
-                  // Marca tutte come lette
-                  setNotifiche(prev => 
-                    prev.map(n => ({ ...n, stato: 'letta' }))
-                  )
+                onClick={async () => {
+                  try {
+                    // Marca tutte le notifiche correnti come lette
+                    await Promise.all(
+                      notifiche.map(notifica => 
+                        fetch(`/api/notifications/${notifica.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ letta: true })
+                        })
+                      )
+                    )
+                    
+                    // Svuota la lista dato che mostriamo solo non lette
+                    setNotifiche([])
+                  } catch (error) {
+                    console.error('Errore marcatura notifiche:', error)
+                  }
                 }}
                 className="text-xs text-blue-600 hover:text-blue-800"
               >
