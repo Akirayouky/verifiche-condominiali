@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import { Condominio } from '@/lib/types'
+import dynamic from 'next/dynamic'
+
+// Carica QrCodeGenerator solo lato client
+const QrCodeGenerator = dynamic(() => import('@/components/ui/QrCodeGenerator'), { ssr: false })
 
 interface CondominioTableProps {
   condomini: Condominio[]
@@ -20,6 +24,7 @@ export default function CondominioTable({
 }: CondominioTableProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null)
+  const [showQrModal, setShowQrModal] = useState<Condominio | null>(null)
 
   const handleDelete = async (id: string) => {
     setDeletingId(id)
@@ -127,6 +132,16 @@ export default function CondominioTable({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
+                      {/* Pulsante QR Code */}
+                      {condominio.qr_code && (
+                        <button
+                          onClick={() => setShowQrModal(condominio)}
+                          className="text-purple-600 hover:text-purple-900 transition-colors"
+                          title="Mostra QR Code"
+                        >
+                          📷
+                        </button>
+                      )}
                       {onView && (
                         <button
                           onClick={() => onView(condominio)}
@@ -198,6 +213,57 @@ export default function CondominioTable({
                   'Elimina'
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal QR Code */}
+      {showQrModal && showQrModal.qr_code && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowQrModal(null)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 w-96 mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                QR Code Condominio
+              </h3>
+              <button
+                onClick={() => setShowQrModal(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>{showQrModal.nome}</strong>
+              </p>
+              <p className="text-xs text-gray-500 mb-4">
+                {showQrModal.indirizzo || 'Indirizzo non specificato'}
+              </p>
+              
+              <QrCodeGenerator
+                value={showQrModal.qr_code}
+                size={250}
+                level="M"
+                label={showQrModal.nome}
+              />
+              
+              <p className="text-xs text-gray-500 mt-4 font-mono">
+                {showQrModal.qr_code}
+              </p>
+            </div>
+            
+            <div className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded p-3">
+              💡 <strong>Come usare:</strong> Stampa o scarica questo QR code. 
+              Durante la creazione di una verifica, usa il pulsante "📷 Scansiona QR Code" 
+              per selezionare rapidamente questo condominio.
             </div>
           </div>
         </div>
