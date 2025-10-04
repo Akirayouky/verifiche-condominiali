@@ -279,8 +279,6 @@ export class PDFGenerator {
     if (lavorazione.allegati) {
       try {
         const metadata = JSON.parse(lavorazione.allegati)
-        console.log('🔍 PDF Generator - metadata.foto:', metadata.foto)
-        console.log('🔍 PDF Generator - foto type:', typeof metadata.foto, Array.isArray(metadata.foto))
         this.addSubtitle('TIPOLOGIA VERIFICA')
         
         let tipoLabel = 'Altro'
@@ -307,44 +305,59 @@ export class PDFGenerator {
         }
         
         // Foto dalla verifica (Vercel Blob o Cloudinary)
-        if (metadata.foto && Array.isArray(metadata.foto) && metadata.foto.length > 0) {
-          this.addSubtitle('DOCUMENTAZIONE FOTOGRAFICA')
-          this.addText(`Numero foto allegate: ${metadata.foto.length}`)
-          this.currentY += 5
-          
-          // Aggiungi foto una per volta
-          let fotoAggiunte = 0
-          for (const foto of metadata.foto) {
-            // Supporta sia stringhe URL (Vercel Blob) che oggetti {url, createdAt} (Cloudinary)
-            const fotoUrl = typeof foto === 'string' ? foto : foto.url
+        if (metadata.foto) {
+          // Supporta sia oggetto per sezione che array legacy
+          if (typeof metadata.foto === 'object' && !Array.isArray(metadata.foto)) {
+            // Nuovo formato: oggetto con foto per sezione
+            this.addSubtitle('DOCUMENTAZIONE FOTOGRAFICA')
             
-            if (fotoUrl) {
-              console.log(`📸 Aggiungendo foto ${fotoAggiunte + 1}/${metadata.foto.length} al PDF:`, fotoUrl)
-              const successo = await this.addImage(fotoUrl, 140, 140)
-              if (successo) {
-                fotoAggiunte++
-                // Aggiungi info foto (opzionale - solo per oggetti con createdAt)
-                if (typeof foto === 'object' && foto.createdAt) {
-                  this.doc.setFontSize(8)
-                  this.doc.setTextColor(100, 100, 100)
-                  this.doc.text(
-                    `Foto ${fotoAggiunte} - ${new Date(foto.createdAt).toLocaleString('it-IT')}`,
-                    this.margin,
-                    this.currentY
-                  )
-                  this.currentY += 8
-                  this.doc.setTextColor(0, 0, 0)
+            for (const [nomeSezione, fotoArray] of Object.entries(metadata.foto)) {
+              if (Array.isArray(fotoArray) && fotoArray.length > 0) {
+                // Titolo sezione (es: "Foto Estintori")
+                const titoloSezione = nomeSezione
+                  .replace(/_/g, ' ')
+                  .split(' ')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ')
+                
+                this.doc.setFontSize(11)
+                this.doc.setFont('helvetica', 'bold')
+                this.doc.setTextColor(0, 102, 204) // Blu
+                this.doc.text(titoloSezione, this.margin, this.currentY)
+                this.currentY += 8
+                this.doc.setTextColor(0, 0, 0)
+                this.doc.setFont('helvetica', 'normal')
+                
+                // Aggiungi foto della sezione
+                for (const fotoUrl of fotoArray as string[]) {
+                  if (typeof fotoUrl === 'string') {
+                    console.log(`📸 Aggiungendo foto al PDF (${titoloSezione}):`, fotoUrl)
+                    const successo = await this.addImage(fotoUrl, 140, 140)
+                    if (!successo) {
+                      console.error(`❌ Impossibile aggiungere foto da ${titoloSezione}`)
+                    }
+                  }
                 }
-              } else {
-                console.error(`❌ Impossibile aggiungere foto ${fotoAggiunte + 1}`)
+                
+                this.currentY += 5 // Spazio tra sezioni
               }
             }
-          }
-          
-          if (fotoAggiunte > 0) {
-            console.log(`✅ ${fotoAggiunte}/${metadata.foto.length} foto aggiunte al PDF`)
-          } else {
-            this.addText('⚠️ Nessuna foto disponibile')
+          } else if (Array.isArray(metadata.foto) && metadata.foto.length > 0) {
+            // Formato legacy: array di stringhe o oggetti {url}
+            this.addSubtitle('DOCUMENTAZIONE FOTOGRAFICA')
+            
+            for (const foto of metadata.foto) {
+              // Supporta sia stringhe URL (Vercel Blob) che oggetti {url, createdAt} (Cloudinary)
+              const fotoUrl = typeof foto === 'string' ? foto : foto.url
+              
+              if (fotoUrl) {
+                console.log(`📸 Aggiungendo foto al PDF (legacy):`, fotoUrl)
+                const successo = await this.addImage(fotoUrl, 140, 140)
+                if (!successo) {
+                  console.error(`❌ Impossibile aggiungere foto`)
+                }
+              }
+            }
           }
         }
         

@@ -170,12 +170,20 @@ export default function WizardVerifiche({
       if (isLavorazioneMode && lavorazione) {
         // Modalità lavorazione: aggiorna la lavorazione esistente
         
-        // Estrai foto da datiVerifica se presenti
-        const fotoArray = Object.values(datiVerifica).find(val => 
-          Array.isArray(val) && val.length > 0 && typeof val[0] === 'string' && val[0].includes('blob.vercel-storage.com')
-        ) as string[] | undefined
+        // Estrai TUTTE le foto da TUTTI i campi di datiVerifica, preservando la sezione
+        const fotoDaSezioni: Record<string, string[]> = {}
+        let totaleFoto = 0
         
-        console.log('📸 Completamento lavorazione - Foto trovate:', fotoArray?.length || 0)
+        Object.entries(datiVerifica).forEach(([nomeCampo, valore]) => {
+          if (Array.isArray(valore) && valore.length > 0 && 
+              typeof valore[0] === 'string' && valore[0].includes('blob.vercel-storage.com')) {
+            fotoDaSezioni[nomeCampo] = valore
+            totaleFoto += valore.length
+          }
+        })
+        
+        console.log('📸 Completamento lavorazione - Foto per sezione:', fotoDaSezioni)
+        console.log('📸 Totale foto trovate:', totaleFoto)
         
         const response = await fetch(`/api/lavorazioni/${lavorazione.id}`, {
           method: 'PUT',
@@ -184,7 +192,7 @@ export default function WizardVerifiche({
             azione: 'completa',
             dati: {
               dati_verifica: datiVerifica,
-              foto: fotoArray || [],
+              foto: fotoDaSezioni, // Oggetto con foto per sezione
               note: note
             }
           })

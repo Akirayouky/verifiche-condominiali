@@ -108,10 +108,19 @@ export async function PUT(
               nuoviMetadata.dati_verifica_completamento = dati.dati_verifica
             }
             
-            // Aggiungi foto se presenti (supporta sia array di stringhe che oggetti)
-            if (dati.foto && Array.isArray(dati.foto) && dati.foto.length > 0) {
-              nuoviMetadata.foto = dati.foto
-              console.log('📸 Salvando', dati.foto.length, 'foto nei metadati')
+            // Aggiungi foto se presenti (supporta sia oggetto per sezione che array legacy)
+            if (dati.foto) {
+              if (typeof dati.foto === 'object' && !Array.isArray(dati.foto)) {
+                // Nuovo formato: oggetto con foto per sezione
+                nuoviMetadata.foto = dati.foto
+                const totaleFoto = Object.values(dati.foto).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+                console.log('📸 Salvando foto per sezione:', Object.keys(dati.foto).join(', '))
+                console.log('📸 Totale foto:', totaleFoto)
+              } else if (Array.isArray(dati.foto) && dati.foto.length > 0) {
+                // Formato legacy: array di stringhe
+                nuoviMetadata.foto = dati.foto
+                console.log('📸 Salvando', dati.foto.length, 'foto (formato legacy)')
+              }
             }
             
             updateData.allegati = JSON.stringify(nuoviMetadata)
@@ -125,9 +134,18 @@ export async function PUT(
               nuoviMetadata.dati_verifica_completamento = dati.dati_verifica
             }
             
-            if (dati.foto && Array.isArray(dati.foto) && dati.foto.length > 0) {
-              nuoviMetadata.foto = dati.foto
-              console.log('📸 Salvando', dati.foto.length, 'foto nei metadati (nuovo)')
+            if (dati.foto) {
+              if (typeof dati.foto === 'object' && !Array.isArray(dati.foto)) {
+                // Nuovo formato: oggetto con foto per sezione
+                nuoviMetadata.foto = dati.foto
+                const totaleFoto = Object.values(dati.foto).reduce((sum: number, arr: any) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+                console.log('📸 Salvando foto per sezione (nuovo):', Object.keys(dati.foto).join(', '))
+                console.log('📸 Totale foto:', totaleFoto)
+              } else if (Array.isArray(dati.foto) && dati.foto.length > 0) {
+                // Formato legacy: array di stringhe
+                nuoviMetadata.foto = dati.foto
+                console.log('📸 Salvando', dati.foto.length, 'foto (formato legacy - nuovo)')
+              }
             }
             
             updateData.allegati = JSON.stringify(nuoviMetadata)
