@@ -26,6 +26,9 @@ export default function WizardVerifiche({
   const [loading, setLoading] = useState(false)
   const [completata, setCompletata] = useState(false)
   const [errorModal, setErrorModal] = useState<string | null>(null)
+  
+  // ID per upload foto - usa lavorazione.id se disponibile, altrimenti genera temp ID
+  const [uploadId] = useState<string>(lavorazione?.id || `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`)
 
   // Carica i dati preconfigurati dalla lavorazione
   useEffect(() => {
@@ -357,6 +360,7 @@ export default function WizardVerifiche({
             onNext={handleStep2Next}
             onPrevious={handlePrevious}
             canProceed={canProceedStep2}
+            lavorazioneId={uploadId}
           />
         )}
 

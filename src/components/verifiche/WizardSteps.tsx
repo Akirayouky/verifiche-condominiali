@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useCondomini } from '@/hooks/useCondomini'
 import { useTipologie } from '@/hooks/useTipologie'
 import { Condominio, TipologiaVerifica, CampoPersonalizzato } from '@/lib/types'
-import FotoUpload from '@/components/ui/FotoUpload'
+import FotoUploadCloud from '@/components/ui/FotoUploadCloud'
 
 interface Step1Props {
   selectedCondominio: Condominio | null
@@ -191,6 +191,7 @@ interface Step2Props {
   onNext: () => void
   onPrevious: () => void
   canProceed: boolean
+  lavorazioneId?: string  // ID per upload foto su Cloudinary
 }
 
 export function Step2({ 
@@ -199,7 +200,8 @@ export function Step2({
   onDatiChange, 
   onNext, 
   onPrevious,
-  canProceed 
+  canProceed,
+  lavorazioneId
 }: Step2Props) {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -342,9 +344,10 @@ export function Step2({
 
       case 'foto':
         return (
-          <FotoUpload
+          <FotoUploadCloud
             value={value || []}
             onChange={(foto) => handleFieldChange(campo, foto)}
+            lavorazioneId={lavorazioneId || `temp-${Date.now()}`}
             maxFoto={campo.maxFoto || 5}
             required={campo.obbligatorio}
             nome={campo.nome}
