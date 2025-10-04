@@ -7,8 +7,8 @@ export interface FotoVercel {
 }
 
 interface FotoUploadVercelProps {
-  value: FotoVercel[]
-  onChange: (foto: FotoVercel[]) => void
+  value: string[] // Array di URL (compatibile con database)
+  onChange: (foto: string[]) => void
   lavorazioneId: string
   maxFoto?: number
   required?: boolean
@@ -95,7 +95,10 @@ export default function FotoUploadVercel({
 
       if (data.success) {
         console.log('✅ Foto uploaded successfully to Vercel Blob:', data.foto)
-        onChange([...value, ...data.foto])
+        
+        // Estrai solo gli URL dalle foto (compatibilità con database)
+        const fotoUrls = data.foto.map((f: FotoVercel) => f.url)
+        onChange([...value, ...fotoUrls])
         
         if (data.errori && data.errori.length > 0) {
           setError(`${data.errori.length} foto non caricate correttamente`)
@@ -183,11 +186,11 @@ export default function FotoUploadVercel({
 
       {value.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {value.map((foto, index) => (
+          {value.map((fotoUrl, index) => (
             <div key={index} className="relative group">
               <div className="aspect-square relative rounded-lg overflow-hidden border-2 border-gray-200">
                 <Image
-                  src={foto.url}
+                  src={fotoUrl}
                   alt={`Foto ${index + 1}`}
                   fill
                   className="object-cover"
