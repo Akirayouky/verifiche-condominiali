@@ -145,34 +145,7 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
     }
   }
 
-  // Esegui azione notifica
-  const eseguiAzione = async (notifica: Notifica, azione: any) => {
-    console.log('🎯 Executing notification action:', azione.action, 'for:', notifica.titolo)
-    
-    // Marca come letta quando si clicca su un'azione
-    if (!notifica.letta) {
-      await marcaComeLetta(notifica.id)
-    }
 
-    switch (azione.action) {
-      case 'navigate':
-        if (azione.url) {
-          window.location.href = azione.url
-        }
-        break
-        
-      case 'complete':
-        // Logica per completare lavorazione
-        break
-        
-      case 'accept':
-        // Logica per accettare assegnazione
-        break
-        
-      default:
-        console.log('Action not implemented:', azione.action)
-    }
-  }
 
   const getPriorityIcon = (priorita: string) => {
     switch (priorita) {
@@ -291,27 +264,6 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
                       <p className="text-sm text-gray-700 mb-2">
                         {notifica.messaggio}
                       </p>
-                      
-                      {/* Azioni */}
-                      {notifica.azioni && notifica.azioni.length > 0 && (
-                        <div className="flex gap-2">
-                          {notifica.azioni.map((azione) => (
-                            <button
-                              key={azione.id}
-                              onClick={() => eseguiAzione(notifica, azione)}
-                              className={`px-3 py-1 text-xs rounded transition-colors ${
-                                azione.tipo === 'primary' 
-                                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                  : azione.tipo === 'danger'
-                                  ? 'bg-red-600 text-white hover:bg-red-700'
-                                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                              }`}
-                            >
-                              {azione.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                       
                       {/* Marca come letta */}
                       {!notifica.letta && (
