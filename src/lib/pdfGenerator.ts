@@ -237,6 +237,14 @@ export class PDFGenerator {
   }
 
   private async _generatePDF(lavorazione: LavorazionePDF): Promise<Blob> {
+    console.log('📄 Generazione PDF con dati:', {
+      id: lavorazione.id,
+      hasFirma: !!lavorazione.firma,
+      firmaUrl: lavorazione.firma,
+      hasGeolocations: !!lavorazione.geolocations,
+      geolocationsCount: lavorazione.geolocations?.length || 0
+    })
+    
     // Header
     this.addHeader()
     
@@ -396,17 +404,21 @@ export class PDFGenerator {
                 // Aggiungi mappa GPS se disponibile per questa foto
                 const geoData = lavorazione.geolocations?.find(g => g.fotoUrl === fotoUrl)
                 if (geoData) {
+                  console.log('🗺️ Trovato GPS per foto:', fotoUrl, geoData)
                   this.doc.setFontSize(9)
                   this.doc.setTextColor(100, 100, 100)
                   this.doc.text(`📍 GPS: ${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`, this.margin, this.currentY)
                   this.currentY += 5
                   
-                  // Aggiungi mini mappa
+                  // Aggiungi mini mappa (OpenStreetMap Static)
                   try {
                     const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${geoData.latitude},${geoData.longitude}&zoom=16&size=300x150&maptype=mapnik&markers=${geoData.latitude},${geoData.longitude},red`
+                    console.log('🗺️ Tentativo caricamento mappa:', mapUrl)
                     const mapSuccess = await this.addImage(mapUrl, 80, 40)
                     if (mapSuccess) {
-                      console.log('🗺️ Mappa GPS aggiunta al PDF')
+                      console.log('✅ Mappa GPS aggiunta al PDF')
+                    } else {
+                      console.error('❌ Mappa non aggiunta (addImage returned false)')
                     }
                   } catch (error) {
                     console.error('❌ Errore aggiunta mappa GPS:', error)
@@ -414,6 +426,8 @@ export class PDFGenerator {
                   
                   this.doc.setTextColor(0, 0, 0)
                   this.doc.setFontSize(10)
+                } else if (lavorazione.geolocations && lavorazione.geolocations.length > 0) {
+                  console.log('⚠️ GPS disponibile ma non trovato per questa foto:', fotoUrl)
                 }
               }
             }
@@ -442,18 +456,26 @@ export class PDFGenerator {
       
       // Aggiungi firma digitale se presente
       if (lavorazione.firma) {
+        console.log('✍️ Tentativo aggiunta firma al PDF:', lavorazione.firma)
         this.currentY += 10
         this.addText('Firma digitale del sopralluoghista:')
         this.currentY += 5
         
         try {
           // Carica e inserisci la firma nel PDF (dimensioni ridotte per firma)
-          await this.addImage(lavorazione.firma, 100, 40)
-          console.log('✍️ Firma aggiunta al PDF')
+          const firmaSuccess = await this.addImage(lavorazione.firma, 100, 40)
+          if (firmaSuccess) {
+            console.log('✅ Firma aggiunta al PDF con successo')
+          } else {
+            console.error('❌ Firma non aggiunta (addImage returned false)')
+            this.addText('[Firma digitale non disponibile]')
+          }
         } catch (error) {
           console.error('❌ Errore aggiunta firma al PDF:', error)
           this.addText('[Firma digitale non disponibile]')
         }
+      } else {
+        console.log('⚠️ Nessuna firma da aggiungere al PDF')
       }
     }
     
