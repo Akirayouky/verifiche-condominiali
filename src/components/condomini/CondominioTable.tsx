@@ -262,7 +262,7 @@ export default function CondominioTable({
             
             <div className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded p-3">
               💡 <strong>Come usare:</strong> Stampa o scarica questo QR code. 
-              Durante la creazione di una verifica, usa il pulsante "📷 Scansiona QR Code" 
+              Durante la creazione di una verifica, usa il pulsante &ldquo;📷 Scansiona QR Code&rdquo; 
               per selezionare rapidamente questo condominio.
             </div>
           </div>
