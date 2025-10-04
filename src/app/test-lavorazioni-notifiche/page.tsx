@@ -18,7 +18,7 @@ export default function TestLavorazioniNotifichePage() {
     condominio_id: crypto.randomUUID(),
     tipologia_id: crypto.randomUUID(),
     descrizione: 'Test lavorazione per notifica sopralluoghista',
-    sopralluoghista_id: crypto.randomUUID(),
+    sopralluoghista_id: '0a534c3a-daf0-41a2-8821-9aa003c9e423', // Monica Canavese
     data_scadenza: '2025-10-15',
     note: 'Test automatico per verificare notifiche'
   });
@@ -37,9 +37,12 @@ export default function TestLavorazioniNotifichePage() {
       const result = await response.json();
 
       if (response.ok) {
+        const nomeUtente = formData.sopralluoghista_id === '0a534c3a-daf0-41a2-8821-9aa003c9e423' ? 'Monica Canavese' :
+                          formData.sopralluoghista_id === 'e1017f5d-83e1-4da3-ac81-4924a0dfd010' ? 'Diego Marruchi' : 'Utente Test';
+        
         setResults(prev => [{
           success: true,
-          message: '✅ Lavorazione creata con successo! Verifica se è arrivata la notifica al sopralluoghista.',
+          message: `✅ Lavorazione creata! Notifica inviata a: ${nomeUtente}. Verifica nel NotificationCenter dell'app.`,
           data: result,
           timestamp: new Date().toISOString()
         }, ...prev]);
@@ -132,15 +135,21 @@ export default function TestLavorazioniNotifichePage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sopralluoghista ID (riceverà la notifica)
+                    Sopralluoghista (riceverà la notifica)
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.sopralluoghista_id}
                     onChange={(e) => setFormData(prev => ({...prev, sopralluoghista_id: e.target.value}))}
-                    placeholder="UUID del sopralluoghista"
-                    className="w-full p-2 border border-gray-300 rounded text-xs"
-                  />
+                    title="Seleziona sopralluoghista per il test"
+                    className="w-full p-2 border border-gray-300 rounded text-sm"
+                  >
+                    <option value="0a534c3a-daf0-41a2-8821-9aa003c9e423">Monica Canavese</option>
+                    <option value="e1017f5d-83e1-4da3-ac81-4924a0dfd010">Diego Marruchi</option>
+                    <option value={crypto.randomUUID()}>UUID Casuale (per test)</option>
+                  </select>
+                  <div className="mt-1 text-xs text-gray-500">
+                    ID selezionato: {formData.sopralluoghista_id}
+                  </div>
                 </div>
                 
                 <div>
