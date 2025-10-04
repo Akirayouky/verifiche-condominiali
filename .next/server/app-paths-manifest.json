@@ -1,4 +1,6 @@
 {
+  "/dev/page": "app/dev/page.js",
+  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
   "/page": "app/page.js",
-  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js"
+  "/test-lavorazioni-notifiche/page": "app/test-lavorazioni-notifiche/page.js"
 }

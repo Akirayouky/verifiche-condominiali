@@ -160,14 +160,26 @@ export class NotificationManager {
    */
   async marcaComeLetta(notificaId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      console.log(`📝 Marcando notifica come letta: ${notificaId}`)
+      
+      const { data, error } = await supabase
         .from('notifiche')
-        .update({ letta: true })
+        .update({ 
+          letta: true,
+          data_aggiornamento: new Date().toISOString()
+        })
         .eq('id', notificaId)
+        .select()
 
-      return !error
+      if (error) {
+        console.error('❌ Errore DB marca come letta:', error)
+        return false
+      }
+
+      console.log(`✅ Notifica ${notificaId} aggiornata:`, data)
+      return true
     } catch (error) {
-      console.error('❌ Errore marca come letta:', error)
+      console.error('❌ Errore critico marca come letta:', error)
       return false
     }
   }
@@ -177,15 +189,27 @@ export class NotificationManager {
    */
   async marcaTutteComeLette(utenteId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      console.log(`📝 Marcando tutte le notifiche come lette per utente: ${utenteId}`)
+      
+      const { data, error } = await supabase
         .from('notifiche')
-        .update({ letta: true })
+        .update({ 
+          letta: true,
+          data_aggiornamento: new Date().toISOString()
+        })
         .eq('utente_id', utenteId)
         .eq('letta', false)
+        .select()
 
-      return !error
+      if (error) {
+        console.error('❌ Errore DB marca tutte come lette:', error)
+        return false
+      }
+
+      console.log(`✅ ${data?.length || 0} notifiche marcate come lette per utente ${utenteId}`)
+      return true
     } catch (error) {
-      console.error('❌ Errore marca tutte come lette:', error)
+      console.error('❌ Errore critico marca tutte come lette:', error)
       return false
     }
   }
