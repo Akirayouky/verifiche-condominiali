@@ -33,6 +33,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it">
+      <head>
+        {/* Eruda Console per debug mobile - attivabile con ?debug=1 nell'URL */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('debug') === '1') {
+                  var script = document.createElement('script');
+                  script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+                  script.onload = function() { eruda.init(); };
+                  document.head.appendChild(script);
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-gray-50">{children}</body>
     </html>
   )
