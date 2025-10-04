@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/supabase'
-import { NotificationManager } from '@/lib/notifications'
+import { NotificationManager, getAdminUsers } from '@/lib/notifications'
 
 // GET - Ottieni lavorazione per ID
 export async function GET(
@@ -112,20 +112,29 @@ export async function PUT(
           }
         }
         
-        // Crea notifica per completamento lavorazione
+        // Crea notifica per completamento lavorazione (per tutti gli admin)
         try {
           const { data: condominio } = await dbQuery.condomini.getById(lavorazioneEsistente.condominio_id)
           const notificationManager = new NotificationManager()
-          await notificationManager.creaNotifica({
-            tipo: 'lavorazione_completata',
-            titolo: 'Lavorazione Completata',
-            messaggio: `Lavorazione completata per ${condominio?.nome || 'condominio'}: ${lavorazioneEsistente.descrizione}`,
-            utente_id: '', // Notifica generale per admin
-            priorita: 'alta',
-            lavorazione_id: lavorazioneEsistente.id,
-            condominio_id: lavorazioneEsistente.condominio_id
-          })
-          console.log('✅ Notifica creata per completamento lavorazione:', id)
+          
+          // Ottieni lista admin
+          const adminUsers = await getAdminUsers()
+          console.log('📧 Inviando notifica di completamento a', adminUsers.length, 'admin')
+          
+          // Crea notifiche per tutti gli admin
+          if (adminUsers.length > 0) {
+            const notifiche = await notificationManager.notificaLavorazioneCompletata(
+              {
+                id: lavorazioneEsistente.id,
+                titolo: lavorazioneEsistente.titolo || lavorazioneEsistente.descrizione,
+                condominio_id: lavorazioneEsistente.condominio_id
+              },
+              adminUsers
+            )
+            console.log('✅ Notifiche completamento create:', notifiche.length)
+          } else {
+            console.warn('⚠️ Nessun admin trovato per notifica completamento')
+          }
         } catch (notifError) {
           console.error('⚠️ Errore nella creazione della notifica di completamento:', notifError)
         }

@@ -106,6 +106,53 @@ export class PDFGenerator {
     this.currentY = this.margin
   }
 
+  private async addImage(imageUrl: string, maxWidth: number = 150, maxHeight: number = 150) {
+    try {
+      // Scarica l'immagine
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      
+      // Converti in base64 per jsPDF
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+
+      // Determina formato immagine
+      const format = imageUrl.includes('.png') ? 'PNG' : 'JPEG'
+      
+      // Calcola dimensioni mantenendo aspect ratio
+      const img = new Image()
+      img.src = base64
+      await new Promise(resolve => img.onload = resolve)
+      
+      const aspectRatio = img.width / img.height
+      let width = maxWidth
+      let height = maxWidth / aspectRatio
+      
+      if (height > maxHeight) {
+        height = maxHeight
+        width = maxHeight * aspectRatio
+      }
+      
+      // Controlla se serve nuova pagina
+      if (this.currentY + height > this.pageHeight - this.margin - 20) {
+        this.addNewPage()
+      }
+      
+      // Aggiungi immagine al PDF
+      this.doc.addImage(base64, format, this.margin, this.currentY, width, height)
+      this.currentY += height + 10
+      
+      return true
+    } catch (error) {
+      console.error('❌ Errore aggiunta immagine al PDF:', error)
+      return false
+    }
+  }
+
   private addHeader() {
     // Logo/Header azienda (placeholder)
     this.doc.setFillColor(59, 130, 246) // blue-600
@@ -178,7 +225,11 @@ export class PDFGenerator {
     }
   }
 
-  generateLavorazionePDF(lavorazione: LavorazionePDF): Blob {
+  generateLavorazionePDF(lavorazione: LavorazionePDF): Promise<Blob> {
+    return this._generatePDF(lavorazione)
+  }
+
+  private async _generatePDF(lavorazione: LavorazionePDF): Promise<Blob> {
     // Header
     this.addHeader()
     
@@ -253,6 +304,45 @@ export class PDFGenerator {
           })
         }
         
+        // Foto dalla verifica (Cloudinary)
+        if (metadata.foto && Array.isArray(metadata.foto) && metadata.foto.length > 0) {
+          this.addSubtitle('DOCUMENTAZIONE FOTOGRAFICA')
+          this.addText(`Numero foto allegate: ${metadata.foto.length}`)
+          this.currentY += 5
+          
+          // Aggiungi foto una per volta
+          let fotoAggiunte = 0
+          for (const foto of metadata.foto) {
+            if (foto.url) {
+              console.log(`📸 Aggiungendo foto ${fotoAggiunte + 1}/${metadata.foto.length} al PDF:`, foto.url)
+              const successo = await this.addImage(foto.url, 140, 140)
+              if (successo) {
+                fotoAggiunte++
+                // Aggiungi info foto (opzionale)
+                if (foto.createdAt) {
+                  this.doc.setFontSize(8)
+                  this.doc.setTextColor(100, 100, 100)
+                  this.doc.text(
+                    `Foto ${fotoAggiunte} - ${new Date(foto.createdAt).toLocaleString('it-IT')}`,
+                    this.margin,
+                    this.currentY
+                  )
+                  this.currentY += 8
+                  this.doc.setTextColor(0, 0, 0)
+                }
+              } else {
+                console.error(`❌ Impossibile aggiungere foto ${fotoAggiunte + 1}`)
+              }
+            }
+          }
+          
+          if (fotoAggiunte > 0) {
+            console.log(`✅ ${fotoAggiunte}/${metadata.foto.length} foto aggiunte al PDF`)
+          } else {
+            this.addText('⚠️ Nessuna foto disponibile')
+          }
+        }
+        
         this.addSeparator()
       } catch (e) {
         // Ignora errori di parsing JSON
@@ -280,8 +370,8 @@ export class PDFGenerator {
     return this.doc.output('blob')
   }
 
-  downloadPDF(lavorazione: LavorazionePDF, filename?: string) {
-    const blob = this.generateLavorazionePDF(lavorazione)
+  async downloadPDF(lavorazione: LavorazionePDF, filename?: string) {
+    const blob = await this.generateLavorazionePDF(lavorazione)
     const url = URL.createObjectURL(blob)
     
     const link = document.createElement('a')

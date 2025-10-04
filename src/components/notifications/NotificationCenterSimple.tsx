@@ -6,6 +6,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 
 interface NotificationCenterProps {
   userId: string
@@ -26,6 +27,9 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [sseConnected, setSseConnected] = useState(false)
+
+  // Hook per Push Notifications
+  const pushState = usePushNotifications(userId)
 
   // Connessione SSE per notifiche real-time
   useEffect(() => {
@@ -250,6 +254,57 @@ export default function NotificationCenter({ userId }: NotificationCenterProps) 
               </div>
             </div>
           </div>
+
+          {/* Sezione Push Notifications */}
+          {pushState.supported && (
+            <div className="px-4 py-2 border-b border-gray-100 bg-gray-50">
+              {!pushState.isSubscribed ? (
+                <button
+                  onClick={pushState.requestPermission}
+                  disabled={pushState.loading || pushState.permission === 'denied'}
+                  className={`w-full px-3 py-2 text-xs rounded flex items-center justify-center space-x-2 ${
+                    pushState.permission === 'denied'
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
+                >
+                  {pushState.loading ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Attivazione...</span>
+                    </>
+                  ) : pushState.permission === 'denied' ? (
+                    <>
+                      <span>🔕</span>
+                      <span>Notifiche bloccate</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🔔</span>
+                      <span>Attiva notifiche Android</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-xs text-green-600">
+                    <span>✅</span>
+                    <span>Notifiche Android attive</span>
+                  </div>
+                  <button
+                    onClick={pushState.unsubscribe}
+                    className="text-xs text-gray-500 hover:text-red-600"
+                    title="Disattiva notifiche"
+                  >
+                    🔕
+                  </button>
+                </div>
+              )}
+              {pushState.error && (
+                <p className="text-xs text-red-600 mt-1">{pushState.error}</p>
+              )}
+            </div>
+          )}
 
           {/* Loading */}
           {loading && (

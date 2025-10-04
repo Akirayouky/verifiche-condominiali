@@ -50,6 +50,11 @@ export class NotificationManager {
       // Invia notifica real-time ai subscriber
       this.inviaNotificaRealTime(notifica)
 
+      // Invia push notification (non blocca se fallisce)
+      this.inviaPushNotification(notifica).catch(error => {
+        console.warn('⚠️ Errore invio push notification:', error)
+      })
+
       return notifica
 
     } catch (error) {
@@ -233,6 +238,40 @@ export class NotificationManager {
     const callback = this.subscribers.get(notifica.utente_id)
     if (callback) {
       callback(notifica)
+    }
+  }
+
+  /**
+   * Invia push notification al dispositivo (se subscription attiva)
+   */
+  private async inviaPushNotification(notifica: Notifica): Promise<void> {
+    try {
+      console.log(`📲 Tentativo invio push per notifica ${notifica.id} a utente ${notifica.utente_id}`)
+
+      const response = await fetch('/api/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          utenteIds: [notifica.utente_id],
+          title: notifica.titolo,
+          message: notifica.messaggio,
+          url: '/', // Potresti customizzare in base al tipo
+          priorita: notifica.priorita,
+          notificaId: notifica.id,
+          lavorazioneId: notifica.lavorazione_id,
+          condominioId: notifica.condominio_id
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log(`✅ Push inviato: ${result.sent}/${result.total}`)
+    } catch (error) {
+      // Non blocca, solo log
+      console.warn(`⚠️ Push notification non inviato per ${notifica.id}:`, error)
     }
   }
 }
