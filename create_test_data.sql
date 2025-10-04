@@ -1,41 +1,34 @@
--- Script per creare dati di test nel database
+-- Script per creare dati di test nel database (versione semplificata)
 
--- 1. Crea un condominio di test
-INSERT INTO condomini (id, nome, indirizzo, codice_fiscale, amministratore_nome, amministratore_email)
+-- 1. Crea un condominio di test con solo campi base
+INSERT INTO condomini (id, nome, indirizzo)
 VALUES (
   'test-condo-123',
   'Condominio Test',
-  'Via Test 123, Test City',
-  'TESTCONDO123',
-  'Admin Test',
-  'admin@test.com'
+  'Via Test 123, Test City'
 ) ON CONFLICT (id) DO UPDATE SET
   nome = EXCLUDED.nome,
   indirizzo = EXCLUDED.indirizzo;
 
--- 2. Crea una tipologia di test  
-INSERT INTO tipologie_verifiche (id, nome, descrizione, categoria)
+-- 2. Crea una tipologia di test (se la tabella esiste)
+INSERT INTO tipologie_verifiche (id, nome, descrizione)
 VALUES (
   'test-tipo-123',
   'Test Tipologia',
-  'Tipologia per test automatici',
-  'test'
+  'Tipologia per test automatici'
 ) ON CONFLICT (id) DO UPDATE SET
   nome = EXCLUDED.nome,
   descrizione = EXCLUDED.descrizione;
 
--- 3. Crea un utente sopralluoghista di test
-INSERT INTO users (id, username, email, nome, cognome, role, password_hash, attivo, approved_at)
+-- 3. Crea un utente sopralluoghista di test con campi base
+INSERT INTO users (id, username, email, nome, cognome, role)
 VALUES (
   'test-sopralluoghi-456',
   'test.sopralluoghista',
   'test.sopralluoghista@test.com',
   'Test',
-  'Sopralluoghista',
-  'sopralluoghista',
-  '$2b$10$test.hash.password', -- Hash placeholder
-  true,
-  CURRENT_TIMESTAMP
+  'Sopralluoghista', 
+  'sopralluoghista'
 ) ON CONFLICT (id) DO UPDATE SET
   nome = EXCLUDED.nome,
   cognome = EXCLUDED.cognome,

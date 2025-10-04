@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
           utente_id: sopralluoghista_id,
           priorita: 'media',
           lavorazione_id: data.id,
-          condominio_id: condominio_id || undefined
+          condominio_id: undefined // Sempre undefined per evitare FK issues
         })
 
         console.log('🔔 Notifica creata:', notificaResult ? 'SUCCESS' : 'FAILED')
