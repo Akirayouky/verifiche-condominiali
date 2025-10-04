@@ -1,12 +1,32 @@
 -- Script per verificare e correggere struttura tabella notifiche
 
+-- 0. PRIMA: Rimuovi tutti i constraint problematici per evitare errori
+ALTER TABLE notifiche DROP CONSTRAINT IF EXISTS notifiche_priorita_check;
+ALTER TABLE notifiche DROP CONSTRAINT IF EXISTS notifiche_tipo_check;
+
 -- 1. Verifica struttura esistente
 SELECT column_name, data_type, is_nullable 
 FROM information_schema.columns 
 WHERE table_name = 'notifiche' 
 ORDER BY ordinal_position;
 
--- 2. Aggiungi colonne mancanti se non esistono
+-- 2. PULIZIA DATI: Correggi dati mal formattati PRIMA di aggiungere constraint
+UPDATE notifiche 
+SET priorita = 'media',
+    letta = CASE 
+        WHEN priorita = 'non_letta' THEN false
+        WHEN priorita = 'letta' THEN true
+        ELSE COALESCE(letta, false)
+    END
+WHERE priorita NOT IN ('bassa', 'media', 'alta', 'urgente') 
+   OR priorita IS NULL;
+
+-- Assicurati che letta sia sempre boolean
+UPDATE notifiche 
+SET letta = COALESCE(letta, false) 
+WHERE letta IS NULL;
+
+-- 3. Aggiungi colonne mancanti se non esistono
 ALTER TABLE notifiche 
 ADD COLUMN IF NOT EXISTS letta BOOLEAN DEFAULT FALSE;
 

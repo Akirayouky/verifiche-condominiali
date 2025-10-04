@@ -1,1 +1,0 @@
-{"success":true,"message":"Test completato","results":{"totalUsers":[{"count":3}],"adminExists":true,"adminData":{"id":"a0000000-0000-0000-0000-000000000000","username":"admin","email":"admin@condomini.local","role":"admin"},"passwordCorrect":true}}
