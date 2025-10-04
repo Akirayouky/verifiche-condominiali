@@ -5,6 +5,7 @@ import { useCondomini } from '@/hooks/useCondomini'
 import { useTipologie } from '@/hooks/useTipologie'
 import { Condominio, TipologiaVerifica, CampoPersonalizzato } from '@/lib/types'
 import FotoUploadVercel from '@/components/ui/FotoUploadVercel'
+import VoiceInput from '@/components/ui/VoiceInput'
 import dynamic from 'next/dynamic'
 
 // Carica QrScanner solo lato client (usa fotocamera)
@@ -542,19 +543,20 @@ export function Step3({
         </div>
       </div>
 
-      {/* Note aggiuntive */}
+      {/* Note aggiuntive con Voice Input */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Note Aggiuntive
+          Note Aggiuntive 🎤
         </label>
-        <textarea
+        <VoiceInput
           value={note}
-          onChange={(e) => onNoteChange(e.target.value)}
-          placeholder="Inserisci eventuali note, osservazioni o commenti sulla verifica..."
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          disabled={loading}
+          onChange={onNoteChange}
+          placeholder="Scrivi o usa il microfono per dettare note, osservazioni o commenti sulla verifica..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
         />
+        <p className="mt-1 text-xs text-gray-500">
+          💡 Tocca il microfono per dettare le note a voce (funziona hands-free!)
+        </p>
       </div>
 
       {/* Opzioni finali */}
