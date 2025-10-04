@@ -13,6 +13,17 @@ const nextConfig = {
       fullUrl: false,
     },
   },
+  // Configurazione per Image component con Vercel Blob
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.public.blob.vercel-storage.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
 }
 
 module.exports = nextConfig

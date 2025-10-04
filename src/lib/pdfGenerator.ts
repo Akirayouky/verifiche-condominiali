@@ -304,7 +304,7 @@ export class PDFGenerator {
           })
         }
         
-        // Foto dalla verifica (Cloudinary)
+        // Foto dalla verifica (Vercel Blob o Cloudinary)
         if (metadata.foto && Array.isArray(metadata.foto) && metadata.foto.length > 0) {
           this.addSubtitle('DOCUMENTAZIONE FOTOGRAFICA')
           this.addText(`Numero foto allegate: ${metadata.foto.length}`)
@@ -313,13 +313,16 @@ export class PDFGenerator {
           // Aggiungi foto una per volta
           let fotoAggiunte = 0
           for (const foto of metadata.foto) {
-            if (foto.url) {
-              console.log(`📸 Aggiungendo foto ${fotoAggiunte + 1}/${metadata.foto.length} al PDF:`, foto.url)
-              const successo = await this.addImage(foto.url, 140, 140)
+            // Supporta sia stringhe URL (Vercel Blob) che oggetti {url, createdAt} (Cloudinary)
+            const fotoUrl = typeof foto === 'string' ? foto : foto.url
+            
+            if (fotoUrl) {
+              console.log(`📸 Aggiungendo foto ${fotoAggiunte + 1}/${metadata.foto.length} al PDF:`, fotoUrl)
+              const successo = await this.addImage(fotoUrl, 140, 140)
               if (successo) {
                 fotoAggiunte++
-                // Aggiungi info foto (opzionale)
-                if (foto.createdAt) {
+                // Aggiungi info foto (opzionale - solo per oggetti con createdAt)
+                if (typeof foto === 'object' && foto.createdAt) {
                   this.doc.setFontSize(8)
                   this.doc.setTextColor(100, 100, 100)
                   this.doc.text(
