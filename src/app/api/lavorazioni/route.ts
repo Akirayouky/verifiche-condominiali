@@ -69,13 +69,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('📝 Dati ricevuti per nuova lavorazione:', body)
+    
     const { 
       condominio_id, 
+      tipologia_id, // Aggiungiamo supporto per tipologia_id
       tipologia, 
       tipologia_verifica_id, 
       descrizione, 
       priorita, 
       assegnato_a, 
+      sopralluoghista_id, // Alias per assegnato_a
       data_scadenza, 
       note,
       // Retrocompatibilità con API esistente
@@ -119,7 +123,7 @@ export async function POST(request: NextRequest) {
     const nuovaLavorazione = {
       // Nuovi campi per wizard admin
       condominio_id,
-      user_id: assegnato_a || utente_assegnato, // user_id nel DB
+      user_id: assegnato_a || sopralluoghista_id || utente_assegnato, // user_id nel DB
       titolo: getTitolo(),
       descrizione: descrizione.trim(),
       stato: 'aperta', // Stati DB: 'aperta', 'in_corso', 'completata', 'archiviata'
@@ -130,10 +134,12 @@ export async function POST(request: NextRequest) {
       // Campi personalizzati (JSON per metadata)
       allegati: JSON.stringify({
         tipologia: tipologia || 'altro',
-        tipologia_verifica_id: tipologia_verifica_id || null,
+        tipologia_verifica_id: tipologia_verifica_id || tipologia_id || null,
         verifica_id: verifica_id || null // Per retrocompatibilità
       })
     }
+    
+    console.log('🔨 Creando lavorazione:', nuovaLavorazione)
 
     const { data, error } = await dbQuery.lavorazioni.create(nuovaLavorazione)
 
@@ -146,9 +152,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Crea notifica per nuova lavorazione se assegnata a un utente
-    if (data && (assegnato_a || utente_assegnato)) {
+    if (data && (assegnato_a || sopralluoghista_id || utente_assegnato)) {
       try {
-        const userId = assegnato_a || utente_assegnato
+        const userId = assegnato_a || sopralluoghista_id || utente_assegnato
         const { data: condominio } = await dbQuery.condomini.getById(condominio_id)
         const { data: utente } = await dbQuery.users.getById(userId)
         
