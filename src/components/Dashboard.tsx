@@ -24,47 +24,75 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     }
   })
   const [loading, setLoading] = useState(true)
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now())
+
+  // Funzione per ricaricare le statistiche
+  const loadStats = async (showLoading = false) => {
+    if (showLoading) setLoading(true)
+    
+    try {
+      // Aggiungi timestamp per evitare cache
+      const response = await fetch(`/api/dashboard/stats?t=${Date.now()}`)
+      const result = await response.json()
+      
+      if (result.success) {
+        setStats({
+          condomini: { 
+            totali: result.data.totali.condomini, 
+            attivi: result.data.totali.condomini, 
+            inattivi: 0 
+          },
+          tipologie: { 
+            totali: result.data.totali.tipologie, 
+            attive: result.data.totali.tipologie, 
+            inattive: 0 
+          },
+          verifiche: {
+            totali: result.data.totali.verifiche,
+            verificheCompletate: result.data.lavorazioni.completate || 0,
+            inCorso: result.data.lavorazioni.in_corso || 0,
+            scadute: 0
+          },
+          lavorazioni: {
+            totali: result.data.lavorazioni.totali,
+            da_eseguire: result.data.lavorazioni.da_eseguire,
+            in_corso: result.data.lavorazioni.in_corso,
+            completate: result.data.lavorazioni.completate
+          }
+        })
+        setLastUpdate(Date.now())
+      }
+    } catch (error) {
+      console.error('Errore nel caricamento delle statistiche:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const response = await fetch('/api/dashboard/stats')
-        const result = await response.json()
-        
-        if (result.success) {
-          setStats({
-            condomini: { 
-              totali: result.data.totali.condomini, 
-              attivi: result.data.totali.condomini, 
-              inattivi: 0 
-            },
-            tipologie: { 
-              totali: result.data.totali.tipologie, 
-              attive: result.data.totali.tipologie, 
-              inattive: 0 
-            },
-            verifiche: {
-              totali: result.data.totali.verifiche,
-              verificheCompletate: result.data.lavorazioni.completate || 0,
-              inCorso: result.data.lavorazioni.in_corso || 0,
-              scadute: 0
-            },
-            lavorazioni: {
-              totali: result.data.lavorazioni.totali,
-              da_eseguire: result.data.lavorazioni.da_eseguire,
-              in_corso: result.data.lavorazioni.in_corso,
-              completate: result.data.lavorazioni.completate
-            }
-          })
-        }
-      } catch (error) {
-        console.error('Errore nel caricamento delle statistiche:', error)
-      } finally {
-        setLoading(false)
-      }
+    // Caricamento iniziale
+    loadStats(true)
+
+    // Auto-refresh ogni 30 secondi
+    const interval = setInterval(() => {
+      loadStats(false)
+    }, 30000)
+
+    // Listener per eventi personalizzati di refresh stats
+    const handleRefreshStats = () => {
+      console.log('🔄 Dashboard: Refresh statistiche richiesto')
+      loadStats(false)
     }
 
-    loadStats()
+    // Aggiungi listener per eventi globali
+    window.addEventListener('refreshStats', handleRefreshStats)
+    window.addEventListener('focus', handleRefreshStats) // Refresh quando torna la finestra
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('refreshStats', handleRefreshStats)
+      window.removeEventListener('focus', handleRefreshStats)
+    }
   }, [])
 
   if (loading) {

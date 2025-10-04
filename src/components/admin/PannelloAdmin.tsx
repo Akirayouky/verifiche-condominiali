@@ -7,6 +7,7 @@ import GestioneUtenti from './GestioneUtenti'
 import GestioneAssegnazioni from './GestioneAssegnazioni'
 import WizardLavorazioni from './WizardLavorazioni'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
+import { refreshStatsAfterDelay } from '@/lib/refreshStats'
 
 // Hook per evitare hydration errors
 function useIsClient() {
@@ -99,6 +100,9 @@ export default function PannelloAdmin() {
         
         // Ricarica la lista delle lavorazioni
         await caricaLavorazioni()
+        
+        // 🔄 Refresh delle statistiche del dashboard
+        refreshStatsAfterDelay(1000)
       } else {
         throw new Error(result.error || 'Errore nella creazione della lavorazione')
       }
@@ -134,6 +138,9 @@ export default function PannelloAdmin() {
         setShowModal(false)
         setNuovaNota('')
         setLavorazioneSelezionata(null)
+        
+        // 🔄 Refresh delle statistiche del dashboard per cambi stato lavorazioni
+        refreshStatsAfterDelay(1000)
       } else {
         setError(result.error)
       }
@@ -226,6 +233,10 @@ export default function PannelloAdmin() {
         setShowModal(false)
         setLavorazioneSelezionata(null)
         await caricaLavorazioni() // Ricarica la lista
+        
+        // 🔄 Refresh delle statistiche del dashboard
+        refreshStatsAfterDelay(1000)
+        
         alert('Lavorazione eliminata con successo!')
       } else {
         throw new Error(result.error || 'Errore nella cancellazione')

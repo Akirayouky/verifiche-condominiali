@@ -5,6 +5,7 @@ import { useCondomini } from '@/hooks/useCondomini'
 import { Condominio, CreateCondominioRequest } from '@/lib/types'
 import CondominioForm from './CondominioForm'
 import CondominioTable from './CondominioTable'
+import { refreshStatsAfterDelay } from '@/lib/refreshStats'
 
 export default function GestioneCondomini() {
   const { 
@@ -76,6 +77,9 @@ export default function GestioneCondomini() {
     
     if (success) {
       setSuccessMessage('Condominio eliminato con successo!')
+      
+      // 🔄 Refresh delle statistiche del dashboard
+      refreshStatsAfterDelay(1000)
     }
 
     return success
