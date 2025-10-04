@@ -15,7 +15,7 @@ export default function TestLavorazioniNotifichePage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [formData, setFormData] = useState<TestLavorazioneData>({
-    condominio_id: crypto.randomUUID(),
+    condominio_id: '00000000-1111-2222-3333-444444444444', // Condominio test fisso
     tipologia_id: crypto.randomUUID(),
     descrizione: 'Test lavorazione per notifica sopralluoghista',
     sopralluoghista_id: '0a534c3a-daf0-41a2-8821-9aa003c9e423', // Monica Canavese

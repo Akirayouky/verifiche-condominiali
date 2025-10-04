@@ -4,10 +4,10 @@
 SELECT 'CONDOMINI ESISTENTI:' as info;
 SELECT id, nome, indirizzo FROM condomini LIMIT 5;
 
--- 2. Crea un condominio di test se non esiste
+-- 2. Crea un condominio di test se non esiste (usando UUID valido)
 INSERT INTO condomini (id, nome, indirizzo, data_inserimento)
 VALUES (
-  'test-condo-123',
+  '00000000-1111-2222-3333-444444444444',
   'Condominio Test Notifiche',
   'Via Test Notifiche 123, Test City',
   CURRENT_TIMESTAMP
@@ -17,7 +17,7 @@ VALUES (
 
 -- 3. Verifica che sia stato creato
 SELECT 'CONDOMINIO TEST CREATO:' as info;
-SELECT id, nome, indirizzo FROM condomini WHERE id = 'test-condo-123';
+SELECT id, nome, indirizzo FROM condomini WHERE id = '00000000-1111-2222-3333-444444444444';
 
 -- 4. Se non funziona, mostra la struttura della tabella condomini
 SELECT 'STRUTTURA CONDOMINI:' as info;

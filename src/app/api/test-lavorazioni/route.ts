@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Crea una lavorazione semplificata per test
     const lavorazioneTest = {
-      condominio_id: 'test-condo-123', // Usa condominio test invece di NULL
+      condominio_id: '00000000-1111-2222-3333-444444444444', // Usa UUID condominio test
       user_id: sopralluoghista_id || null,
       titolo: 'Test Lavorazione',
       descrizione: descrizione,
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       const { error: condominioError } = await supabase
         .from('condomini')
         .upsert({
-          id: 'test-condo-123',
+          id: '00000000-1111-2222-3333-444444444444',
           nome: 'Condominio Test Notifiche',
           indirizzo: 'Via Test Notifiche 123'
         }, { 
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
           utente_id: sopralluoghista_id,
           priorita: 'media',
           lavorazione_id: data.id,
-          condominio_id: 'test-condo-123' // Usa condominio test
+          condominio_id: '00000000-1111-2222-3333-444444444444' // Usa UUID condominio test
         })
 
         console.log('🔔 Notifica creata:', notificaResult ? 'SUCCESS' : 'FAILED')
