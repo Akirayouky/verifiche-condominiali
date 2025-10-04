@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Crea una lavorazione semplificata per test
     const lavorazioneTest = {
-      condominio_id: null, // NULL per evitare foreign key constraint
+      condominio_id: 'test-condo-123', // Usa condominio test invece di NULL
       user_id: sopralluoghista_id || null,
       titolo: 'Test Lavorazione',
       descrizione: descrizione,
@@ -40,9 +40,32 @@ export async function POST(request: NextRequest) {
       allegati: JSON.stringify({
         tipologia: 'test',
         tipologia_id: tipologia_id || null,
-        condominio_test: condominio_id || 'test-condo-123', // Salviamo l'ID nel JSON
+        condominio_originale: condominio_id || null, // Salviamo l'ID originale nel JSON
         test: true
       })
+    }
+
+    // Assicurati che il condominio test esista
+    try {
+      console.log('🏢 Verifica/crea condominio test...')
+      const { error: condominioError } = await supabase
+        .from('condomini')
+        .upsert({
+          id: 'test-condo-123',
+          nome: 'Condominio Test Notifiche',
+          indirizzo: 'Via Test Notifiche 123'
+        }, { 
+          onConflict: 'id',
+          ignoreDuplicates: true 
+        })
+
+      if (condominioError) {
+        console.warn('⚠️ Avviso creazione condominio test:', condominioError.message)
+      } else {
+        console.log('✅ Condominio test pronto')
+      }
+    } catch (condErr) {
+      console.warn('⚠️ Errore condominio test (ignorato):', condErr)
     }
 
     console.log('🔨 Inserendo lavorazione test:', lavorazioneTest)
@@ -77,7 +100,7 @@ export async function POST(request: NextRequest) {
           utente_id: sopralluoghista_id,
           priorita: 'media',
           lavorazione_id: data.id,
-          condominio_id: undefined // Sempre undefined per evitare FK issues
+          condominio_id: 'test-condo-123' // Usa condominio test
         })
 
         console.log('🔔 Notifica creata:', notificaResult ? 'SUCCESS' : 'FAILED')
