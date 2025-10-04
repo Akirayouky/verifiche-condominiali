@@ -115,25 +115,51 @@ export class PDFGenerator {
 
   private async addImage(imageUrl: string, maxWidth: number = 150, maxHeight: number = 150) {
     try {
-      // Scarica l'immagine
-      const response = await fetch(imageUrl)
-      const blob = await response.blob()
+      console.log('🖼️ Tentativo caricamento immagine:', imageUrl.substring(0, 100))
       
-      // Converti in base64 per jsPDF
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(blob)
-      })
+      let base64: string
+      let format: string
+      
+      // Se l'immagine è già in base64 (firma digitale)
+      if (imageUrl.startsWith('data:image/')) {
+        console.log('✅ Immagine già in formato base64')
+        base64 = imageUrl
+        format = imageUrl.includes('png') ? 'PNG' : 'JPEG'
+      } else {
+        // Scarica l'immagine da URL esterno
+        console.log('🌐 Download immagine da URL...')
+        const response = await fetch(imageUrl, {
+          mode: 'cors',
+          cache: 'no-cache'
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+        
+        const blob = await response.blob()
+        console.log('✅ Immagine scaricata:', blob.size, 'bytes')
+        
+        // Converti in base64 per jsPDF
+        base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(blob)
+        })
+        
+        format = imageUrl.includes('.png') ? 'PNG' : 'JPEG'
+      }
 
-      // Determina formato immagine
-      const format = imageUrl.includes('.png') ? 'PNG' : 'JPEG'
-      
       // Calcola dimensioni mantenendo aspect ratio
       const img = new Image()
       img.src = base64
-      await new Promise(resolve => img.onload = resolve)
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = () => reject(new Error('Errore caricamento immagine'))
+      })
+      
+      console.log('✅ Immagine caricata:', img.width, 'x', img.height)
       
       const aspectRatio = img.width / img.height
       let width = maxWidth
@@ -361,6 +387,7 @@ export class PDFGenerator {
                     // Aggiungi mappa GPS se disponibile per questa foto
                     const geoData = lavorazione.geolocations?.find(g => g.fotoUrl === fotoUrl)
                     if (geoData) {
+                      console.log('🗺️ Trovato GPS per foto:', fotoUrl, geoData)
                       this.doc.setFontSize(9)
                       this.doc.setTextColor(100, 100, 100)
                       this.doc.text(`📍 GPS: ${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`, this.margin, this.currentY)
@@ -369,16 +396,27 @@ export class PDFGenerator {
                       // Aggiungi mini mappa (usando OpenStreetMap Static)
                       try {
                         const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${geoData.latitude},${geoData.longitude}&zoom=16&size=300x150&maptype=mapnik&markers=${geoData.latitude},${geoData.longitude},red`
+                        console.log('🗺️ Tentativo caricamento mappa:', mapUrl)
                         const mapSuccess = await this.addImage(mapUrl, 80, 40)
                         if (mapSuccess) {
-                          console.log('🗺️ Mappa GPS aggiunta al PDF')
+                          console.log('✅ Mappa GPS aggiunta al PDF')
+                        } else {
+                          console.error('❌ Mappa non aggiunta - fallback a solo coordinate')
+                          this.doc.setFontSize(8)
+                          this.doc.text(`(Mappa non disponibile)`, this.margin, this.currentY)
+                          this.currentY += 5
                         }
                       } catch (error) {
                         console.error('❌ Errore aggiunta mappa GPS:', error)
+                        this.doc.setFontSize(8)
+                        this.doc.text(`(Errore caricamento mappa)`, this.margin, this.currentY)
+                        this.currentY += 5
                       }
                       
                       this.doc.setTextColor(0, 0, 0)
                       this.doc.setFontSize(10)
+                    } else if (lavorazione.geolocations && lavorazione.geolocations.length > 0) {
+                      console.log('⚠️ GPS disponibile ma non trovato per questa foto:', fotoUrl)
                     }
                   }
                 }
