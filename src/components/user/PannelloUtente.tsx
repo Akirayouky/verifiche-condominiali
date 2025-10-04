@@ -24,19 +24,27 @@ function ModalDettaglioLavorazione({ lavorazione, onClose }: ModalDettaglioProps
     let geolocations: Array<{fotoUrl: string, latitude: number, longitude: number, accuracy?: number}> = []
     
     try {
+      console.log('🔍 Estrazione metadata da lavorazione.allegati:', lavorazione.allegati)
       const metadata = JSON.parse(lavorazione.allegati || '{}')
+      console.log('📦 Metadata parsato:', metadata)
       
       // Estrai firma
       if (metadata.firma) {
         firma = metadata.firma
+        console.log('✅ Firma trovata nel metadata:', metadata.firma.substring(0, 50) + '...')
+      } else {
+        console.log('❌ Firma NON trovata nel metadata')
       }
       
       // Estrai GPS dalle foto
       if (metadata.foto_geo) {
         geolocations = metadata.foto_geo
+        console.log('✅ GPS trovato nel metadata:', geolocations.length, 'locations')
+      } else {
+        console.log('❌ GPS NON trovato nel metadata (foto_geo)')
       }
     } catch (e) {
-      console.log('⚠️ Nessun metadata trovato per firma/GPS')
+      console.log('⚠️ Errore parsing metadata:', e)
     }
     
     // Converti la lavorazione nel formato richiesto
@@ -63,6 +71,13 @@ function ModalDettaglioLavorazione({ lavorazione, onClose }: ModalDettaglioProps
       firma: firma,
       geolocations: geolocations.length > 0 ? geolocations : undefined
     }
+    
+    console.log('📄 Dati finali per PDF:', {
+      hasFirma: !!lavorazionePDF.firma,
+      firmaLength: lavorazionePDF.firma?.length,
+      hasGeolocations: !!lavorazionePDF.geolocations,
+      geolocationsCount: lavorazionePDF.geolocations?.length
+    })
     
     // Scarica il PDF
     pdfGenerator.downloadPDF(lavorazionePDF)
