@@ -24,13 +24,14 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // Test 2: Crea notifica di test
+    // Test 2: Crea notifica di test con UUID
+    const testUUID = crypto.randomUUID()
     const notificationManager = new NotificationManager()
     const testNotifica = await notificationManager.creaNotifica({
       tipo: 'nuova_assegnazione',
       titolo: '🧪 Test Debug Notifica',
       messaggio: 'Questa è una notifica di test per verificare il funzionamento',
-      utente_id: 'debug-test',
+      utente_id: testUUID,
       priorita: 'media',
       condominio_id: undefined,
       lavorazione_id: undefined,
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { data: notifiche, error: selectError } = await supabase
       .from('notifiche')
       .select('*')
-      .eq('utente_id', 'debug-test')
+      .eq('utente_id', testUUID)
       .order('data_creazione', { ascending: false })
       .limit(5)
     
@@ -75,10 +76,11 @@ export async function GET(request: NextRequest) {
 // POST per pulire notifiche di test
 export async function POST(request: NextRequest) {
   try {
+    // Pulisce tutte le notifiche che contengono "Test" nel titolo
     const { data, error } = await supabase
       .from('notifiche')
       .delete()
-      .eq('utente_id', 'debug-test')
+      .ilike('titolo', '%Test%')
     
     return NextResponse.json({
       success: true,

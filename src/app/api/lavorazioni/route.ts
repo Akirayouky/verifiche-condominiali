@@ -148,19 +148,27 @@ export async function POST(request: NextRequest) {
     // Crea notifica per nuova lavorazione se assegnata a un utente
     if (data && (assegnato_a || utente_assegnato)) {
       try {
+        const userId = assegnato_a || utente_assegnato
         const { data: condominio } = await dbQuery.condomini.getById(condominio_id)
-        const { data: utente } = await dbQuery.users.getById(assegnato_a || utente_assegnato)
+        const { data: utente } = await dbQuery.users.getById(userId)
         
-        const notificationManager = new NotificationManager()
-        console.log('🎯 Creando notifica per utente:', assegnato_a || utente_assegnato)
+        console.log('🎯 Creando notifica per utente:', userId)
+        console.log('👤 Utente trovato:', utente ? `${utente.nome} ${utente.cognome}` : 'NON TROVATO')
         console.log('🏢 Condominio:', condominio?.nome)
         console.log('📋 Descrizione:', descrizione)
+        
+        if (!utente) {
+          console.error('❌ Utente non trovato per ID:', userId)
+          throw new Error(`Utente con ID ${userId} non trovato`)
+        }
+        
+        const notificationManager = new NotificationManager()
         
         const notificaResult = await notificationManager.creaNotifica({
           tipo: 'nuova_assegnazione',
           titolo: 'Nuova Lavorazione Assegnata',
-          messaggio: `Ti è stata assegnata una nuova lavorazione nel ${condominio?.nome || 'condominio'}: ${descrizione}`,
-          utente_id: assegnato_a || utente_assegnato,
+          messaggio: `Ciao ${utente.nome}, ti è stata assegnata una nuova lavorazione nel ${condominio?.nome || 'condominio'}: ${descrizione}`,
+          utente_id: userId,
           priorita: priorita === 'urgente' ? 'urgente' : priorita === 'alta' ? 'alta' : 'media',
           lavorazione_id: data.id,
           condominio_id: condominio_id,

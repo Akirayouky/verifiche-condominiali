@@ -49,7 +49,7 @@ ORDER BY ordinal_position;
 
 -- 7. Test inserimento per verificare tutto funzioni
 INSERT INTO notifiche (tipo, titolo, messaggio, utente_id, priorita, letta) 
-VALUES ('nuova_assegnazione', 'Test Fix Schema', 'Test dopo correzione schema', 'test-fix-user', 'media', false)
+VALUES ('nuova_assegnazione', 'Test Fix Schema', 'Test dopo correzione schema', gen_random_uuid(), 'media', false)
 ON CONFLICT DO NOTHING;
 
 -- 8. Conta record totali

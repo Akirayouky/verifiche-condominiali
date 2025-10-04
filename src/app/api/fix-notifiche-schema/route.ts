@@ -15,14 +15,15 @@ export async function GET(request: NextRequest) {
       .select('*')
       .limit(1)
     
-    // 2. Test inserimento con tutti i campi
+    // 2. Test inserimento con tutti i campi usando UUID
+    const testUUID = crypto.randomUUID()
     const { data: testInsert, error: insertError } = await supabase
       .from('notifiche')
       .insert({
         tipo: 'nuova_assegnazione',
         titolo: '🔧 Test Schema',
         messaggio: 'Test schema tabella notifiche',
-        utente_id: 'schema-test',
+        utente_id: testUUID,
         priorita: 'media',
         letta: false,
         lavorazione_id: null,
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
     await supabase
       .from('notifiche')
       .delete()
-      .eq('utente_id', 'schema-test')
+      .eq('utente_id', testUUID)
     
     return NextResponse.json({
       success: true,
