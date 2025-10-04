@@ -152,7 +152,11 @@ export async function POST(request: NextRequest) {
         const { data: utente } = await dbQuery.users.getById(assegnato_a || utente_assegnato)
         
         const notificationManager = new NotificationManager()
-        await notificationManager.creaNotifica({
+        console.log('🎯 Creando notifica per utente:', assegnato_a || utente_assegnato)
+        console.log('🏢 Condominio:', condominio?.nome)
+        console.log('📋 Descrizione:', descrizione)
+        
+        const notificaResult = await notificationManager.creaNotifica({
           tipo: 'nuova_assegnazione',
           titolo: 'Nuova Lavorazione Assegnata',
           messaggio: `Ti è stata assegnata una nuova lavorazione nel ${condominio?.nome || 'condominio'}: ${descrizione}`,
@@ -162,7 +166,9 @@ export async function POST(request: NextRequest) {
           condominio_id: condominio_id,
           data_scadenza: data_scadenza || undefined
         })
+        
         console.log('✅ Notifica creata per nuova assegnazione lavorazione:', data.id)
+        console.log('📤 Risultato notifica:', notificaResult ? 'SUCCESS' : 'FAILED')
       } catch (notifError) {
         console.error('⚠️ Errore nella creazione della notifica di assegnazione:', notifError)
       }

@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
         count: notifiche.length
       })
     } else {
-      // Implementa recupero di tutte le notifiche con paginazione
+      // Recupera notifiche specifiche per l'utente + notifiche generali (utente_id vuoto)
       const { data: notifiche, error } = await supabase
         .from('notifiche')
         .select('*')
-        .eq('utente_id', userId)
+        .or(`utente_id.eq.${userId},utente_id.eq.`)
         .order('data_creazione', { ascending: false })
         .limit(100)
 
