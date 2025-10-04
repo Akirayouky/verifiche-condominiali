@@ -26,7 +26,7 @@ export default function TestLavorazioniNotifichePage() {
   const testCreateLavorazione = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/lavorazioni', {
+      const response = await fetch('/api/test-lavorazioni', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +187,38 @@ export default function TestLavorazioniNotifichePage() {
                 disabled={loading}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded font-medium disabled:opacity-50"
               >
-                📝 Crea Lavorazione (con notifica automatica)
+                📝 Test Lavorazione (API semplificata)
+              </button>
+              
+              <button
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const response = await fetch('/api/lavorazioni', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(formData)
+                    });
+                    const result = await response.json();
+                    setResults(prev => [{
+                      success: response.ok,
+                      message: response.ok ? '✅ Lavorazione API normale creata!' : `❌ Errore API normale: ${result.error}`,
+                      data: result,
+                      timestamp: new Date().toISOString()
+                    }, ...prev]);
+                  } catch (error) {
+                    setResults(prev => [{
+                      success: false,
+                      message: `❌ Errore API normale: ${error instanceof Error ? error.message : 'Sconosciuto'}`,
+                      timestamp: new Date().toISOString()
+                    }, ...prev]);
+                  }
+                  setLoading(false);
+                }}
+                disabled={loading}
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 px-4 rounded font-medium disabled:opacity-50"
+              >
+                📋 Test API Lavorazioni Normale
               </button>
               
               <button
