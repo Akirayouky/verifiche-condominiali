@@ -116,6 +116,7 @@ export interface CreateVerificaRequest {
   condominio_id: string
   tipologia_id: string
   dati_verifica: Record<string, any>
+  firma?: string  // URL firma digitale
   note?: string
 }
 

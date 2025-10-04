@@ -23,6 +23,7 @@ export default function WizardVerifiche({
   const [selectedTipologia, setSelectedTipologia] = useState<TipologiaVerifica | null>(null)
   const [datiVerifica, setDatiVerifica] = useState<Record<string, any>>({})
   const [note, setNote] = useState('')
+  const [firma, setFirma] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [completata, setCompletata] = useState(false)
   const [errorModal, setErrorModal] = useState<string | null>(null)
@@ -167,6 +168,33 @@ export default function WizardVerifiche({
     setLoading(true)
 
     try {
+      // 1️⃣ Upload firma se presente
+      let firmaUrl: string | null = null
+      if (firma) {
+        try {
+          // Converti base64 a Blob
+          const response = await fetch(firma)
+          const blob = await response.blob()
+          
+          const formData = new FormData()
+          formData.append('file', blob, `firma-${Date.now()}.png`)
+          formData.append('lavorazioneId', uploadId)
+          
+          const uploadResponse = await fetch('/api/upload-firma-vercel', {
+            method: 'POST',
+            body: formData
+          })
+          
+          const uploadResult = await uploadResponse.json()
+          if (uploadResult.success) {
+            firmaUrl = uploadResult.data.url
+            console.log('✍️ Firma caricata:', firmaUrl)
+          }
+        } catch (e) {
+          console.error('Errore upload firma:', e)
+        }
+      }
+
       if (isLavorazioneMode && lavorazione) {
         // Modalità lavorazione: aggiorna la lavorazione esistente
         
@@ -193,6 +221,7 @@ export default function WizardVerifiche({
             dati: {
               dati_verifica: datiVerifica,
               foto: fotoDaSezioni, // Oggetto con foto per sezione
+              firma: firmaUrl, // URL firma digitale
               note: note
             }
           })
@@ -217,6 +246,7 @@ export default function WizardVerifiche({
           condominio_id: selectedCondominio.id,
           tipologia_id: selectedTipologia.id,
           dati_verifica: datiVerifica,
+          firma: firmaUrl || undefined, // Firma digitale
           note
         }
 
@@ -238,6 +268,7 @@ export default function WizardVerifiche({
             setSelectedTipologia(null)
             setDatiVerifica({})
             setNote('')
+            setFirma(null)
             setCompletata(false)
           }, 3000)
         } else {
@@ -257,6 +288,7 @@ export default function WizardVerifiche({
     setSelectedTipologia(null)
     setDatiVerifica({})
     setNote('')
+    setFirma(null)
     setCompletata(false)
   }
 
@@ -387,7 +419,9 @@ export default function WizardVerifiche({
             tipologia={selectedTipologia}
             datiVerifica={datiVerifica}
             note={note}
+            firma={firma}
             onNoteChange={setNote}
+            onFirmaChange={setFirma}
             onComplete={handleComplete}
             onPrevious={handlePrevious}
             loading={loading}

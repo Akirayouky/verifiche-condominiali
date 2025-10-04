@@ -6,6 +6,7 @@ import { useTipologie } from '@/hooks/useTipologie'
 import { Condominio, TipologiaVerifica, CampoPersonalizzato } from '@/lib/types'
 import FotoUploadVercel from '@/components/ui/FotoUploadVercel'
 import VoiceInput from '@/components/ui/VoiceInput'
+import SignaturePad from '@/components/ui/SignaturePad'
 import dynamic from 'next/dynamic'
 
 // Carica QrScanner solo lato client (usa fotocamera)
@@ -482,7 +483,9 @@ interface Step3Props {
   tipologia: TipologiaVerifica
   datiVerifica: Record<string, any>
   note: string
+  firma: string | null
   onNoteChange: (note: string) => void
+  onFirmaChange: (firma: string) => void
   onComplete: () => void
   onPrevious: () => void
   loading?: boolean
@@ -493,11 +496,20 @@ export function Step3({
   tipologia, 
   datiVerifica, 
   note,
-  onNoteChange, 
+  firma,
+  onNoteChange,
+  onFirmaChange, 
   onComplete, 
   onPrevious,
   loading = false 
 }: Step3Props) {
+  const [showSignaturePad, setShowSignaturePad] = useState(false)
+
+  const handleSaveSignature = (signatureData: string) => {
+    onFirmaChange(signatureData)
+    setShowSignaturePad(false)
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -556,6 +568,59 @@ export function Step3({
         />
         <p className="mt-1 text-xs text-gray-500">
           💡 Tocca il microfono per dettare le note a voce (funziona hands-free!)
+        </p>
+      </div>
+
+      {/* Firma Digitale */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          ✍️ Firma Digitale
+        </label>
+        
+        {!firma && !showSignaturePad && (
+          <button
+            type="button"
+            onClick={() => setShowSignaturePad(true)}
+            className="w-full bg-blue-50 border-2 border-blue-300 border-dashed rounded-lg p-6 text-center hover:bg-blue-100 transition-colors"
+          >
+            <div className="text-4xl mb-2">✍️</div>
+            <div className="text-blue-700 font-medium">Aggiungi Firma Digitale</div>
+            <div className="text-sm text-blue-600 mt-1">Tocca qui per firmare</div>
+          </button>
+        )}
+
+        {showSignaturePad && (
+          <SignaturePad
+            onSave={handleSaveSignature}
+            onCancel={() => setShowSignaturePad(false)}
+          />
+        )}
+
+        {firma && !showSignaturePad && (
+          <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center text-green-700">
+                <span className="text-2xl mr-2">✅</span>
+                <span className="font-medium">Firma acquisita</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSignaturePad(true)}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Rifirma
+              </button>
+            </div>
+            <img 
+              src={firma} 
+              alt="Firma digitale" 
+              className="border border-gray-300 rounded bg-white p-2 max-w-full h-auto"
+            />
+          </div>
+        )}
+
+        <p className="mt-2 text-xs text-gray-500">
+          La firma digitale conferma la tua verifica personale e sarà inclusa nel PDF
         </p>
       </div>
 
