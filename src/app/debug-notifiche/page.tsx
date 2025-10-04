@@ -113,9 +113,9 @@ export default function DebugNotifichePage() {
         <h3 className="text-lg font-semibold text-yellow-800 mb-2">📝 Checklist Debug</h3>
         <ul className="text-sm text-yellow-700 space-y-1">
           <li>1. ✅ Le notifiche vengono salvate nel database?</li>
-          <li>2. ✅ L'endpoint SSE funziona e invia messaggi?</li>
+          <li>2. ✅ L&apos;endpoint SSE funziona e invia messaggi?</li>
           <li>3. ❓ Il NotificationCenter riceve i messaggi SSE?</li>
-          <li>4. ❓ Le notifiche appaiono nell'interfaccia?</li>
+          <li>4. ❓ Le notifiche appaiono nell&apos;interfaccia?</li>
         </ul>
       </div>
     </div>
