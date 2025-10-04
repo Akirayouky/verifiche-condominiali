@@ -93,22 +93,44 @@ export async function PUT(
         }
         
         // Salva dati verifica nei metadati se presenti
-        if (dati && dati.dati_verifica) {
+        if (dati && (dati.dati_verifica || dati.foto)) {
           try {
             const metadataEsistenti = lavorazioneEsistente.allegati ? 
               JSON.parse(lavorazioneEsistente.allegati) : {}
             
-            updateData.allegati = JSON.stringify({
+            const nuoviMetadata: any = {
               ...metadataEsistenti,
-              dati_verifica_completamento: dati.dati_verifica,
               data_completamento: now
-            })
+            }
+            
+            // Aggiungi dati verifica se presenti
+            if (dati.dati_verifica) {
+              nuoviMetadata.dati_verifica_completamento = dati.dati_verifica
+            }
+            
+            // Aggiungi foto se presenti (supporta sia array di stringhe che oggetti)
+            if (dati.foto && Array.isArray(dati.foto) && dati.foto.length > 0) {
+              nuoviMetadata.foto = dati.foto
+              console.log('📸 Salvando', dati.foto.length, 'foto nei metadati')
+            }
+            
+            updateData.allegati = JSON.stringify(nuoviMetadata)
           } catch (e) {
             // Se i metadati esistenti non sono JSON valido, crea nuovi
-            updateData.allegati = JSON.stringify({
-              dati_verifica_completamento: dati.dati_verifica,
+            const nuoviMetadata: any = {
               data_completamento: now
-            })
+            }
+            
+            if (dati.dati_verifica) {
+              nuoviMetadata.dati_verifica_completamento = dati.dati_verifica
+            }
+            
+            if (dati.foto && Array.isArray(dati.foto) && dati.foto.length > 0) {
+              nuoviMetadata.foto = dati.foto
+              console.log('📸 Salvando', dati.foto.length, 'foto nei metadati (nuovo)')
+            }
+            
+            updateData.allegati = JSON.stringify(nuoviMetadata)
           }
         }
         

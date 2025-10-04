@@ -279,6 +279,8 @@ export class PDFGenerator {
     if (lavorazione.allegati) {
       try {
         const metadata = JSON.parse(lavorazione.allegati)
+        console.log('🔍 PDF Generator - metadata.foto:', metadata.foto)
+        console.log('🔍 PDF Generator - foto type:', typeof metadata.foto, Array.isArray(metadata.foto))
         this.addSubtitle('TIPOLOGIA VERIFICA')
         
         let tipoLabel = 'Altro'

@@ -169,6 +169,14 @@ export default function WizardVerifiche({
     try {
       if (isLavorazioneMode && lavorazione) {
         // Modalità lavorazione: aggiorna la lavorazione esistente
+        
+        // Estrai foto da datiVerifica se presenti
+        const fotoArray = Object.values(datiVerifica).find(val => 
+          Array.isArray(val) && val.length > 0 && typeof val[0] === 'string' && val[0].includes('blob.vercel-storage.com')
+        ) as string[] | undefined
+        
+        console.log('📸 Completamento lavorazione - Foto trovate:', fotoArray?.length || 0)
+        
         const response = await fetch(`/api/lavorazioni/${lavorazione.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -176,6 +184,7 @@ export default function WizardVerifiche({
             azione: 'completa',
             dati: {
               dati_verifica: datiVerifica,
+              foto: fotoArray || [],
               note: note
             }
           })
