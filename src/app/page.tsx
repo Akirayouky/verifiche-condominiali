@@ -11,6 +11,7 @@ import PannelloUtente from '@/components/user/PannelloUtente'
 import NotePersonali from '@/components/user/NotePersonali'
 import ImpostazioniUtente from '@/components/user/ImpostazioniUtente'
 import Dashboard from '@/components/Dashboard'
+import NotificationCenter from '@/components/notifications/NotificationCenterSimple'
 
 function MainApp() {
   const { isAuthenticated, user, role, logout } = useAuth()
@@ -89,22 +90,7 @@ function MainApp() {
               </div>
               
               {/* Icona Notifiche */}
-              <div className="relative">
-                <button
-                  className="relative p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Notifiche"
-                  onClick={() => {
-                    // Per ora mostra alert - poi sarà il dropdown
-                    alert('🔔 Sistema Notifiche Attivo!\n\nFunzionalità:\n- Notifiche real-time\n- Controllo scadenze\n- Reminder automatici\n\nVai su Admin > Sistema Notifiche per i controlli')
-                  }}
-                >
-                  <span className="text-xl">🔔</span>
-                  {/* Badge notifiche non lette */}
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    3
-                  </span>
-                </button>
-              </div>
+              <NotificationCenter userId={user?.id || ''} />
 
               <button
                 onClick={logout}
