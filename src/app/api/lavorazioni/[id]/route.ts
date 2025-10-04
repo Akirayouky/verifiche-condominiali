@@ -87,9 +87,17 @@ export async function PUT(
         }
         
         // Aggiungi note se presenti
-        if (dati && dati.note) {
+        if (dati && dati.note && dati.note.trim()) {
           const noteEsistenti = lavorazioneEsistente.note || ''
-          updateData.note = noteEsistenti ? `${noteEsistenti}\n${dati.note}` : dati.note
+          const nuovaNota = dati.note.trim()
+          
+          // Evita duplicati: aggiungi solo se la nota non è già presente
+          if (!noteEsistenti.includes(nuovaNota)) {
+            updateData.note = noteEsistenti ? `${noteEsistenti}\n${nuovaNota}` : nuovaNota
+          } else {
+            // Se la nota è già presente, mantieni quelle esistenti
+            updateData.note = noteEsistenti
+          }
         }
         
         // Salva dati verifica nei metadati se presenti
