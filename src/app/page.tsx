@@ -12,6 +12,7 @@ import NotePersonali from '@/components/user/NotePersonali'
 import ImpostazioniUtente from '@/components/user/ImpostazioniUtente'
 import Dashboard from '@/components/Dashboard'
 import NotificationCenter from '@/components/notifications/NotificationCenterSimple'
+import Guida from '@/components/Guida'
 import Link from 'next/link'
 
 function MainApp() {
@@ -25,8 +26,7 @@ function MainApp() {
     { id: 'tipologie', name: 'Tipologie', icon: '📋' },
     { id: 'verifiche', name: 'Nuova Verifica', icon: '✅' },
     { id: 'admin', name: 'Gestione Lavorazioni', icon: '⚙️' },
-    { id: 'test-notifiche', name: 'Test Notifiche', icon: '🧪' },
-    { id: 'test-lavorazioni', name: 'Test Integrazione', icon: '🔄' },
+    { id: 'guida', name: 'Guida', icon: '�' },
   ]
 
   const userSections = [
@@ -92,6 +92,18 @@ function MainApp() {
                 </div>
               </div>
               
+              {/* Link Pannello Dev (solo in development) */}
+              {process.env.NODE_ENV === 'development' && (
+                <Link
+                  href="/dev"
+                  target="_blank"
+                  className="px-3 py-1 text-sm text-purple-600 hover:text-purple-800 border border-purple-300 rounded hover:bg-purple-50 transition-colors font-medium"
+                  title="Apri Pannello Sviluppatore"
+                >
+                  🔧 Dev
+                </Link>
+              )}
+              
               {/* Icona Notifiche */}
               <NotificationCenter userId={user?.id || ''} />
 
@@ -115,46 +127,7 @@ function MainApp() {
               {activeSection === 'tipologie' && <GestioneTipologie />}
               {activeSection === 'verifiche' && <WizardVerifiche />}
               {activeSection === 'admin' && <PannelloAdmin />}
-              {activeSection === 'test-notifiche' && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-xl font-bold mb-4">🧪 Test Sistema Notifiche</h3>
-                  <p className="text-gray-600 mb-6">
-                    Strumenti per testare il funzionamento del sistema di notifiche
-                  </p>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <Link 
-                      href="/test-notifiche"
-                      className="block bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg text-center transition-colors"
-                    >
-                      <div className="text-2xl mb-2">🔌</div>
-                      <h4 className="font-semibold">Test Database</h4>
-                      <p className="text-sm opacity-90">Test CRUD notifiche</p>
-                    </Link>
-                    <Link 
-                      href="/test-lavorazioni-notifiche"
-                      className="block bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg text-center transition-colors"
-                    >
-                      <div className="text-2xl mb-2">🔄</div>
-                      <h4 className="font-semibold">Test Integrazione</h4>
-                      <p className="text-sm opacity-90">Lavorazioni → Notifiche</p>
-                    </Link>
-                  </div>
-                </div>
-              )}
-              {activeSection === 'test-lavorazioni' && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-xl font-bold mb-4">🔄 Test Integrazione Completa</h3>
-                  <p className="text-gray-600 mb-6">
-                    Test del flusso completo: Lavorazioni → Notifiche → Sopralluoghisti
-                  </p>
-                  <Link 
-                    href="/test-lavorazioni-notifiche"
-                    className="inline-block bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                  >
-                    🚀 Avvia Test Completo
-                  </Link>
-                </div>
-              )}
+              {activeSection === 'guida' && <Guida />}
             </>
           )}
 

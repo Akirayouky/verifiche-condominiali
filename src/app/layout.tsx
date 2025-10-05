@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import DebugPanel from '@/components/ui/DebugPanel'
-import QuickTestButton from '@/components/debug/QuickTestButton'
 
 const APP_NAME = 'Verifiche Condominiali'
 const APP_DESCRIPTION = 'App PWA per gestione verifiche condominiali'
@@ -55,8 +53,6 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-gray-50">
         {children}
-        <DebugPanel />
-        <QuickTestButton />
       </body>
     </html>
   )
