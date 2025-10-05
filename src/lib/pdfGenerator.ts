@@ -120,35 +120,32 @@ export class PDFGenerator {
       let base64: string
       let format: string
       
-      // Se l'immagine è già in base64 (firma digitale)
+      // Se l'immagine è già in base64 (firma digitale locale)
       if (imageUrl.startsWith('data:image/')) {
         console.log('✅ Immagine già in formato base64')
         base64 = imageUrl
         format = imageUrl.includes('png') ? 'PNG' : 'JPEG'
       } else {
-        // Scarica l'immagine da URL esterno
-        console.log('🌐 Download immagine da URL...')
-        const response = await fetch(imageUrl, {
-          mode: 'cors',
-          cache: 'no-cache'
-        })
+        // Usa il proxy API per scaricare immagini esterne (risolve CORS)
+        console.log('🌐 Download immagine tramite proxy API...')
+        
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`
+        const response = await fetch(proxyUrl)
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(`Proxy error: ${errorData.error || response.statusText}`)
         }
         
-        const blob = await response.blob()
-        console.log('✅ Immagine scaricata:', blob.size, 'bytes')
+        const data = await response.json()
         
-        // Converti in base64 per jsPDF
-        base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.onerror = reject
-          reader.readAsDataURL(blob)
-        })
+        if (!data.success || !data.dataUrl) {
+          throw new Error('Proxy non ha restituito dataUrl')
+        }
         
-        format = imageUrl.includes('.png') ? 'PNG' : 'JPEG'
+        console.log('✅ Immagine scaricata tramite proxy:', data.size, 'bytes')
+        base64 = data.dataUrl
+        format = data.type.includes('png') ? 'PNG' : 'JPEG'
       }
 
       // Calcola dimensioni mantenendo aspect ratio
@@ -156,10 +153,11 @@ export class PDFGenerator {
       img.src = base64
       await new Promise((resolve, reject) => {
         img.onload = resolve
-        img.onerror = () => reject(new Error('Errore caricamento immagine'))
+        img.onerror = () => reject(new Error('Errore caricamento immagine in canvas'))
+        setTimeout(() => reject(new Error('Timeout caricamento immagine')), 5000)
       })
       
-      console.log('✅ Immagine caricata:', img.width, 'x', img.height)
+      console.log('✅ Immagine caricata in canvas:', img.width, 'x', img.height)
       
       const aspectRatio = img.width / img.height
       let width = maxWidth
