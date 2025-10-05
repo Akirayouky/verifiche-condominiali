@@ -21,7 +21,14 @@ export async function GET(request: NextRequest) {
           nome,
           indirizzo
         ),
-        users(
+        users!lavorazioni_user_id_fkey(
+          id,
+          username,
+          nome,
+          cognome,
+          email
+        ),
+        riaperta_da_user:users!lavorazioni_riaperta_da_fkey(
           id,
           username,
           nome,
@@ -126,7 +133,7 @@ export async function POST(request: NextRequest) {
       user_id: assegnato_a || sopralluoghista_id || utente_assegnato, // user_id nel DB
       titolo: getTitolo(),
       descrizione: descrizione.trim(),
-      stato: 'aperta', // Stati DB: 'aperta', 'in_corso', 'completata', 'archiviata'
+      stato: 'in_corso', // Stati DB: 'in_corso', 'completata', 'riaperta'
       priorita: priorita || 'media',
       data_apertura: now,
       data_scadenza: data_scadenza || null,
