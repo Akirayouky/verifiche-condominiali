@@ -6,6 +6,13 @@ export default function PannelloSviluppatore() {
   const [results, setResults] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
+  
+  // Stati per reset database
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [resetType, setResetType] = useState<'all' | 'lavorazioni' | 'users' | 'condomini' | 'tipologie' | 'notifiche'>('all')
+  const [password, setPassword] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetResult, setResetResult] = useState<any>(null)
 
   const createQuickTest = async () => {
     setLoading(true)
@@ -110,20 +117,93 @@ export default function PannelloSviluppatore() {
     }
   }
 
+  const openResetModal = (type: 'all' | 'lavorazioni' | 'users' | 'condomini' | 'tipologie' | 'notifiche') => {
+    setResetType(type)
+    setPassword('')
+    setResetResult(null)
+    setShowResetModal(true)
+  }
+
+  const handleReset = async () => {
+    if (!password) {
+      setResetResult({ success: false, error: 'Inserisci la password' })
+      return
+    }
+
+    setResetLoading(true)
+    setResetResult(null)
+
+    try {
+      const response = await fetch('/api/dev/reset-database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: resetType, password })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Errore durante il reset')
+      }
+
+      setResetResult(data)
+      
+      // Chiudi modal dopo 3 secondi se successo
+      if (data.success) {
+        setTimeout(() => {
+          setShowResetModal(false)
+          setPassword('')
+        }, 3000)
+      }
+    } catch (error) {
+      setResetResult({
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      })
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  const getResetLabel = (type: string) => {
+    const labels = {
+      all: '🔥 Reset Completo Database',
+      lavorazioni: '📋 Reset Lavorazioni',
+      users: '👥 Reset Utenti',
+      condomini: '🏢 Reset Condomini',
+      tipologie: '📝 Reset Tipologie',
+      notifiche: '🔔 Reset Notifiche'
+    }
+    return labels[type as keyof typeof labels] || 'Reset'
+  }
+
+  const getResetDescription = (type: string) => {
+    const descriptions = {
+      all: 'Elimina TUTTI i dati: lavorazioni, utenti (eccetto admin), condomini, tipologie, notifiche. Reset totale del sistema.',
+      lavorazioni: 'Elimina solo le lavorazioni e i relativi allegati (foto, firma, note).',
+      users: 'Elimina tutti gli utenti tranne l\'amministratore principale.',
+      condomini: 'Elimina tutti i condomini dal sistema.',
+      tipologie: 'Elimina tutte le tipologie di verifica.',
+      notifiche: 'Elimina tutte le notifiche dal sistema.'
+    }
+    return descriptions[type as keyof typeof descriptions] || ''
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">🔧 Pannello Sviluppatore</h1>
-        <p className="text-gray-600">Test rapido lavorazione con foto, GPS e firma digitale</p>
+        <p className="text-gray-600">Test rapido e gestione database di sviluppo</p>
       </div>
       
+      {/* Sezione Quick Test */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">🧪 Quick Test Lavorazione</h2>
         <p className="text-sm text-gray-600 mb-4">
           Crea una lavorazione completa con 2 foto fake, coordinate GPS (Milano) e firma digitale
         </p>
         
-                <button
+        <button
           onClick={createQuickTest}
           disabled={loading}
           className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-lg font-bold rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
@@ -132,6 +212,70 @@ export default function PannelloSviluppatore() {
         </button>
       </div>
 
+      {/* Sezione Reset Database */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ Reset Database</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          <strong className="text-red-600">ATTENZIONE:</strong> Queste operazioni eliminano i dati in modo permanente. Protette da password.
+        </p>
+
+        {/* Reset Completo */}
+        <div className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+          <h3 className="font-bold text-red-800 mb-2">🔥 Reset Completo</h3>
+          <p className="text-sm text-red-700 mb-3">Elimina TUTTI i dati dal database (lavorazioni, utenti, condomini, tipologie, notifiche)</p>
+          <button
+            onClick={() => openResetModal('all')}
+            className="w-full px-4 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors"
+          >
+            🔥 Reset Database Completo
+          </button>
+        </div>
+
+        {/* Reset Singoli */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <button
+            onClick={() => openResetModal('lavorazioni')}
+            className="p-4 bg-orange-50 border border-orange-300 rounded-lg hover:bg-orange-100 transition-colors text-left"
+          >
+            <div className="font-bold text-orange-800 mb-1">📋 Reset Lavorazioni</div>
+            <div className="text-xs text-orange-700">Elimina solo le lavorazioni</div>
+          </button>
+
+          <button
+            onClick={() => openResetModal('users')}
+            className="p-4 bg-yellow-50 border border-yellow-300 rounded-lg hover:bg-yellow-100 transition-colors text-left"
+          >
+            <div className="font-bold text-yellow-800 mb-1">👥 Reset Utenti</div>
+            <div className="text-xs text-yellow-700">Elimina utenti (tranne admin)</div>
+          </button>
+
+          <button
+            onClick={() => openResetModal('condomini')}
+            className="p-4 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors text-left"
+          >
+            <div className="font-bold text-blue-800 mb-1">🏢 Reset Condomini</div>
+            <div className="text-xs text-blue-700">Elimina tutti i condomini</div>
+          </button>
+
+          <button
+            onClick={() => openResetModal('tipologie')}
+            className="p-4 bg-purple-50 border border-purple-300 rounded-lg hover:bg-purple-100 transition-colors text-left"
+          >
+            <div className="font-bold text-purple-800 mb-1">📝 Reset Tipologie</div>
+            <div className="text-xs text-purple-700">Elimina tutte le tipologie</div>
+          </button>
+
+          <button
+            onClick={() => openResetModal('notifiche')}
+            className="p-4 bg-pink-50 border border-pink-300 rounded-lg hover:bg-pink-100 transition-colors text-left"
+          >
+            <div className="font-bold text-pink-800 mb-1">🔔 Reset Notifiche</div>
+            <div className="text-xs text-pink-700">Elimina tutte le notifiche</div>
+          </button>
+        </div>
+      </div>
+
+      {/* Risultati Quick Test */}
       {results && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
@@ -161,6 +305,77 @@ export default function PannelloSviluppatore() {
           <pre className="text-xs overflow-auto bg-gray-50 p-4 rounded border max-h-96">
             {JSON.stringify(results, null, 2)}
           </pre>
+        </div>
+      )}
+
+      {/* Modal Reset Database */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-red-600 mb-4">
+              {getResetLabel(resetType)}
+            </h3>
+            
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800">
+                <strong>⚠️ ATTENZIONE:</strong> {getResetDescription(resetType)}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password di conferma:
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleReset()}
+                placeholder="Inserisci password"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Inserisci la password admin per confermare l'operazione
+              </p>
+            </div>
+
+            {resetResult && (
+              <div className={`mb-4 p-3 rounded-lg ${resetResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                {resetResult.success ? (
+                  <div>
+                    <p className="text-sm font-medium text-green-800 mb-2">✅ {resetResult.message}</p>
+                    {resetResult.deletedCount !== undefined && (
+                      <p className="text-xs text-green-700">Elementi eliminati: {resetResult.deletedCount}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-red-800">❌ {resetResult.error}</p>
+                )}
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowResetModal(false)
+                  setPassword('')
+                  setResetResult(null)
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={resetLoading}
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={resetLoading || !password}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-bold"
+              >
+                {resetLoading ? '⏳ Eliminazione...' : '🗑️ Conferma Reset'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
