@@ -26,14 +26,27 @@ function ModalDettaglioLavorazione({ lavorazione, onClose }: ModalDettaglioProps
     try {
       console.log('🔍 Estrazione metadata da lavorazione.allegati:', lavorazione.allegati)
       const metadata = JSON.parse(lavorazione.allegati || '{}')
-      console.log('📦 Metadata parsato:', metadata)
+      console.log('📦 Metadata parsato COMPLETO:', JSON.stringify(metadata, null, 2))
+      console.log('📦 Chiavi presenti nel metadata:', Object.keys(metadata))
       
       // Estrai firma
       if (metadata.firma) {
         firma = metadata.firma
-        console.log('✅ Firma trovata nel metadata:', metadata.firma.substring(0, 50) + '...')
+        console.log('✅ Firma trovata in metadata.firma:', metadata.firma.substring(0, 50) + '...')
       } else {
-        console.log('❌ Firma NON trovata nel metadata')
+        console.log('❌ Firma NON trovata in metadata.firma')
+        console.log('🔍 Cerco firma in altri campi...')
+        
+        // Prova altri possibili campi
+        if (metadata.dati && metadata.dati.firma) {
+          firma = metadata.dati.firma
+          console.log('✅ Firma trovata in metadata.dati.firma:', metadata.dati.firma.substring(0, 50) + '...')
+        } else if (metadata.foto_firma) {
+          firma = metadata.foto_firma
+          console.log('✅ Firma trovata in metadata.foto_firma:', metadata.foto_firma.substring(0, 50) + '...')
+        } else {
+          console.log('❌ Firma non trovata in nessun campo del metadata')
+        }
       }
       
       // Estrai GPS dalle foto
