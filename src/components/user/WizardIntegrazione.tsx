@@ -30,6 +30,20 @@ export default function WizardIntegrazione({
   const [valoriRicompilati, setValoriRicompilati] = useState<Record<string, any>>({})
   const [valoriNuovi, setValoriNuovi] = useState<Record<string, any>>({})
 
+  // Foto esistenti dal blob storage
+  const [fotoEsistenti, setFotoEsistenti] = useState<Array<{
+    url: string
+    downloadUrl: string
+    pathname: string
+    nome: string
+    size: number
+    uploadedAt: string
+  }>>([])
+  
+  // Tracciamento modifiche foto: quali tenere, quali rimuovere, quali nuove
+  const [fotoMantenute, setFotoMantenute] = useState<string[]>([]) // pathname delle foto da mantenere
+  const [fotoNuove, setFotoNuove] = useState<Record<string, File[]>>({}) // nomeCampo -> File[]
+
   // Carica i campi dalla lavorazione
   useEffect(() => {
     try {
@@ -68,6 +82,36 @@ export default function WizardIntegrazione({
       setError('Errore nel caricamento dei campi. Contatta l\'amministratore.')
     }
   }, [lavorazione])
+
+  // Carica foto esistenti dal blob storage
+  useEffect(() => {
+    const loadFotoEsistenti = async () => {
+      try {
+        console.log('📸 Loading foto esistenti for lavorazione:', lavorazione.id)
+        
+        const response = await fetch(`/api/lavorazioni/${lavorazione.id}/foto`)
+        if (!response.ok) {
+          console.warn('⚠️ Nessuna foto trovata o errore API foto')
+          return
+        }
+
+        const data = await response.json()
+        
+        if (data.success && data.foto && Array.isArray(data.foto)) {
+          console.log(`✅ Loaded ${data.foto.length} foto esistenti`)
+          setFotoEsistenti(data.foto)
+          
+          // Inizialmente mantieni tutte le foto esistenti
+          setFotoMantenute(data.foto.map((f: any) => f.pathname))
+        }
+      } catch (err) {
+        console.error('❌ Errore caricamento foto esistenti:', err)
+        // Non bloccare il wizard se le foto non si caricano
+      }
+    }
+
+    loadFotoEsistenti()
+  }, [lavorazione.id])
 
   const handleValoreRicompilatoChange = (nomeCampo: string, valore: any) => {
     setValoriRicompilati({
@@ -133,16 +177,48 @@ export default function WizardIntegrazione({
     setError(null)
 
     try {
-      const payload = {
-        campi_ricompilati: valoriRicompilati,
-        campi_nuovi_compilati: valoriNuovi,
-        utente_id: userId
-      }
+      // Prepara FormData per gestire file upload
+      const formData = new FormData()
+      
+      // Dati JSON base
+      formData.append('campi_ricompilati', JSON.stringify(valoriRicompilati))
+      formData.append('campi_nuovi_compilati', JSON.stringify(valoriNuovi))
+      formData.append('utente_id', userId)
+      
+      // Foto da mantenere (pathname delle foto esistenti)
+      formData.append('foto_mantenute', JSON.stringify(fotoMantenute))
+      
+      // Foto da rimuovere (tutte quelle esistenti NON in fotoMantenute)
+      const fotoRimosse = fotoEsistenti
+        .filter(foto => !fotoMantenute.includes(foto.pathname))
+        .map(foto => foto.pathname)
+      formData.append('foto_rimosse', JSON.stringify(fotoRimosse))
+      
+      // Aggiungi nuove foto come file
+      Object.entries(fotoNuove).forEach(([nomeCampo, files]) => {
+        files.forEach((file, index) => {
+          formData.append(`foto_nuove_${nomeCampo}_${index}`, file)
+        })
+      })
+      
+      // Info su quante foto per campo
+      const fotoNuoveInfo: Record<string, number> = {}
+      Object.entries(fotoNuove).forEach(([nomeCampo, files]) => {
+        fotoNuoveInfo[nomeCampo] = files.length
+      })
+      formData.append('foto_nuove_info', JSON.stringify(fotoNuoveInfo))
+
+      console.log('📤 Submitting integrazione:', {
+        campiRicompilati: Object.keys(valoriRicompilati).length,
+        campiNuovi: Object.keys(valoriNuovi).length,
+        fotoMantenute: fotoMantenute.length,
+        fotoRimosse: fotoRimosse.length,
+        fotoNuoveInfo
+      })
 
       const response = await fetch(`/api/lavorazioni/${lavorazione.id}/completa-integrazione`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData // NO Content-Type header, browser lo aggiunge automaticamente con boundary
       })
 
       const data = await response.json()
@@ -241,25 +317,125 @@ export default function WizardIntegrazione({
         )
 
       case 'file':
+        // Ottieni le foto mantenute per questo campo (filtra per nome campo se necessario)
+        const fotoMantenuteCampo = fotoEsistenti.filter(foto => 
+          fotoMantenute.includes(foto.pathname)
+        )
+        const nuoveFotoCampo = fotoNuove[campo.nome] || []
+
         return (
-          <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">
-              {campo.label}
-            </label>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={(e) => {
-                const files = Array.from(e.target.files || [])
-                onChange(files.map(f => f.name)) // Simplified: in production upload to server
-              }}
-              className={commonClasses}
-              aria-label={campo.label}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {campo.descrizione || 'Seleziona una o più foto'}
-            </p>
+          <div className="space-y-3">
+            {/* Foto esistenti mantenute */}
+            {fotoMantenuteCampo.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  📷 Foto esistenti ({fotoMantenuteCampo.length})
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {fotoMantenuteCampo.map((foto) => (
+                    <div key={foto.pathname} className="relative group">
+                      <img 
+                        src={foto.url} 
+                        alt={foto.nome}
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-gray-300 shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Rimuovi da mantenute
+                          setFotoMantenute(prev => prev.filter(p => p !== foto.pathname))
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-md"
+                        title="Rimuovi foto"
+                      >
+                        ✕
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1 truncate w-24" title={foto.nome}>
+                        {foto.nome}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Nuove foto selezionate */}
+            {nuoveFotoCampo.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  ➕ Nuove foto da caricare ({nuoveFotoCampo.length})
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {nuoveFotoCampo.map((file, idx) => (
+                    <div key={idx} className="relative group">
+                      <div className="w-24 h-24 bg-gray-100 rounded-lg border-2 border-dashed border-blue-400 flex items-center justify-center">
+                        <div className="text-center">
+                          <span className="text-2xl">📄</span>
+                          <p className="text-xs text-gray-600 mt-1 px-1">Nuova</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Rimuovi file dalle nuove
+                          setFotoNuove(prev => ({
+                            ...prev,
+                            [campo.nome]: prev[campo.nome]?.filter((_, i) => i !== idx) || []
+                          }))
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-md"
+                        title="Rimuovi file"
+                      >
+                        ✕
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1 truncate w-24" title={file.name}>
+                        {file.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Input per aggiungere nuove foto */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700">
+                {fotoMantenuteCampo.length > 0 || nuoveFotoCampo.length > 0 
+                  ? 'Aggiungi altre foto' 
+                  : campo.label}
+              </label>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || [])
+                  if (files.length > 0) {
+                    setFotoNuove(prev => ({
+                      ...prev,
+                      [campo.nome]: [...(prev[campo.nome] || []), ...files]
+                    }))
+                    // Reset input per permettere di ri-selezionare stesso file
+                    e.target.value = ''
+                  }
+                }}
+                className={commonClasses}
+                aria-label={campo.label}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {campo.descrizione || 'Seleziona una o più foto da aggiungere'}
+              </p>
+            </div>
+
+            {/* Riepilogo totale */}
+            {(fotoMantenuteCampo.length > 0 || nuoveFotoCampo.length > 0) && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-sm">
+                <p className="text-blue-800">
+                  <strong>Totale foto:</strong> {fotoMantenuteCampo.length + nuoveFotoCampo.length}
+                  {' '}({fotoMantenuteCampo.length} esistenti + {nuoveFotoCampo.length} nuove)
+                </p>
+              </div>
+            )}
           </div>
         )
 

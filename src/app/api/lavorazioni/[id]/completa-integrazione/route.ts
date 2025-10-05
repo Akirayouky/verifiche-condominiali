@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, dbQuery } from '@/lib/supabase'
 import { NotificationManager } from '@/lib/notifications'
+import { del, put } from '@vercel/blob'
 
 /**
  * PUT /api/lavorazioni/[id]/completa-integrazione
  * 
  * Completa l'integrazione di una lavorazione riaperta
- * Merge dei campi ricompilati + aggiunta nuovi campi
+ * Merge dei campi ricompilati + aggiunta nuovi campi + gestione foto
  * 
- * Body:
+ * Body (FormData):
  * {
- *   campi_ricompilati: Record<string, any>, // Campi che erano da ricompilare, ora compilati
- *   campi_nuovi_compilati: Record<string, any>, // Nuovi campi ora compilati
- *   utente_id: string // UUID sopralluoghista
+ *   campi_ricompilati: JSON string Record<string, any>
+ *   campi_nuovi_compilati: JSON string Record<string, any>
+ *   utente_id: string
+ *   foto_mantenute: JSON string string[] (pathname delle foto da mantenere)
+ *   foto_rimosse: JSON string string[] (pathname delle foto da eliminare)
+ *   foto_nuove_info: JSON string Record<string, number> (campo -> count)
+ *   foto_nuove_{campo}_{index}: File (per ogni nuova foto)
  * }
  */
 export async function PUT(
@@ -21,9 +26,26 @@ export async function PUT(
 ) {
   try {
     const { id } = params
-    const body = await request.json()
+    
+    // Parse FormData invece di JSON
+    const formData = await request.formData()
+    
+    // Estrai dati JSON
+    const campi_ricompilati = JSON.parse(formData.get('campi_ricompilati') as string || '{}')
+    const campi_nuovi_compilati = JSON.parse(formData.get('campi_nuovi_compilati') as string || '{}')
+    const utente_id = formData.get('utente_id') as string
+    const foto_mantenute = JSON.parse(formData.get('foto_mantenute') as string || '[]') as string[]
+    const foto_rimosse = JSON.parse(formData.get('foto_rimosse') as string || '[]') as string[]
+    const foto_nuove_info = JSON.parse(formData.get('foto_nuove_info') as string || '{}') as Record<string, number>
 
-    const { campi_ricompilati = {}, campi_nuovi_compilati = {}, utente_id } = body
+    console.log('📥 Received completa-integrazione request:', {
+      lavorazioneId: id,
+      campiRicompilati: Object.keys(campi_ricompilati).length,
+      campiNuovi: Object.keys(campi_nuovi_compilati).length,
+      fotoMantenute: foto_mantenute.length,
+      fotoRimosse: foto_rimosse.length,
+      fotoNuoveInfo: foto_nuove_info
+    })
 
     if (!utente_id) {
       return NextResponse.json(
@@ -100,15 +122,106 @@ export async function PUT(
       )
     }
 
+    // ========================================
+    // GESTIONE FOTO
+    // ========================================
+    
+    const idCartella = lavorazione.id // O lavorazione.id_cartella se esiste
+    const fotoPrefix = `lavorazione/${idCartella}/foto/`
+    
+    // 1. Elimina foto rimosse dal blob storage
+    if (foto_rimosse.length > 0) {
+      console.log(`🗑️ Deleting ${foto_rimosse.length} foto from blob storage...`)
+      
+      for (const pathname of foto_rimosse) {
+        try {
+          // Il pathname include già il prefisso, costruisci l'URL completo
+          // Vercel Blob del() può accettare pathname o URL
+          await del(pathname)
+          console.log(`  ✓ Deleted: ${pathname}`)
+        } catch (delError) {
+          console.error(`  ✗ Failed to delete ${pathname}:`, delError)
+          // Continua con le altre anche se una fallisce
+        }
+      }
+    }
+    
+    // 2. Uploada nuove foto al blob storage
+    const fotoNuoveUploaded: Record<string, string[]> = {} // campo -> array di URL
+    
+    if (Object.keys(foto_nuove_info).length > 0) {
+      console.log('📤 Uploading new foto to blob storage...')
+      
+      for (const [nomeCampo, count] of Object.entries(foto_nuove_info)) {
+        fotoNuoveUploaded[nomeCampo] = []
+        
+        for (let i = 0; i < count; i++) {
+          const fileKey = `foto_nuove_${nomeCampo}_${i}`
+          const file = formData.get(fileKey) as File
+          
+          if (!file) {
+            console.warn(`  ⚠️ File missing: ${fileKey}`)
+            continue
+          }
+          
+          try {
+            // Converti File in Buffer
+            const bytes = await file.arrayBuffer()
+            const buffer = Buffer.from(bytes)
+            
+            // Genera pathname unico
+            const timestamp = Date.now()
+            const extension = file.name.split('.').pop() || 'jpg'
+            const pathname = `${fotoPrefix}${nomeCampo}-${timestamp}-${i}.${extension}`
+            
+            // Upload al blob storage
+            const blob = await put(pathname, buffer, {
+              access: 'public',
+              contentType: file.type || 'image/jpeg',
+              addRandomSuffix: false
+            })
+            
+            fotoNuoveUploaded[nomeCampo].push(blob.url)
+            console.log(`  ✓ Uploaded: ${pathname} -> ${blob.url}`)
+          } catch (uploadError) {
+            console.error(`  ✗ Failed to upload ${fileKey}:`, uploadError)
+            // Continua con le altre
+          }
+        }
+      }
+    }
+    
+    console.log('✅ Foto processing complete:', {
+      rimosse: foto_rimosse.length,
+      nuoveUploaded: Object.values(fotoNuoveUploaded).flat().length,
+      mantenute: foto_mantenute.length
+    })
+
+    // ========================================
+    // MERGE DATI
+    // ========================================
+
     // Merge dei dati esistenti con i nuovi
     const datiEsistenti = lavorazione.dati_verifiche || {}
     
-    // Aggiorna i campi ricompilati
+    // Aggiorna i campi ricompilati e nuovi
     const datiAggiornati = {
       ...datiEsistenti,
       ...campi_ricompilati,
-      ...campi_nuovi_compilati
+      ...campi_nuovi_compilati,
     }
+    
+    // Aggiungi le nuove foto uploaded agli URL dei campi corrispondenti
+    Object.entries(fotoNuoveUploaded).forEach(([nomeCampo, urls]) => {
+      if (urls.length > 0) {
+        // Se il campo già esiste, aggiungi agli URL esistenti, altrimenti crea nuovo array
+        const existingUrls = Array.isArray(datiAggiornati[nomeCampo]) 
+          ? datiAggiornati[nomeCampo] 
+          : []
+        
+        datiAggiornati[nomeCampo] = [...existingUrls, ...urls]
+      }
+    })
 
     // Prepara update
     const updateData = {
@@ -161,6 +274,7 @@ export async function PUT(
     
     const numCampiRicompilati = Object.keys(campi_ricompilati).length
     const numCampiNuovi = Object.keys(campi_nuovi_compilati).length
+    const totalFotoNuove = Object.values(fotoNuoveUploaded).flat().length
     
     if (!adminsError && admins && admins.length > 0) {
       const notificationManager = NotificationManager.getInstance()
@@ -169,7 +283,7 @@ export async function PUT(
         await notificationManager.creaNotifica({
           tipo: 'integrazione_completata' as const,
           titolo: '✅ Integrazione Lavorazione Completata',
-          messaggio: `${sopralluoghista?.nome || 'Sopralluoghista'} ${sopralluoghista?.cognome || ''} ha completato l'integrazione della lavorazione "${condominio?.nome || 'N/A'}". ${numCampiRicompilati} campo/i ricompilati, ${numCampiNuovi} nuovo/i campo/i aggiunti.`,
+          messaggio: `${sopralluoghista?.nome || 'Sopralluoghista'} ${sopralluoghista?.cognome || ''} ha completato l'integrazione della lavorazione "${condominio?.nome || 'N/A'}". ${numCampiRicompilati} campo/i ricompilati, ${numCampiNuovi} nuovo/i campo/i aggiunti${totalFotoNuove > 0 ? `, ${totalFotoNuove} foto aggiunte` : ''}.`,
           utente_id: admin.id,
           lavorazione_id: id,
           priorita: 'media' as const
@@ -190,6 +304,8 @@ export async function PUT(
       stato: 'completata',
       campi_ricompilati: numCampiRicompilati,
       campi_nuovi: numCampiNuovi,
+      foto_rimosse: foto_rimosse.length,
+      foto_aggiunte: totalFotoNuove,
       completata_da: sopralluoghista?.email || utente_id
     })
 
@@ -202,6 +318,8 @@ export async function PUT(
         data_completamento: updated.data_completamento,
         campi_ricompilati: numCampiRicompilati,
         campi_nuovi_aggiunti: numCampiNuovi,
+        foto_rimosse: foto_rimosse.length,
+        foto_aggiunte: totalFotoNuove,
         totale_campi: Object.keys(datiAggiornati).length
       }
     })
