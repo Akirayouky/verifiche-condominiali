@@ -417,8 +417,6 @@ export class PDFGenerator {
                       // Reset colori
                       this.doc.setTextColor(0, 0, 0)
                       this.doc.setFontSize(10)
-                    } else if (lavorazione.geolocations && lavorazione.geolocations.length > 0) {
-                      console.log('⚠️ GPS disponibile ma non trovato per questa foto:', fotoUrl)
                     }
                   }
                 }
