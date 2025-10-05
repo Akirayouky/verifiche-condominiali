@@ -8,7 +8,7 @@ const HARDCODED_ADMIN = {
   username: 'Kamia',
   password: 'Amministrazione2025!',
   user: {
-    id: 'hardcoded-admin',
+    id: 'a0000000-0000-0000-0000-000000000001', // UUID valido per admin hardcoded
     username: 'Kamia',
     email: 'admin@sistema.local',
     nome: 'Amministratore',

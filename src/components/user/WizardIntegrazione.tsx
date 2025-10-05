@@ -370,9 +370,31 @@ export default function WizardIntegrazione({
                   {campo.valore_precedente && (
                     <div className="mt-2 text-xs text-gray-500">
                       <span className="font-semibold">Valore precedente:</span>{' '}
-                      <span className="font-mono bg-gray-200 px-2 py-0.5 rounded">
-                        {String(campo.valore_precedente).slice(0, 100)}
-                      </span>
+                      {campo.tipo === 'file' ? (
+                        Array.isArray(campo.valore_precedente) ? (
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {campo.valore_precedente.map((foto: any, idx: number) => (
+                              <div key={idx} className="relative w-16 h-16">
+                                <img 
+                                  src={typeof foto === 'string' ? foto : foto.url || foto.path} 
+                                  alt={`Foto ${idx + 1}`}
+                                  className="w-full h-full object-cover rounded border border-gray-300"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="font-mono bg-gray-200 px-2 py-0.5 rounded">
+                            {String(campo.valore_precedente)}
+                          </span>
+                        )
+                      ) : (
+                        <span className="font-mono bg-gray-200 px-2 py-0.5 rounded">
+                          {Array.isArray(campo.valore_precedente) 
+                            ? campo.valore_precedente.join(', ') 
+                            : String(campo.valore_precedente).slice(0, 100)}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
