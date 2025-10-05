@@ -77,9 +77,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Crea condominio con solo i campi base
+    // Genera QR code univoco (UUID-based)
+    const qrCode = `COND-${crypto.randomUUID()}`
+    
+    // Crea condominio con campi base + QR code
     const condominioData = {
-      nome: nome.trim()
+      nome: nome.trim(),
+      qr_code: qrCode
     }
 
     console.log('💾 Creating condominio with data:', condominioData)

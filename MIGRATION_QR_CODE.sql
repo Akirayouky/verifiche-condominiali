@@ -1,3 +1,7 @@
+-- ⚠️ DEPRECATO - USA INVECE SETUP_QR_CODE_AUTO.sql
+-- Questo file è stato sostituito da SETUP_QR_CODE_AUTO.sql
+-- che include anche un trigger automatico per i nuovi condomini
+
 -- Aggiunge campo qr_code alla tabella condomini
 -- Esegui questo su Supabase SQL Editor
 
@@ -15,3 +19,6 @@ CREATE INDEX IF NOT EXISTS idx_condomini_qr_code ON condomini(qr_code);
 
 -- 4. Verifica
 SELECT id, nome, qr_code FROM condomini LIMIT 5;
+
+-- ⚠️ NOTA: Questo script non include il trigger automatico.
+-- Per una soluzione completa, usa SETUP_QR_CODE_AUTO.sql
