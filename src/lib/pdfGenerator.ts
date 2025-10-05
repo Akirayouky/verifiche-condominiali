@@ -483,36 +483,46 @@ export class PDFGenerator {
       this.addSeparator()
     }
     
-    // Firma digitale
+    // SEZIONE FIRMA DIGITALE - Sempre visibile per debug
+    this.addSubtitle('FIRMA DIGITALE')
+    console.log('🖊️ DEBUG FIRMA nel PDF:', {
+      hasFirma: !!lavorazione.firma,
+      firmaUrl: lavorazione.firma ? lavorazione.firma.substring(0, 50) + '...' : null,
+      firmaType: typeof lavorazione.firma,
+      statoLavorazione: lavorazione.stato
+    })
+    
+    if (lavorazione.firma) {
+      console.log('✍️ Tentativo aggiunta firma al PDF')
+      this.addText('Firma digitale del sopralluoghista:')
+      this.currentY += 5
+      
+      try {
+        const firmaSuccess = await this.addImage(lavorazione.firma, 100, 40)
+        if (firmaSuccess) {
+          console.log('✅ Firma aggiunta al PDF con successo')
+        } else {
+          console.error('❌ Firma non aggiunta (addImage returned false)')
+          this.addText('[Errore: Firma non caricabile]')
+        }
+      } catch (error) {
+        console.error('❌ Errore aggiunta firma al PDF:', error)
+        this.addText(`[Errore caricamento firma: ${error}]`)
+      }
+    } else {
+      this.addText('Firma non disponibile per questa lavorazione')
+      if (lavorazione.stato !== 'completata') {
+        this.addText('(La lavorazione non è stata completata)')
+      }
+    }
+    this.addSeparator()
+    
+    // Firma digitale (legacy - per compatibilità)
     this.addSubtitle('VALIDAZIONE')
     this.addText('Questo documento è stato generato automaticamente dal sistema di gestione verifiche condominiali.')
     this.addText(`Data generazione: ${new Date().toLocaleString('it-IT')}`)
     if (lavorazione.stato === 'completata') {
       this.addText('✓ Verifica completata e validata dal sopralluoghista assegnato')
-      
-      // Aggiungi firma digitale se presente
-      if (lavorazione.firma) {
-        console.log('✍️ Tentativo aggiunta firma al PDF:', lavorazione.firma)
-        this.currentY += 10
-        this.addText('Firma digitale del sopralluoghista:')
-        this.currentY += 5
-        
-        try {
-          // Carica e inserisci la firma nel PDF (dimensioni ridotte per firma)
-          const firmaSuccess = await this.addImage(lavorazione.firma, 100, 40)
-          if (firmaSuccess) {
-            console.log('✅ Firma aggiunta al PDF con successo')
-          } else {
-            console.error('❌ Firma non aggiunta (addImage returned false)')
-            this.addText('[Firma digitale non disponibile]')
-          }
-        } catch (error) {
-          console.error('❌ Errore aggiunta firma al PDF:', error)
-          this.addText('[Firma digitale non disponibile]')
-        }
-      } else {
-        console.log('⚠️ Nessuna firma da aggiungere al PDF')
-      }
     }
     
     // Footer
