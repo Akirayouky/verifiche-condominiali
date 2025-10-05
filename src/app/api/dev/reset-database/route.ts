@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import bcrypt from 'bcryptjs'
+
+// Password hardcoded per reset database (stesso del login dev)
+const DEV_PASSWORD = 'Criogenia2025!'
 
 export async function POST(request: Request) {
   try {
@@ -13,24 +15,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verifica password admin
-    const { data: adminUser } = await supabase
-      .from('users')
-      .select('password')
-      .eq('email', 'admin@condomini.it')
-      .single()
-
-    if (!adminUser) {
+    // Verifica password sviluppatore hardcoded
+    if (password !== DEV_PASSWORD) {
       return NextResponse.json(
-        { success: false, error: 'Admin non trovato' },
-        { status: 404 }
-      )
-    }
-
-    const passwordCorrect = await bcrypt.compare(password, adminUser.password)
-    if (!passwordCorrect) {
-      return NextResponse.json(
-        { success: false, error: 'Password errata' },
+        { success: false, error: 'Password sviluppatore errata' },
         { status: 401 }
       )
     }

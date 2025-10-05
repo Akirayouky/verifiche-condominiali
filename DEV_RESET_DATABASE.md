@@ -51,22 +51,27 @@ Elimina solo:
 ## Come Usare
 
 1. **Accedi al Pannello Dev**
-   - Vai su `/dev` (link nell'header in development mode)
+   - Vai su `/dev`
+   - Effettua login con credenziali sviluppatore
+   - Username: `Akirayouky`
+   - Password: `Criogenia2025!`
 
 2. **Scegli il tipo di reset**
-   - Clicca sul pulsante corrispondente
+   - Clicca sul pulsante corrispondente alla tipologia desiderata
 
-3. **Inserisci password**
-   - Inserisci la password dell'admin
-   - Conferma l'operazione
+3. **Inserisci password sviluppatore**
+   - Inserisci la password: `Criogenia2025!`
+   - Conferma l&apos;operazione
 
 4. **Verifica risultato**
    - Il sistema mostra il numero di elementi eliminati
    - Conferma operazione completata
 
-## Password Admin
+## Password Reset Database
 
-La password admin è quella dell'utente `admin@condomini.it` nel database.
+**Password richiesta:** `Criogenia2025!` (stessa del login sviluppatore)
+
+Questa è la password hardcoded per l&apos;accesso al pannello dev e per tutte le operazioni di reset database.
 
 ## Sicurezza
 
