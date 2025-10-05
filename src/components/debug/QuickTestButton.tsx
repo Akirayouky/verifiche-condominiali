@@ -86,15 +86,20 @@ export default function QuickTestButton() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           condominio_id: '19b16df3-303e-44dd-94c3-d6f5048c343e', // Via Volpiano 1
-          user_id: 'e1017f5d-83e1-4da3-ac81-4924a0dfd010', // Diego
+          assegnato_a: 'e1017f5d-83e1-4da3-ac81-4924a0dfd010', // Diego (user_id)
           titolo: `Test Rapido ${new Date().toLocaleTimeString('it-IT')}`,
           descrizione: 'Lavorazione test generata automaticamente',
-          priorita: 'media'
+          priorita: 'media',
+          tipologia: 'verifica'
         })
       })
       
       const creaData = await creaResponse.json()
-      if (!creaData.success) throw new Error('Errore creazione lavorazione')
+      console.log('📦 Risposta creazione:', creaData)
+      
+      if (!creaData.success) {
+        throw new Error(`Errore creazione lavorazione: ${creaData.error || 'Unknown'}`)
+      }
       
       const lavorazioneId = creaData.data.id
       console.log('✅ Lavorazione creata:', lavorazioneId)
