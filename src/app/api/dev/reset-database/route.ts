@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
         // 5. Elimina tipologie (ora che non ci sono più lavorazioni)
         const { data: delTipologie } = await supabase
-          .from('tipologie')
+          .from('tipologie_verifiche')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
           .select()
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
 
       case 'tipologie':
         const { data: deletedTipologie, error: errTip } = await supabase
-          .from('tipologie')
+          .from('tipologie_verifiche')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
           .select()
