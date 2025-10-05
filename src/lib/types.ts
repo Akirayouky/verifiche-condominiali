@@ -132,8 +132,16 @@ export interface Lavorazione {
   data_apertura: string             // Data apertura
   data_scadenza?: string            // Data scadenza (opzionale)
   data_assegnazione?: string        // Data assegnazione (per compatibilità UI)
+  data_completamento?: string       // Data completamento
   note?: string | string[]          // Note generali (string o array per compatibilità)
   allegati?: string                 // Metadata JSON (tipologia, etc)
+  
+  // Campi per riapertura
+  data_riapertura?: string          // Quando è stata riaperta
+  riaperta_da?: string              // ID admin che ha riaperto
+  campi_da_ricompilare?: string[]   // Array nomi campi da far ricompilare
+  campi_nuovi?: string[]            // Array nuovi campi da aggiungere
+  motivo_riapertura?: string        // Perché è stata riaperta
   
   // Relazioni (quando popolate dall'API)
   condomini?: {
@@ -153,7 +161,6 @@ export interface Lavorazione {
   verifica_id?: string              // Legacy
   utente_assegnato?: string         // Legacy - ora user_id
   data_chiusura?: string            // Legacy
-  data_riapertura?: string          // Legacy
   verifica?: Verifica              // Legacy relation
 }
 
@@ -232,3 +239,42 @@ export interface NotificationEvent {
     message?: string
   }
 }
+
+// Interfaccia per Riapertura Lavorazioni
+export interface RiaperturaLavorazione {
+  lavorazione_id: string
+  motivo: string
+  campi_da_ricompilare: CampoRiapertura[]
+  campi_nuovi: CampoRiapertura[]
+  riaperta_da: string  // ID admin
+}
+
+export interface CampoRiapertura {
+  nome: string
+  tipo: "text" | "number" | "date" | "select" | "textarea" | "checkbox" | "file" | "verifica"
+  label: string
+  required: boolean
+  valore_precedente?: any  // Valore da pre-compilare se è da ricompilare
+  opzioni?: string[]  // Per select
+  descrizione?: string  // Aiuto per il sopralluoghista
+}
+
+export interface WizardRiaperturaStep {
+  step: 1 | 2 | 3
+  lavorazione: Lavorazione
+  campiEsistenti: CampoEsistente[]
+  campiSelezionati: {
+    mantenere: string[]
+    ricompilare: string[]
+    nuovi: CampoRiapertura[]
+  }
+}
+
+export interface CampoEsistente {
+  nome: string
+  label: string
+  tipo: string
+  valore: any
+  obbligatorio: boolean
+}
+
