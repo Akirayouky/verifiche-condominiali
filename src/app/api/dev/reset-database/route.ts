@@ -28,31 +28,37 @@ export async function POST(request: Request) {
 
     switch (type) {
       case 'all':
-        // Reset completo - elimina tutto
+        // Reset completo - elimina tutto in ordine corretto (prima dipendenze, poi tabelle principali)
+        
+        // 1. Elimina notifiche (dipendono da lavorazioni/users)
         const { data: delNotifiche } = await supabase
           .from('notifiche')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
           .select()
 
+        // 2. Elimina lavorazioni (dipendono da tipologie/condomini/users)
         const { data: delLavorazioni } = await supabase
           .from('lavorazioni')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
           .select()
 
+        // 3. Elimina users (indipendenti)
         const { data: delUsers } = await supabase
           .from('users')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
           .select()
 
+        // 4. Elimina condomini (indipendenti)
         const { data: delCondomini } = await supabase
           .from('condomini')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
           .select()
 
+        // 5. Elimina tipologie (ora che non ci sono più lavorazioni)
         const { data: delTipologie } = await supabase
           .from('tipologie')
           .delete()
