@@ -36,10 +36,10 @@ export default function Guida() {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Creare un nuovo condominio:</h3>
               <ol className="list-decimal pl-6 space-y-2 text-gray-700">
-                <li>Clicca su <strong>"Condomini"</strong> nel menu laterale</li>
-                <li>Clicca sul pulsante <strong>"+ Nuovo Condominio"</strong></li>
+                <li>Clicca su <strong>&quot;Condomini&quot;</strong> nel menu laterale</li>
+                <li>Clicca sul pulsante <strong>&quot;+ Nuovo Condominio&quot;</strong></li>
                 <li>Compila i campi: Nome, Indirizzo, Città, CAP, etc.</li>
-                <li>Clicca <strong>"Salva"</strong></li>
+                <li>Clicca <strong>&quot;Salva&quot;</strong></li>
               </ol>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg">
@@ -60,8 +60,8 @@ export default function Guida() {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Creare una nuova tipologia:</h3>
               <ol className="list-decimal pl-6 space-y-2 text-gray-700">
-                <li>Vai su <strong>"Tipologie"</strong></li>
-                <li>Clicca <strong>"+ Nuova Tipologia"</strong></li>
+                <li>Vai su <strong>&quot;Tipologie&quot;</strong></li>
+                <li>Clicca <strong>&quot;+ Nuova Tipologia&quot;</strong></li>
                 <li>Inserisci nome, descrizione e campi personalizzati</li>
                 <li>Salva la tipologia</li>
               </ol>
@@ -75,7 +75,7 @@ export default function Guida() {
           <div className="space-y-4">
             <p className="text-gray-700">Il modo più veloce per creare una lavorazione:</p>
             <ol className="list-decimal pl-6 space-y-3 text-gray-700">
-              <li><strong>Seleziona Condominio:</strong> Scegli il condominio dall'elenco</li>
+              <li><strong>Seleziona Condominio:</strong> Scegli il condominio dall&apos;elenco</li>
               <li><strong>Scegli Tipologia:</strong> Seleziona il tipo di verifica (es: Verifica Elettrica)</li>
               <li><strong>Assegna Sopralluoghista:</strong> Scegli chi dovrà eseguire la verifica</li>
               <li><strong>Imposta Priorità:</strong> Bassa, Media, Alta o Urgente</li>
@@ -101,7 +101,7 @@ export default function Guida() {
               <ul className="list-disc pl-6 space-y-2 text-gray-700">
                 <li><strong>Filtrare per stato:</strong> Visualizza solo lavorazioni specifiche (tutte, da eseguire, in corso, completate, riaperte)</li>
                 <li><strong>Statistiche in tempo reale:</strong> Contatori aggiornati automaticamente</li>
-                <li><strong>Visualizzare dettagli:</strong> Clicca sull'icona 👁️ per vedere tutti i dettagli</li>
+                <li><strong>Visualizzare dettagli:</strong> Clicca sull&apos;icona 👁️ per vedere tutti i dettagli</li>
                 <li><strong>Scaricare PDF:</strong> Per lavorazioni completate, scarica il report con foto e firma</li>
                 <li><strong>Riaprire lavorazioni:</strong> Clicca su 🔄 per riaprire una lavorazione completata</li>
                 <li><strong>Eliminare:</strong> Rimuovi lavorazioni non più necessarie</li>
@@ -110,7 +110,7 @@ export default function Guida() {
 
             <div className="bg-yellow-50 p-4 rounded-lg">
               <p className="text-sm text-yellow-800">
-                ⚠️ <strong>Attenzione:</strong> L'eliminazione di una lavorazione è permanente
+                ⚠️ <strong>Attenzione:</strong> L&apos;eliminazione di una lavorazione è permanente
               </p>
             </div>
           </div>
@@ -134,10 +134,10 @@ export default function Guida() {
             <div className="bg-indigo-50 p-4 rounded-lg mt-4">
               <h4 className="font-semibold text-indigo-900 mb-2">Come scaricare il PDF:</h4>
               <ol className="list-decimal pl-6 space-y-1 text-sm text-indigo-800">
-                <li>Vai in "Gestione Lavorazioni"</li>
+                <li>Vai in &quot;Gestione Lavorazioni&quot;</li>
                 <li>Clicca su 👁️ per vedere i dettagli di una lavorazione completata</li>
-                <li>Scorri fino alla sezione "Report"</li>
-                <li>Clicca su <strong>"📥 Scarica Report PDF"</strong></li>
+                <li>Scorri fino alla sezione &quot;Report&quot;</li>
+                <li>Clicca su <strong>&quot;📥 Scarica Report PDF&quot;</strong></li>
               </ol>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function Guida() {
             </ul>
             <div className="bg-orange-50 p-4 rounded-lg">
               <p className="text-sm text-orange-800">
-                💡 Le notifiche appaiono nell'icona 🔔 nell'header. Clicca per visualizzarle tutte.
+                💡 Le notifiche appaiono nell&apos;icona 🔔 nell&apos;header. Clicca per visualizzarle tutte.
               </p>
             </div>
           </div>

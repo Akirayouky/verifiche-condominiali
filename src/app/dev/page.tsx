@@ -336,7 +336,7 @@ export default function PannelloSviluppatore() {
                 autoFocus
               />
               <p className="text-xs text-gray-500 mt-1">
-                Inserisci la password admin per confermare l'operazione
+                Inserisci la password admin per confermare l&apos;operazione
               </p>
             </div>
 

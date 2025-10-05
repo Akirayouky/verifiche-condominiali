@@ -1192,7 +1192,7 @@ export default function PannelloAdmin() {
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-700">
-                    La lavorazione <span className="font-semibold text-gray-900">"{deletedLavorazioneTitle}"</span> è stata eliminata con successo.
+                    La lavorazione <span className="font-semibold text-gray-900">&quot;{deletedLavorazioneTitle}&quot;</span> è stata eliminata con successo.
                   </p>
                 </div>
 
