@@ -69,7 +69,7 @@ export class PDFGenerator {
     this.doc.setTextColor(30, 64, 175) // blue-800
     this.doc.setFontSize(fontSize)
     this.doc.setFont('helvetica', 'bold')
-    this.doc.text('📋 ' + text, this.margin + 3, this.currentY + fontSize * 0.5)
+    this.doc.text(text, this.margin + 3, this.currentY + fontSize * 0.5)
     
     // Reset colore
     this.doc.setTextColor(0, 0, 0)
@@ -366,21 +366,21 @@ export class PDFGenerator {
     )
     
     // ID e titolo
-    this.addKeyValue('📋 Titolo', lavorazione.titolo || lavorazione.descrizione, 12)
+    this.addKeyValue('Titolo', lavorazione.titolo || lavorazione.descrizione, 12)
     this.addSeparator()
     
     // Informazioni generali
     this.addSubtitle('INFORMAZIONI GENERALI')
-    this.addKeyValue('📝 Descrizione', lavorazione.descrizione)
-    this.addKeyValue('📊 Priorità', this.getPrioritaLabel(lavorazione.priorita))
+    this.addKeyValue('Descrizione', lavorazione.descrizione)
+    this.addKeyValue('Priorità', this.getPrioritaLabel(lavorazione.priorita))
     this.addSeparator()
     
     // Condominio
     if (lavorazione.condominio) {
       this.addSubtitle('CONDOMINIO')
-      this.addKeyValue('🏢 Nome', lavorazione.condominio.nome)
+      this.addKeyValue('Nome', lavorazione.condominio.nome)
       if (lavorazione.condominio.indirizzo) {
-        this.addKeyValue('📍 Indirizzo', lavorazione.condominio.indirizzo)
+        this.addKeyValue('Indirizzo', lavorazione.condominio.indirizzo)
       }
       this.addSeparator()
     }
@@ -388,16 +388,16 @@ export class PDFGenerator {
     // Assegnazione
     if (lavorazione.utente) {
       this.addSubtitle('SOPRALLUOGHISTA ASSEGNATO')
-      this.addKeyValue('👤 Nome', `${lavorazione.utente.nome} ${lavorazione.utente.cognome}`)
-      this.addKeyValue('📧 Email', lavorazione.utente.email)
+      this.addKeyValue('Nome', `${lavorazione.utente.nome} ${lavorazione.utente.cognome}`)
+      this.addKeyValue('Email', lavorazione.utente.email)
       this.addSeparator()
     }
     
     // Timeline
     this.addSubtitle('TIMELINE')
-    this.addKeyValue('📅 Data Apertura', new Date(lavorazione.data_apertura).toLocaleString('it-IT'))
+    this.addKeyValue('Data Apertura', new Date(lavorazione.data_apertura).toLocaleString('it-IT'))
     if (lavorazione.data_completamento) {
-      this.addKeyValue('✅ Data Completamento', new Date(lavorazione.data_completamento).toLocaleString('it-IT'))
+      this.addKeyValue('Data Completamento', new Date(lavorazione.data_completamento).toLocaleString('it-IT'))
     }
     this.addSeparator()
     
@@ -592,7 +592,7 @@ export class PDFGenerator {
     
     if (lavorazione.firma) {
       console.log('✍️ Tentativo aggiunta firma al PDF')
-      this.addInfoBox('✍️ Firma digitale del sopralluoghista certificata dal sistema', 'success')
+      this.addInfoBox('Firma digitale del sopralluoghista certificata dal sistema', 'success')
       this.currentY += 5
       
       try {
@@ -609,23 +609,23 @@ export class PDFGenerator {
           this.currentY += 10
         } else {
           console.error('❌ Firma non aggiunta (addImage returned false)')
-          this.addInfoBox('⚠️ Errore: Firma non caricabile', 'error')
+          this.addInfoBox('Errore: Firma non caricabile', 'error')
         }
       } catch (error) {
         console.error('❌ Errore aggiunta firma al PDF:', error)
-        this.addInfoBox(`⚠️ Errore caricamento firma: ${error}`, 'error')
+        this.addInfoBox(`Errore caricamento firma: ${error}`, 'error')
       }
     } else {
-      this.addInfoBox('ℹ️ Firma non disponibile - La lavorazione non è stata ancora completata', 'warning')
+      this.addInfoBox('Firma non disponibile - La lavorazione non è stata ancora completata', 'warning')
     }
     this.addSeparator()
     
     // Validazione finale
     this.addSubtitle('VALIDAZIONE DOCUMENTO')
     this.addInfoBox(
-      '✓ Documento generato automaticamente dal Sistema di Gestione Verifiche Condominiali' +
+      'Documento generato automaticamente dal Sistema di Gestione Verifiche Condominiali' +
       `\nData e ora generazione: ${new Date().toLocaleString('it-IT', { dateStyle: 'full', timeStyle: 'long' })}` +
-      (lavorazione.stato === 'completata' ? '\n✓ Verifica completata e validata dal sopralluoghista assegnato' : ''),
+      (lavorazione.stato === 'completata' ? '\nVerifica completata e validata dal sopralluoghista assegnato' : ''),
       'info'
     )
     
