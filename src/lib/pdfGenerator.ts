@@ -382,35 +382,39 @@ export class PDFGenerator {
                       console.error(`❌ Impossibile aggiungere foto da ${titoloSezione}`)
                     }
                     
-                    // Aggiungi mappa GPS se disponibile per questa foto
+                    // Aggiungi sezione UBICAZIONE con coordinate GPS se disponibili
                     const geoData = lavorazione.geolocations?.find(g => g.fotoUrl === fotoUrl)
                     if (geoData) {
-                      console.log('🗺️ Trovato GPS per foto:', fotoUrl, geoData)
+                      console.log('� Trovato GPS per foto:', fotoUrl, geoData)
+                      
+                      // Sezione UBICAZIONE
+                      this.currentY += 3
                       this.doc.setFontSize(9)
-                      this.doc.setTextColor(100, 100, 100)
-                      this.doc.text(`📍 GPS: ${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`, this.margin, this.currentY)
+                      this.doc.setFont('helvetica', 'bold')
+                      this.doc.setTextColor(59, 130, 246) // blue-600
+                      this.doc.text('UBICAZIONE FOTO', this.margin, this.currentY)
                       this.currentY += 5
                       
-                      // Aggiungi mini mappa (usando OpenStreetMap Static)
-                      try {
-                        const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${geoData.latitude},${geoData.longitude}&zoom=16&size=300x150&maptype=mapnik&markers=${geoData.latitude},${geoData.longitude},red`
-                        console.log('🗺️ Tentativo caricamento mappa:', mapUrl)
-                        const mapSuccess = await this.addImage(mapUrl, 80, 40)
-                        if (mapSuccess) {
-                          console.log('✅ Mappa GPS aggiunta al PDF')
-                        } else {
-                          console.error('❌ Mappa non aggiunta - fallback a solo coordinate')
-                          this.doc.setFontSize(8)
-                          this.doc.text(`(Mappa non disponibile)`, this.margin, this.currentY)
-                          this.currentY += 5
-                        }
-                      } catch (error) {
-                        console.error('❌ Errore aggiunta mappa GPS:', error)
-                        this.doc.setFontSize(8)
-                        this.doc.text(`(Errore caricamento mappa)`, this.margin, this.currentY)
-                        this.currentY += 5
+                      // Coordinate GPS
+                      this.doc.setFont('helvetica', 'normal')
+                      this.doc.setTextColor(60, 60, 60)
+                      this.doc.text(`Latitudine: ${geoData.latitude.toFixed(6)}°`, this.margin, this.currentY)
+                      this.currentY += 4
+                      this.doc.text(`Longitudine: ${geoData.longitude.toFixed(6)}°`, this.margin, this.currentY)
+                      this.currentY += 4
+                      
+                      if (geoData.accuracy) {
+                        this.doc.text(`Precisione: ±${geoData.accuracy.toFixed(0)} metri`, this.margin, this.currentY)
+                        this.currentY += 4
                       }
                       
+                      // Link Google Maps
+                      this.doc.setTextColor(59, 130, 246)
+                      const mapsLink = `https://maps.google.com/?q=${geoData.latitude},${geoData.longitude}`
+                      this.doc.textWithLink('Visualizza su Google Maps', this.margin, this.currentY, { url: mapsLink })
+                      this.currentY += 5
+                      
+                      // Reset colori
                       this.doc.setTextColor(0, 0, 0)
                       this.doc.setFontSize(10)
                     } else if (lavorazione.geolocations && lavorazione.geolocations.length > 0) {
@@ -437,29 +441,39 @@ export class PDFGenerator {
                   console.error(`❌ Impossibile aggiungere foto`)
                 }
                 
-                // Aggiungi mappa GPS se disponibile per questa foto
+                // Aggiungi sezione UBICAZIONE con coordinate GPS se disponibili (legacy)
                 const geoData = lavorazione.geolocations?.find(g => g.fotoUrl === fotoUrl)
                 if (geoData) {
-                  console.log('🗺️ Trovato GPS per foto:', fotoUrl, geoData)
+                  console.log('� Trovato GPS per foto:', fotoUrl, geoData)
+                  
+                  // Sezione UBICAZIONE
+                  this.currentY += 3
                   this.doc.setFontSize(9)
-                  this.doc.setTextColor(100, 100, 100)
-                  this.doc.text(`📍 GPS: ${geoData.latitude.toFixed(6)}, ${geoData.longitude.toFixed(6)}`, this.margin, this.currentY)
+                  this.doc.setFont('helvetica', 'bold')
+                  this.doc.setTextColor(59, 130, 246) // blue-600
+                  this.doc.text('UBICAZIONE FOTO', this.margin, this.currentY)
                   this.currentY += 5
                   
-                  // Aggiungi mini mappa (OpenStreetMap Static)
-                  try {
-                    const mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${geoData.latitude},${geoData.longitude}&zoom=16&size=300x150&maptype=mapnik&markers=${geoData.latitude},${geoData.longitude},red`
-                    console.log('🗺️ Tentativo caricamento mappa:', mapUrl)
-                    const mapSuccess = await this.addImage(mapUrl, 80, 40)
-                    if (mapSuccess) {
-                      console.log('✅ Mappa GPS aggiunta al PDF')
-                    } else {
-                      console.error('❌ Mappa non aggiunta (addImage returned false)')
-                    }
-                  } catch (error) {
-                    console.error('❌ Errore aggiunta mappa GPS:', error)
+                  // Coordinate GPS
+                  this.doc.setFont('helvetica', 'normal')
+                  this.doc.setTextColor(60, 60, 60)
+                  this.doc.text(`Latitudine: ${geoData.latitude.toFixed(6)}°`, this.margin, this.currentY)
+                  this.currentY += 4
+                  this.doc.text(`Longitudine: ${geoData.longitude.toFixed(6)}°`, this.margin, this.currentY)
+                  this.currentY += 4
+                  
+                  if (geoData.accuracy) {
+                    this.doc.text(`Precisione: ±${geoData.accuracy.toFixed(0)} metri`, this.margin, this.currentY)
+                    this.currentY += 4
                   }
                   
+                  // Link Google Maps
+                  this.doc.setTextColor(59, 130, 246)
+                  const mapsLink = `https://maps.google.com/?q=${geoData.latitude},${geoData.longitude}`
+                  this.doc.textWithLink('Visualizza su Google Maps', this.margin, this.currentY, { url: mapsLink })
+                  this.currentY += 5
+                  
+                  // Reset colori
                   this.doc.setTextColor(0, 0, 0)
                   this.doc.setFontSize(10)
                 } else if (lavorazione.geolocations && lavorazione.geolocations.length > 0) {
