@@ -131,6 +131,18 @@ export async function PUT(
               }
             }
             
+            // Aggiungi firma digitale se presente
+            if (dati.firma) {
+              nuoviMetadata.firma = dati.firma
+              console.log('✍️ Salvando firma digitale:', dati.firma)
+            }
+            
+            // Aggiungi GPS metadata se presente
+            if (dati.foto_geo && Array.isArray(dati.foto_geo) && dati.foto_geo.length > 0) {
+              nuoviMetadata.foto_geo = dati.foto_geo
+              console.log('📍 Salvando GPS metadata:', dati.foto_geo.length, 'posizioni')
+            }
+            
             updateData.allegati = JSON.stringify(nuoviMetadata)
           } catch (e) {
             // Se i metadati esistenti non sono JSON valido, crea nuovi
@@ -154,6 +166,18 @@ export async function PUT(
                 nuoviMetadata.foto = dati.foto
                 console.log('📸 Salvando', dati.foto.length, 'foto (formato legacy - nuovo)')
               }
+            }
+            
+            // Aggiungi firma digitale se presente (catch block)
+            if (dati.firma) {
+              nuoviMetadata.firma = dati.firma
+              console.log('✍️ Salvando firma digitale (catch):', dati.firma)
+            }
+            
+            // Aggiungi GPS metadata se presente (catch block)
+            if (dati.foto_geo && Array.isArray(dati.foto_geo) && dati.foto_geo.length > 0) {
+              nuoviMetadata.foto_geo = dati.foto_geo
+              console.log('📍 Salvando GPS metadata (catch):', dati.foto_geo.length, 'posizioni')
             }
             
             updateData.allegati = JSON.stringify(nuoviMetadata)
