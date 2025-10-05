@@ -28,38 +28,46 @@ export async function POST(request: Request) {
 
     switch (type) {
       case 'all':
-        // Reset completo - elimina tutto tranne admin
-        const { error: errorNotifiche } = await supabase
+        // Reset completo - elimina tutto
+        const { data: delNotifiche } = await supabase
           .from('notifiche')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
+          .select()
 
-        const { error: errorLavorazioni } = await supabase
+        const { data: delLavorazioni } = await supabase
           .from('lavorazioni')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
-
-        const { data: deletedUsers, error: errorUsers } = await supabase
-          .from('users')
-          .delete()
-          .neq('email', 'admin@condomini.it')
           .select()
 
-        const { error: errorCondomini } = await supabase
+        const { data: delUsers } = await supabase
+          .from('users')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000')
+          .select()
+
+        const { data: delCondomini } = await supabase
           .from('condomini')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
+          .select()
 
-        const { error: errorTipologie } = await supabase
+        const { data: delTipologie } = await supabase
           .from('tipologie')
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000')
+          .select()
 
-        if (errorNotifiche || errorLavorazioni || errorUsers || errorCondomini || errorTipologie) {
-          throw new Error('Errore durante il reset completo')
-        }
+        const totalDeleted = 
+          (delNotifiche?.length || 0) + 
+          (delLavorazioni?.length || 0) + 
+          (delUsers?.length || 0) + 
+          (delCondomini?.length || 0) + 
+          (delTipologie?.length || 0)
 
-        message = '✅ Database completamente resettato! Tutti i dati eliminati.'
+        message = `✅ Reset completo! ${totalDeleted} record eliminati (${delLavorazioni?.length || 0} lavorazioni, ${delUsers?.length || 0} utenti, ${delCondomini?.length || 0} condomini, ${delTipologie?.length || 0} tipologie, ${delNotifiche?.length || 0} notifiche)`
+        deletedCount = totalDeleted
         break
 
       case 'lavorazioni':
@@ -78,12 +86,12 @@ export async function POST(request: Request) {
         const { data: deletedUsersOnly, error: errUsers } = await supabase
           .from('users')
           .delete()
-          .neq('email', 'admin@condomini.it')
+          .neq('id', '00000000-0000-0000-0000-000000000000')
           .select()
 
         if (errUsers) throw errUsers
         deletedCount = deletedUsersOnly?.length || 0
-        message = `✅ ${deletedCount} utenti eliminati (admin preservato)`
+        message = `✅ ${deletedCount} utenti eliminati`
         break
 
       case 'condomini':

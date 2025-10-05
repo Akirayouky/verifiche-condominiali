@@ -16,7 +16,7 @@ Il pannello sviluppatore (`/dev`) include strumenti per il reset del database du
 #### 🔥 Reset Completo
 Elimina TUTTI i dati:
 - ✅ Lavorazioni (e relativi allegati: foto, firma, GPS, note)
-- ✅ Utenti (tranne admin principale)
+- ✅ Utenti (tutti, nessuna preservazione - admin è hardcoded)
 - ✅ Condomini
 - ✅ Tipologie di verifica
 - ✅ Notifiche
@@ -29,8 +29,8 @@ Elimina solo:
 
 #### 👥 Reset Utenti
 Elimina solo:
-- Tutti gli utenti
-- **PRESERVA**: admin@condomini.it
+- Tutti gli utenti del database
+- **NOTA**: Admin è hardcoded, non è nel database
 - Mantiene: lavorazioni, condomini, tipologie
 
 #### 🏢 Reset Condomini
