@@ -398,7 +398,7 @@ export default function WizardIntegrazione({
                   Compila i nuovi campi
                 </h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  Questi campi sono stati aggiunti dall'amministratore e devono essere compilati.
+                  Questi campi sono stati aggiunti dall&apos;amministratore e devono essere compilati.
                 </p>
               </div>
 
