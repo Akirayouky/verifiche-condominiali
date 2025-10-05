@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import DevLogin from '@/components/auth/DevLogin'
 
 export default function PannelloSviluppatore() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const [results, setResults] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
@@ -13,6 +16,55 @@ export default function PannelloSviluppatore() {
   const [password, setPassword] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
   const [resetResult, setResetResult] = useState<any>(null)
+
+  // Verifica autenticazione all'avvio
+  useEffect(() => {
+    const devAuth = localStorage.getItem('dev_auth')
+    if (devAuth) {
+      try {
+        const parsed = JSON.parse(devAuth)
+        // Verifica che non sia scaduto (24 ore)
+        const timestamp = new Date(parsed.timestamp)
+        const now = new Date()
+        const hoursDiff = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60)
+        
+        if (hoursDiff < 24) {
+          setIsAuthenticated(true)
+        } else {
+          localStorage.removeItem('dev_auth')
+        }
+      } catch (err) {
+        localStorage.removeItem('dev_auth')
+      }
+    }
+    setIsCheckingAuth(false)
+  }, [])
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('dev_auth')
+    setIsAuthenticated(false)
+  }
+
+  // Mostra loader durante il check
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-white text-xl">Verifica autenticazione...</div>
+      </div>
+    )
+  }
+
+  // Mostra login se non autenticato
+  if (!isAuthenticated) {
+    return <DevLogin onLoginSuccess={handleLoginSuccess} />
+  }
+
+  // Pannello dev (contenuto esistente)
+
 
   const createQuickTest = async () => {
     setLoading(true)
@@ -191,9 +243,18 @@ export default function PannelloSviluppatore() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">🔧 Pannello Sviluppatore</h1>
-        <p className="text-gray-600">Test rapido e gestione database di sviluppo</p>
+      {/* Header con logout */}
+      <div className="mb-8 flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">🔧 Pannello Sviluppatore</h1>
+          <p className="text-gray-600">Test rapido e gestione database di sviluppo</p>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
+        >
+          🚪 Esci
+        </button>
       </div>
       
       {/* Sezione Quick Test */}

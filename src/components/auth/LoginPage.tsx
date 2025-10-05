@@ -145,17 +145,6 @@ export default function LoginPage() {
               {showRegister ? 'Torna al login' : 'Non hai un account? Registrati'}
             </button>
           </div>
-
-          {/* Info credenziali per test */}
-          <div className="bg-gray-50 rounded-md p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Credenziali Test:
-            </h4>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p>� <strong>Admin:</strong> <code className="bg-gray-200 px-1 rounded">admin</code> / <code className="bg-gray-200 px-1 rounded">admin123</code></p>
-              <p className="text-gray-500 mt-1">Gli altri account devono essere registrati</p>
-            </div>
-          </div>
         </form>
       </div>
     </div>

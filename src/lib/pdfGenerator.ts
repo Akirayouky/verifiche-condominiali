@@ -45,17 +45,35 @@ export class PDFGenerator {
   }
 
   private addTitle(text: string, fontSize = 18) {
+    // Box colorato per il titolo principale
+    const boxHeight = fontSize * 1.5
+    this.doc.setFillColor(59, 130, 246) // blue-600
+    this.doc.roundedRect(this.margin, this.currentY - 5, this.pageWidth - (this.margin * 2), boxHeight, 3, 3, 'F')
+    
+    this.doc.setTextColor(255, 255, 255)
     this.doc.setFontSize(fontSize)
     this.doc.setFont('helvetica', 'bold')
-    this.doc.text(text, this.margin, this.currentY)
-    this.currentY += fontSize * 0.7
+    this.doc.text(text, this.margin + 5, this.currentY + fontSize * 0.5)
+    
+    // Reset colore
+    this.doc.setTextColor(0, 0, 0)
+    this.currentY += boxHeight + 10
   }
 
   private addSubtitle(text: string, fontSize = 14) {
+    // Box azzurro chiaro per sottotitoli
+    const boxHeight = fontSize * 1.2
+    this.doc.setFillColor(219, 234, 254) // blue-100
+    this.doc.roundedRect(this.margin, this.currentY - 3, this.pageWidth - (this.margin * 2), boxHeight, 2, 2, 'F')
+    
+    this.doc.setTextColor(30, 64, 175) // blue-800
     this.doc.setFontSize(fontSize)
     this.doc.setFont('helvetica', 'bold')
-    this.doc.text(text, this.margin, this.currentY)
-    this.currentY += fontSize * 0.6
+    this.doc.text('📋 ' + text, this.margin + 3, this.currentY + fontSize * 0.5)
+    
+    // Reset colore
+    this.doc.setTextColor(0, 0, 0)
+    this.currentY += boxHeight + 8
   }
 
   private addText(text: string, fontSize = 11, style: 'normal' | 'bold' = 'normal') {
@@ -75,16 +93,28 @@ export class PDFGenerator {
     }
   }
 
-  private addKeyValue(key: string, value: string, fontSize = 11) {
+  private addKeyValue(key: string, value: string, fontSize = 11, icon?: string) {
     this.doc.setFontSize(fontSize)
+    
+    // Aggiungi icona se presente
+    let startX = this.margin + 5
+    if (icon) {
+      this.doc.setFontSize(fontSize + 2)
+      this.doc.text(icon, this.margin + 2, this.currentY)
+      startX = this.margin + 10
+    }
+    
+    // Key in grassetto con colore blu
     this.doc.setFont('helvetica', 'bold')
-    
+    this.doc.setTextColor(30, 64, 175) // blue-800
     const keyWidth = this.doc.getTextWidth(key + ': ')
-    this.doc.text(key + ':', this.margin, this.currentY)
+    this.doc.text(key + ':', startX, this.currentY)
     
+    // Value normale in nero
     this.doc.setFont('helvetica', 'normal')
+    this.doc.setTextColor(60, 60, 60)
     
-    const maxWidth = this.pageWidth - this.margin - keyWidth - 10
+    const maxWidth = this.pageWidth - startX - keyWidth - 15
     const lines = this.doc.splitTextToSize(value, maxWidth)
     
     let firstLine = true
@@ -94,11 +124,14 @@ export class PDFGenerator {
         firstLine = true
       }
       
-      const x = firstLine ? this.margin + keyWidth + 5 : this.margin
+      const x = firstLine ? startX + keyWidth + 5 : startX + 5
       this.doc.text(line, x, this.currentY)
       this.currentY += fontSize * 0.6
       firstLine = false
     }
+    
+    // Reset colore
+    this.doc.setTextColor(0, 0, 0)
   }
 
   private addSeparator() {
@@ -106,6 +139,52 @@ export class PDFGenerator {
     this.doc.setDrawColor(200, 200, 200)
     this.doc.line(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY)
     this.currentY += 8
+  }
+
+  private addInfoBox(text: string, type: 'success' | 'warning' | 'info' | 'error' = 'info') {
+    const colors = {
+      success: { bg: [220, 252, 231] as [number, number, number], border: [34, 197, 94] as [number, number, number], text: [21, 128, 61] as [number, number, number] }, // green
+      warning: { bg: [254, 243, 199] as [number, number, number], border: [245, 158, 11] as [number, number, number], text: [161, 98, 7] as [number, number, number] }, // amber
+      info: { bg: [219, 234, 254] as [number, number, number], border: [59, 130, 246] as [number, number, number], text: [30, 64, 175] as [number, number, number] }, // blue
+      error: { bg: [254, 226, 226] as [number, number, number], border: [239, 68, 68] as [number, number, number], text: [153, 27, 27] as [number, number, number] } // red
+    }
+    
+    const color = colors[type]
+    const maxWidth = this.pageWidth - (this.margin * 2) - 10
+    const lines = this.doc.splitTextToSize(text, maxWidth)
+    const boxHeight = (lines.length * 5) + 10
+    
+    // Verifica spazio
+    if (this.currentY + boxHeight > this.pageHeight - this.margin - 20) {
+      this.addNewPage()
+    }
+    
+    // Background
+    this.doc.setFillColor(...color.bg)
+    this.doc.roundedRect(this.margin, this.currentY, this.pageWidth - (this.margin * 2), boxHeight, 2, 2, 'F')
+    
+    // Border
+    this.doc.setDrawColor(...color.border)
+    this.doc.setLineWidth(0.5)
+    this.doc.roundedRect(this.margin, this.currentY, this.pageWidth - (this.margin * 2), boxHeight, 2, 2, 'S')
+    this.doc.setLineWidth(0.2) // Reset
+    
+    // Text
+    this.doc.setTextColor(...color.text)
+    this.doc.setFontSize(10)
+    this.doc.setFont('helvetica', 'normal')
+    
+    let textY = this.currentY + 7
+    for (const line of lines) {
+      this.doc.text(line, this.margin + 5, textY)
+      textY += 5
+    }
+    
+    this.currentY += boxHeight + 5
+    
+    // Reset
+    this.doc.setTextColor(0, 0, 0)
+    this.doc.setDrawColor(0, 0, 0)
   }
 
   private addNewPage() {
@@ -274,26 +353,34 @@ export class PDFGenerator {
     
     // Titolo principale
     this.addTitle(`REPORT LAVORAZIONE`)
-    this.currentY += 5
+    
+    // Box informativo con stato
+    let statoType: 'success' | 'warning' | 'info' | 'error' = 'info'
+    if (lavorazione.stato === 'completata') statoType = 'success'
+    else if (lavorazione.stato === 'in_corso') statoType = 'warning'
+    else if (lavorazione.stato === 'da_eseguire') statoType = 'info'
+    
+    this.addInfoBox(
+      `Stato: ${this.getStatoLabel(lavorazione.stato)} • ID: ${lavorazione.id.substring(0, 8)}... • Generato: ${new Date().toLocaleDateString('it-IT')}`,
+      statoType
+    )
     
     // ID e titolo
-    this.addKeyValue('ID Lavorazione', lavorazione.id.substring(0, 8) + '...')
-    this.addKeyValue('Titolo', lavorazione.titolo || lavorazione.descrizione)
+    this.addKeyValue('📋 Titolo', lavorazione.titolo || lavorazione.descrizione, 12)
     this.addSeparator()
     
     // Informazioni generali
     this.addSubtitle('INFORMAZIONI GENERALI')
-    this.addKeyValue('Descrizione', lavorazione.descrizione)
-    this.addKeyValue('Stato', this.getStatoLabel(lavorazione.stato))
-    this.addKeyValue('Priorità', this.getPrioritaLabel(lavorazione.priorita))
+    this.addKeyValue('📝 Descrizione', lavorazione.descrizione)
+    this.addKeyValue('📊 Priorità', this.getPrioritaLabel(lavorazione.priorita))
     this.addSeparator()
     
     // Condominio
     if (lavorazione.condominio) {
       this.addSubtitle('CONDOMINIO')
-      this.addKeyValue('Nome', lavorazione.condominio.nome)
+      this.addKeyValue('🏢 Nome', lavorazione.condominio.nome)
       if (lavorazione.condominio.indirizzo) {
-        this.addKeyValue('Indirizzo', lavorazione.condominio.indirizzo)
+        this.addKeyValue('📍 Indirizzo', lavorazione.condominio.indirizzo)
       }
       this.addSeparator()
     }
@@ -301,16 +388,16 @@ export class PDFGenerator {
     // Assegnazione
     if (lavorazione.utente) {
       this.addSubtitle('SOPRALLUOGHISTA ASSEGNATO')
-      this.addKeyValue('Nome', `${lavorazione.utente.nome} ${lavorazione.utente.cognome}`)
-      this.addKeyValue('Email', lavorazione.utente.email)
+      this.addKeyValue('👤 Nome', `${lavorazione.utente.nome} ${lavorazione.utente.cognome}`)
+      this.addKeyValue('📧 Email', lavorazione.utente.email)
       this.addSeparator()
     }
     
     // Timeline
     this.addSubtitle('TIMELINE')
-    this.addKeyValue('Data Apertura', new Date(lavorazione.data_apertura).toLocaleString('it-IT'))
+    this.addKeyValue('📅 Data Apertura', new Date(lavorazione.data_apertura).toLocaleString('it-IT'))
     if (lavorazione.data_completamento) {
-      this.addKeyValue('Data Completamento', new Date(lavorazione.data_completamento).toLocaleString('it-IT'))
+      this.addKeyValue('✅ Data Completamento', new Date(lavorazione.data_completamento).toLocaleString('it-IT'))
     }
     this.addSeparator()
     
@@ -490,9 +577,8 @@ export class PDFGenerator {
     
     // Note
     if (lavorazione.note && lavorazione.note.trim()) {
-      this.addSubtitle('NOTE')
-      this.addText(lavorazione.note)
-      this.addSeparator()
+      this.addSubtitle('NOTE AGGIUNTIVE')
+      this.addInfoBox(lavorazione.note, 'info')
     }
     
     // SEZIONE FIRMA DIGITALE - Sempre visibile per debug
@@ -506,36 +592,42 @@ export class PDFGenerator {
     
     if (lavorazione.firma) {
       console.log('✍️ Tentativo aggiunta firma al PDF')
-      this.addText('Firma digitale del sopralluoghista:')
+      this.addInfoBox('✍️ Firma digitale del sopralluoghista certificata dal sistema', 'success')
       this.currentY += 5
       
       try {
-        const firmaSuccess = await this.addImage(lavorazione.firma, 100, 40)
+        const firmaSuccess = await this.addImage(lavorazione.firma, 120, 50)
         if (firmaSuccess) {
           console.log('✅ Firma aggiunta al PDF con successo')
+          this.currentY += 3
+          this.doc.setFontSize(8)
+          this.doc.setTextColor(100, 100, 100)
+          this.doc.setFont('helvetica', 'italic')
+          this.doc.text('Firma digitale acquisita e validata dal sistema', this.margin + 5, this.currentY)
+          this.doc.setTextColor(0, 0, 0)
+          this.doc.setFont('helvetica', 'normal')
+          this.currentY += 10
         } else {
           console.error('❌ Firma non aggiunta (addImage returned false)')
-          this.addText('[Errore: Firma non caricabile]')
+          this.addInfoBox('⚠️ Errore: Firma non caricabile', 'error')
         }
       } catch (error) {
         console.error('❌ Errore aggiunta firma al PDF:', error)
-        this.addText(`[Errore caricamento firma: ${error}]`)
+        this.addInfoBox(`⚠️ Errore caricamento firma: ${error}`, 'error')
       }
     } else {
-      this.addText('Firma non disponibile per questa lavorazione')
-      if (lavorazione.stato !== 'completata') {
-        this.addText('(La lavorazione non è stata completata)')
-      }
+      this.addInfoBox('ℹ️ Firma non disponibile - La lavorazione non è stata ancora completata', 'warning')
     }
     this.addSeparator()
     
-    // Firma digitale (legacy - per compatibilità)
-    this.addSubtitle('VALIDAZIONE')
-    this.addText('Questo documento è stato generato automaticamente dal sistema di gestione verifiche condominiali.')
-    this.addText(`Data generazione: ${new Date().toLocaleString('it-IT')}`)
-    if (lavorazione.stato === 'completata') {
-      this.addText('✓ Verifica completata e validata dal sopralluoghista assegnato')
-    }
+    // Validazione finale
+    this.addSubtitle('VALIDAZIONE DOCUMENTO')
+    this.addInfoBox(
+      '✓ Documento generato automaticamente dal Sistema di Gestione Verifiche Condominiali' +
+      `\nData e ora generazione: ${new Date().toLocaleString('it-IT', { dateStyle: 'full', timeStyle: 'long' })}` +
+      (lavorazione.stato === 'completata' ? '\n✓ Verifica completata e validata dal sopralluoghista assegnato' : ''),
+      'info'
+    )
     
     // Footer
     this.addFooter()
