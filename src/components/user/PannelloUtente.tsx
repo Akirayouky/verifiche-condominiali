@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Lavorazione, Condominio, TipologiaVerifica } from '@/lib/types'
 import WizardVerifiche from '@/components/verifiche/WizardVerifiche'
+import WizardIntegrazione from './WizardIntegrazione'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import dynamic from 'next/dynamic'
 
@@ -379,6 +380,8 @@ export default function PannelloUtente() {
   const [showLavorazioniModal, setShowLavorazioniModal] = useState(false)
   const [lavorazioniCondominio, setLavorazioniCondominio] = useState<Lavorazione[]>([])
   const [condominioSelezionato, setCondominioSelezionato] = useState<Condominio | null>(null)
+  const [showWizardIntegrazione, setShowWizardIntegrazione] = useState(false)
+  const [lavorazioneDaIntegrare, setLavorazioneDaIntegrare] = useState<Lavorazione | null>(null)
 
   const caricaLavorazioni = useCallback(async () => {
     if (!user?.id) return
@@ -751,6 +754,35 @@ export default function PannelloUtente() {
                           {lavorazione.titolo || lavorazione.descrizione}
                         </h4>
                         
+                        {/* Alert Riapertura */}
+                        {lavorazione.stato === 'riaperta' && lavorazione.motivo_riapertura && (
+                          <div className="bg-orange-50 border-l-4 border-orange-500 p-4 mb-4 rounded">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center">
+                                <span className="text-orange-600 font-bold mr-2">🔄 INTEGRAZIONE RICHIESTA</span>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setLavorazioneDaIntegrare(lavorazione)
+                                  setShowWizardIntegrazione(true)
+                                }}
+                                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-bold"
+                              >
+                                ✏️ Inizia Integrazione
+                              </button>
+                            </div>
+                            <div className="text-sm">
+                              <p className="font-semibold text-orange-800 mb-1">Motivo della riapertura:</p>
+                              <p className="text-orange-700 italic">{lavorazione.motivo_riapertura}</p>
+                              {lavorazione.data_riapertura && (
+                                <p className="text-orange-600 mt-2 text-xs">
+                                  Riaperta il: {formatDate(lavorazione.data_riapertura)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
                         {lavorazione.titolo && lavorazione.descrizione && lavorazione.titolo !== lavorazione.descrizione && (
                           <p className="text-sm text-gray-600 mb-3">
                             {lavorazione.descrizione}
@@ -1109,6 +1141,24 @@ export default function PannelloUtente() {
             setShowWizard(false)
             setSelectedLavorazione(null)
             caricaLavorazioni()
+          }}
+        />
+      )}
+
+      {/* Wizard Integrazione (per lavorazioni riaperte) */}
+      {showWizardIntegrazione && lavorazioneDaIntegrare && user?.id && (
+        <WizardIntegrazione
+          lavorazione={lavorazioneDaIntegrare}
+          userId={user.id}
+          onClose={() => {
+            setShowWizardIntegrazione(false)
+            setLavorazioneDaIntegrare(null)
+          }}
+          onSuccess={() => {
+            setShowWizardIntegrazione(false)
+            setLavorazioneDaIntegrare(null)
+            caricaLavorazioni()
+            alert('✅ Integrazione completata con successo! L\'amministratore è stato notificato.')
           }}
         />
       )}

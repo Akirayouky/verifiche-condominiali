@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Lavorazione } from '@/lib/types'
+import { useAuth } from '@/contexts/AuthContext'
 import FotoViewer from '@/components/ui/FotoViewer'
 import GestioneUtenti from './GestioneUtenti'
 import GestioneAssegnazioni from './GestioneAssegnazioni'
 import WizardLavorazioni from './WizardLavorazioni'
+import WizardRiapertura from './WizardRiapertura'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import { refreshStatsAfterDelay } from '@/lib/refreshStats'
 import { NotificationManager } from '@/lib/notifications'
@@ -21,6 +23,7 @@ function useIsClient() {
 
 export default function PannelloAdmin() {
   const isClient = useIsClient()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('lavorazioni')
   const [lavorazioni, setLavorazioni] = useState<Lavorazione[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,6 +40,8 @@ export default function PannelloAdmin() {
   const [lavorazioneCreata, setLavorazioneCreata] = useState<any>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLavorazione, setDetailLavorazione] = useState<Lavorazione | null>(null)
+  const [showWizardRiapertura, setShowWizardRiapertura] = useState(false)
+  const [lavorazioneDaRiaprire, setLavorazioneDaRiaprire] = useState<Lavorazione | null>(null)
   
   // Inizializza NotificationManager
   const [notificationManager] = useState(() => NotificationManager.getInstance())
@@ -205,9 +210,15 @@ export default function PannelloAdmin() {
   }
 
   const handleAzione = (lavorazione: Lavorazione, tipoAzione: string) => {
-    setLavorazioneSelezionata(lavorazione)
-    setAzione(tipoAzione)
-    setShowModal(true)
+    if (tipoAzione === 'riapri') {
+      // Apri il wizard di riapertura
+      setLavorazioneDaRiaprire(lavorazione)
+      setShowWizardRiapertura(true)
+    } else {
+      setLavorazioneSelezionata(lavorazione)
+      setAzione(tipoAzione)
+      setShowModal(true)
+    }
   }
 
   const confermaAzione = () => {
@@ -247,7 +258,7 @@ export default function PannelloAdmin() {
       case 'da_eseguire': return '🔴'
       case 'in_corso': return '⏳'
       case 'completata': return '✅'
-      case 'riaperta': return '�'
+      case 'riaperta': return '🔄'
       default: return '�'
     }
   }
@@ -1225,6 +1236,25 @@ export default function PannelloAdmin() {
       {/* Modal Dettaglio Lavorazione */}
       {showDetailModal && detailLavorazione && (
         <ModalDettaglioLavorazione lavorazione={detailLavorazione} />
+      )}
+
+      {/* Wizard Riapertura Lavorazione */}
+      {showWizardRiapertura && lavorazioneDaRiaprire && user && (
+        <WizardRiapertura
+          lavorazione={lavorazioneDaRiaprire}
+          adminId={user.id}
+          onClose={() => {
+            setShowWizardRiapertura(false)
+            setLavorazioneDaRiaprire(null)
+          }}
+          onSuccess={() => {
+            setShowWizardRiapertura(false)
+            setLavorazioneDaRiaprire(null)
+            caricaLavorazioni()
+            // Mostra messaggio di successo
+            alert('✅ Lavorazione riaperta con successo! Il sopralluoghista riceverà una notifica.')
+          }}
+        />
       )}
     </div>
   )
