@@ -192,7 +192,7 @@ export interface FotoUploadCloudProps {
 // Sistema Notifiche Real-Time
 export interface Notifica {
   id: string
-  tipo: 'scadenza_imminente' | 'nuova_assegnazione' | 'lavorazione_completata' | 'reminder_personalizzato' | 'urgente' | 'nuova_verifica'
+  tipo: 'scadenza_imminente' | 'nuova_assegnazione' | 'lavorazione_completata' | 'reminder_personalizzato' | 'urgente' | 'nuova_verifica' | 'lavorazione_riaperta' | 'integrazione_completata'
   titolo: string
   messaggio: string
   utente_id: string
