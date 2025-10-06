@@ -5,9 +5,10 @@ import { Lavorazione } from '@/lib/types'
 
 interface IntegrazioniCollegateProps {
   lavorazioneId: string
+  onSelectIntegrazione?: (integrazione: Lavorazione) => void
 }
 
-export default function IntegrazioniCollegate({ lavorazioneId }: IntegrazioniCollegateProps) {
+export default function IntegrazioniCollegate({ lavorazioneId, onSelectIntegrazione }: IntegrazioniCollegateProps) {
   const [integrazioni, setIntegrazioni] = useState<Lavorazione[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -58,7 +59,8 @@ export default function IntegrazioniCollegate({ lavorazioneId }: IntegrazioniCol
           return (
             <div 
               key={integrazione.id}
-              className={`p-4 rounded-lg border-2 ${statoColor}`}
+              className={`p-4 rounded-lg border-2 ${statoColor} ${onSelectIntegrazione ? 'cursor-pointer hover:opacity-75 transition-opacity' : ''}`}
+              onClick={() => onSelectIntegrazione?.(integrazione)}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">

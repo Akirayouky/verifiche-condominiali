@@ -574,6 +574,14 @@ export default function PannelloAdmin() {
                     </div>
                   </div>
                 )}
+
+                {/* Integrazioni Collegate (per lavorazioni completate) */}
+                {lavorazione.stato === 'completata' && !lavorazione.lavorazione_originale_id && (
+                  <IntegrazioniCollegate 
+                    lavorazioneId={lavorazione.id} 
+                    onSelectIntegrazione={(integrazione) => setDetailLavorazione(integrazione)}
+                  />
+                )}
               </div>
 
               {/* Date e Timeline */}

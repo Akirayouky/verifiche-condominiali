@@ -1,6 +1,3 @@
 {
-  "/api/lavorazioni/route": "app/api/lavorazioni/route.js",
-  "/page": "app/page.js",
-  "/api/lavorazioni/[id]/foto/route": "app/api/lavorazioni/[id]/foto/route.js",
-  "/api/notifications/stream/route": "app/api/notifications/stream/route.js"
+  "/page": "app/page.js"
 }
