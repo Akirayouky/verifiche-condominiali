@@ -664,11 +664,6 @@ export default function PannelloAdmin() {
                   </div>
                 )}
 
-                {/* Integrazioni Collegate */}
-                {lavorazione.stato === 'completata' && !lavorazione.lavorazione_originale_id && (
-                  <IntegrazioniCollegate lavorazioneId={lavorazione.id} />
-                )}
-
                 {/* PDF Report per lavorazioni completate */}
                 {lavorazione.stato === 'completata' && (
                   <div className="mt-6 pt-6 border-t border-gray-200">
