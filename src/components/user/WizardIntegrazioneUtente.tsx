@@ -24,6 +24,15 @@ export default function WizardIntegrazioneUtente({
     ? lavorazione.campi_nuovi 
     : []
 
+  // 🐛 DEBUG: Log per vedere i dati
+  useEffect(() => {
+    console.log('🔍 DEBUG WizardIntegrazioneUtente:')
+    console.log('  - lavorazione.campi_nuovi:', lavorazione.campi_nuovi)
+    console.log('  - campiNuovi (parsed):', campiNuovi)
+    console.log('  - campiNuovi.length:', campiNuovi.length)
+    console.log('  - Full lavorazione:', lavorazione)
+  }, [lavorazione])
+
   const handleValoreChange = (nomeCampo: string, valore: any) => {
     setValoriCampi(prev => ({
       ...prev,

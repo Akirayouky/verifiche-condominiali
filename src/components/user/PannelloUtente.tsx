@@ -438,8 +438,15 @@ export default function PannelloUtente() {
   }, [caricaLavorazioni])
 
   const iniziaLavorazione = (lavorazione: Lavorazione) => {
-    setSelectedLavorazione(lavorazione)
-    setShowWizard(true)
+    // Se è un'integrazione, apri il wizard specifico per integrazioni
+    if (lavorazione.stato === 'integrazione' || lavorazione.lavorazione_originale_id) {
+      setLavorazioneDaIntegrare(lavorazione)
+      setShowWizardIntegrazione(true)
+    } else {
+      // Altrimenti apri il wizard normale
+      setSelectedLavorazione(lavorazione)
+      setShowWizard(true)
+    }
   }
 
   const handleQrScan = async (qrCode: string) => {
