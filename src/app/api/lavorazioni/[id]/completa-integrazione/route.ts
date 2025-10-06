@@ -132,18 +132,34 @@ export async function PUT(
     // Validazione: controlla che tutti i campi obbligatori siano stati compilati
     const campiObbligatoriMancanti: string[] = []
 
-    // Controlla campi da ricompilare
+    // Controlla campi da ricompilare (escludi file, sono gestiti separatamente)
     campiDaRicompilare.forEach((campo: any) => {
+      // Skip validation per campi file
+      if (campo.tipo === 'file') {
+        return
+      }
+      
       const nomeCampo = campo.nome
-      if (!campi_ricompilati[nomeCampo] || campi_ricompilati[nomeCampo] === '') {
+      const valore = campi_ricompilati[nomeCampo]
+      
+      // Considera vuoto solo se undefined, null o stringa vuota
+      if (valore === undefined || valore === null || valore === '') {
         campiObbligatoriMancanti.push(`Ricompilato: ${campo.label || nomeCampo}`)
       }
     })
 
-    // Controlla nuovi campi obbligatori
+    // Controlla nuovi campi obbligatori (escludi file)
     campiNuovi.forEach((campo: any) => {
-      if (campo.required && (!campi_nuovi_compilati[campo.nome] || campi_nuovi_compilati[campo.nome] === '')) {
-        campiObbligatoriMancanti.push(`Nuovo: ${campo.label || campo.nome}`)
+      // Skip validation per campi file
+      if (campo.tipo === 'file') {
+        return
+      }
+      
+      if (campo.required) {
+        const valore = campi_nuovi_compilati[campo.nome]
+        if (valore === undefined || valore === null || valore === '') {
+          campiObbligatoriMancanti.push(`Nuovo: ${campo.label || campo.nome}`)
+        }
       }
     })
 

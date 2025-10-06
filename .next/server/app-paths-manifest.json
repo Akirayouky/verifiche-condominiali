@@ -1,7 +1,6 @@
 {
-  "/api/notifications/stream/route": "app/api/notifications/stream/route.js",
-  "/api/auth/dev-login/route": "app/api/auth/dev-login/route.js",
-  "/dev/page": "app/dev/page.js",
+  "/api/lavorazioni/route": "app/api/lavorazioni/route.js",
   "/page": "app/page.js",
-  "/api/dev/reset-database/route": "app/api/dev/reset-database/route.js"
+  "/api/lavorazioni/[id]/foto/route": "app/api/lavorazioni/[id]/foto/route.js",
+  "/api/notifications/stream/route": "app/api/notifications/stream/route.js"
 }
