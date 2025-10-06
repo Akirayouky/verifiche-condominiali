@@ -50,7 +50,7 @@ export async function POST(
     const integrazione = {
       condominio_id: lavorazioneOriginale.condominio_id,
       tipologia_id: lavorazioneOriginale.tipologia_id,
-      utente_assegnato_id: lavorazioneOriginale.utente_assegnato_id,
+      user_id: lavorazioneOriginale.user_id, // Campo corretto: user_id invece di utente_assegnato_id
       titolo: `${lavorazioneOriginale.titolo} - Integrazione`,
       descrizione: lavorazioneOriginale.descrizione,
       stato: 'integrazione',
@@ -95,7 +95,7 @@ export async function POST(
           tipo: 'lavorazione_assegnata',
           titolo: '📋 Nuova Integrazione Assegnata',
           messaggio: `${adminNome} ha richiesto un'integrazione per "${lavorazioneOriginale.titolo}". Motivo: ${motivo_integrazione}`,
-          utente_id: lavorazioneOriginale.utente_assegnato_id,
+          utente_id: lavorazioneOriginale.user_id, // Campo corretto: user_id
           lavorazione_id: nuovaIntegrazione.id,
           priorita: 'alta',
           letta: false
