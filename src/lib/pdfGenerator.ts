@@ -27,6 +27,11 @@ export interface LavorazionePDF {
     longitude: number
     accuracy?: number
   }>
+  // Campi integrazione
+  lavorazione_originale_id?: string
+  motivo_integrazione?: string
+  data_integrazione?: string
+  dati_verifiche?: any
 }
 
 export class PDFGenerator {
@@ -339,14 +344,204 @@ export class PDFGenerator {
     return this._generatePDF(lavorazione)
   }
 
+  private async _generateIntegrazionePDF(lavorazione: LavorazionePDF): Promise<Blob> {
+    console.log('⚡ Generazione PDF Integrazione con dati:', {
+      id: lavorazione.id,
+      lavorazione_originale_id: lavorazione.lavorazione_originale_id,
+      motivo: lavorazione.motivo_integrazione,
+      hasDatiVerifiche: !!lavorazione.dati_verifiche
+    })
+    
+    // Header
+    this.addHeader()
+    
+    // Titolo principale con badge INTEGRAZIONE
+    this.addTitle(`⚡ REPORT INTEGRAZIONE`)
+    
+    // Box informativo verde per integrazione
+    this.addInfoBox(
+      `Integrazione completata • ID: ${lavorazione.id.substring(0, 8)}... • Generato: ${new Date().toLocaleDateString('it-IT')}`,
+      'success'
+    )
+    
+    // Riferimento alla lavorazione originale
+    this.addSubtitle('🔗 LAVORAZIONE ORIGINALE')
+    this.addKeyValue(
+      'ID Originale', 
+      lavorazione.lavorazione_originale_id?.substring(0, 8) + '...' || 'N/D'
+    )
+    if (lavorazione.motivo_integrazione) {
+      this.addKeyValue('Motivo Integrazione', lavorazione.motivo_integrazione)
+    }
+    this.addSeparator()
+    
+    // Informazioni generali
+    this.addSubtitle('INFORMAZIONI GENERALI')
+    this.addKeyValue('Descrizione', lavorazione.descrizione)
+    this.addKeyValue('Priorità', this.getPrioritaLabel(lavorazione.priorita))
+    this.addSeparator()
+    
+    // Condominio
+    if (lavorazione.condominio) {
+      this.addSubtitle('CONDOMINIO')
+      this.addKeyValue('Nome', lavorazione.condominio.nome)
+      if (lavorazione.condominio.indirizzo) {
+        this.addKeyValue('Indirizzo', lavorazione.condominio.indirizzo)
+      }
+      this.addSeparator()
+    }
+    
+    // Sopralluoghista
+    if (lavorazione.utente) {
+      this.addSubtitle('SOPRALLUOGHISTA')
+      this.addKeyValue('Nome', `${lavorazione.utente.nome} ${lavorazione.utente.cognome}`)
+      this.addKeyValue('Email', lavorazione.utente.email)
+      this.addSeparator()
+    }
+    
+    // Timeline integrazione
+    this.addSubtitle('TIMELINE')
+    this.addKeyValue('Data Creazione Integrazione', new Date(lavorazione.data_apertura).toLocaleString('it-IT'))
+    if (lavorazione.data_integrazione) {
+      this.addKeyValue('Data Completamento', new Date(lavorazione.data_integrazione).toLocaleString('it-IT'))
+    }
+    this.addSeparator()
+    
+    // Dati verifiche compilati (campi_nuovi)
+    if (lavorazione.dati_verifiche) {
+      this.addSubtitle('DATI COMPILATI')
+      
+      Object.entries(lavorazione.dati_verifiche).forEach(([key, value]) => {
+        // Salta gli array di foto
+        if (Array.isArray(value) && value.length > 0 && 
+            typeof value[0] === 'string' && value[0].includes('blob.vercel-storage.com')) {
+          return
+        }
+        
+        // Formatta il valore
+        let displayValue: string
+        if (typeof value === 'boolean') {
+          displayValue = value ? '✓ Sì' : '✗ No'
+        } else if (Array.isArray(value)) {
+          displayValue = value.join(', ')
+        } else {
+          displayValue = String(value)
+        }
+        
+        // Formatta la chiave (rimuovi underscore e capitalizza)
+        const displayKey = key
+          .replace(/_/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+        
+        this.addKeyValue(displayKey, displayValue)
+      })
+      
+      this.addSeparator()
+    }
+    
+    // Foto dell'integrazione
+    if (lavorazione.dati_verifiche) {
+      const fotoFields = Object.entries(lavorazione.dati_verifiche).filter(
+        ([key, value]) => Array.isArray(value) && value.length > 0 && 
+        typeof value[0] === 'string' && value[0].includes('blob.vercel-storage.com')
+      )
+      
+      if (fotoFields.length > 0) {
+        this.addSubtitle('📸 DOCUMENTAZIONE FOTOGRAFICA')
+        
+        for (const [nomeCampo, fotoArray] of fotoFields) {
+          // Titolo campo foto
+          const titoloCampo = nomeCampo
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+          
+          this.doc.setFontSize(11)
+          this.doc.setFont('helvetica', 'bold')
+          this.doc.setTextColor(34, 197, 94) // green-600
+          this.doc.text(titoloCampo, this.margin, this.currentY)
+          this.currentY += 8
+          this.doc.setTextColor(0, 0, 0)
+          this.doc.setFont('helvetica', 'normal')
+          
+          // Aggiungi ogni foto
+          for (const fotoUrl of fotoArray as string[]) {
+            if (typeof fotoUrl === 'string') {
+              console.log(`📸 Aggiungendo foto integrazione:`, fotoUrl)
+              const successo = await this.addImage(fotoUrl, 140, 140)
+              if (!successo) {
+                console.error(`❌ Impossibile aggiungere foto da ${titoloCampo}`)
+              }
+              
+              // GPS se disponibile
+              const geoData = lavorazione.geolocations?.find(g => g.fotoUrl === fotoUrl)
+              if (geoData) {
+                this.currentY += 3
+                this.doc.setFontSize(9)
+                this.doc.setFont('helvetica', 'bold')
+                this.doc.setTextColor(34, 197, 94) // green-600
+                this.doc.text('UBICAZIONE FOTO', this.margin, this.currentY)
+                this.currentY += 5
+                
+                this.doc.setFont('helvetica', 'normal')
+                this.doc.setTextColor(60, 60, 60)
+                this.doc.text(`Latitudine: ${geoData.latitude.toFixed(6)}°`, this.margin, this.currentY)
+                this.currentY += 4
+                this.doc.text(`Longitudine: ${geoData.longitude.toFixed(6)}°`, this.margin, this.currentY)
+                this.currentY += 4
+                
+                if (geoData.accuracy) {
+                  this.doc.text(`Precisione: ±${geoData.accuracy.toFixed(0)} metri`, this.margin, this.currentY)
+                  this.currentY += 4
+                }
+                
+                const mapsLink = `https://maps.google.com/?q=${geoData.latitude},${geoData.longitude}`
+                this.doc.setTextColor(34, 197, 94)
+                this.doc.text('Vedi su Google Maps', this.margin, this.currentY)
+                this.doc.link(this.margin, this.currentY - 3, 40, 4, { url: mapsLink })
+                this.currentY += 7
+                this.doc.setTextColor(0, 0, 0)
+              }
+              
+              this.currentY += 5
+            }
+          }
+        }
+      }
+    }
+    
+    // Note
+    if (lavorazione.note) {
+      this.addSubtitle('NOTE')
+      this.addText(lavorazione.note, 10)
+      this.addSeparator()
+    }
+    
+    // Footer
+    this.addFooter()
+    
+    // Download
+    console.log('✅ PDF Integrazione generato con successo')
+    return this.doc.output('blob')
+  }
+
   private async _generatePDF(lavorazione: LavorazionePDF): Promise<Blob> {
     console.log('📄 Generazione PDF con dati:', {
       id: lavorazione.id,
       hasFirma: !!lavorazione.firma,
       firmaUrl: lavorazione.firma,
       hasGeolocations: !!lavorazione.geolocations,
-      geolocationsCount: lavorazione.geolocations?.length || 0
+      geolocationsCount: lavorazione.geolocations?.length || 0,
+      isIntegrazione: !!lavorazione.lavorazione_originale_id
     })
+    
+    // Verifica se è un'integrazione
+    if (lavorazione.lavorazione_originale_id) {
+      return this._generateIntegrazionePDF(lavorazione)
+    }
     
     // Header
     this.addHeader()
