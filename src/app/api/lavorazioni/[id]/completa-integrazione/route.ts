@@ -91,17 +91,21 @@ export async function PUT(
     }
 
     // Verifica che la lavorazione esista e sia riaperta
+    console.log('🔍 Step 1: Fetching lavorazione...')
     const { data: lavorazione, error: fetchError } = await dbQuery.lavorazioni.getById(id)
 
     if (fetchError || !lavorazione) {
-      console.error('Errore recupero lavorazione:', fetchError)
+      console.error('❌ Errore recupero lavorazione:', fetchError)
       return NextResponse.json(
         { success: false, error: 'Lavorazione non trovata' },
         { status: 404 }
       )
     }
+    
+    console.log('✅ Lavorazione trovata:', { id: lavorazione.id, stato: lavorazione.stato })
 
     if (lavorazione.stato !== 'riaperta') {
+      console.error('❌ Stato lavorazione non valido:', lavorazione.stato)
       return NextResponse.json(
         { 
           success: false, 
@@ -111,6 +115,7 @@ export async function PUT(
       )
     }
 
+    console.log('🔍 Step 2: Parsing campi JSONB...')
     // Recupera i campi da ricompilare e i nuovi campi dalla lavorazione
     let campiDaRicompilare: any[] = []
     let campiNuovi: any[] = []
@@ -163,7 +168,10 @@ export async function PUT(
       }
     })
 
+    console.log('✅ Step 3: Validazione completata. Campi mancanti:', campiObbligatoriMancanti.length)
+
     if (campiObbligatoriMancanti.length > 0) {
+      console.error('❌ Campi mancanti:', campiObbligatoriMancanti)
       return NextResponse.json(
         { 
           success: false, 
@@ -178,6 +186,7 @@ export async function PUT(
     // GESTIONE FOTO
     // ========================================
     
+    console.log('🔍 Step 4: Gestione foto...')
     const idCartella = lavorazione.id // O lavorazione.id_cartella se esiste
     const fotoPrefix = `lavorazione/${idCartella}/foto/`
     
@@ -378,11 +387,14 @@ export async function PUT(
 
   } catch (error) {
     console.error('❌ Errore completamento integrazione:', error)
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace')
+    
     return NextResponse.json(
       { 
         success: false, 
         error: 'Errore interno del server',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
       },
       { status: 500 }
     )
