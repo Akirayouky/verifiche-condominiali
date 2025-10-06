@@ -38,6 +38,7 @@ export default function PannelloAdmin() {
   const [nuovaNota, setNuovaNota] = useState('')
   const [azione, setAzione] = useState<string>('')
   const [showWizardLavorazioni, setShowWizardLavorazioni] = useState(false)
+  const [lavorazioneDaModificare, setLavorazioneDaModificare] = useState<Lavorazione | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showDeleteSuccessModal, setShowDeleteSuccessModal] = useState(false)
   const [deletedLavorazioneTitle, setDeletedLavorazioneTitle] = useState<string>('')
@@ -111,7 +112,8 @@ export default function PannelloAdmin() {
 
   const handleNuovaLavorazione = async (lavorazione: any) => {
     try {
-      console.log('Creando lavorazione:', lavorazione)
+      const isEditMode = !!lavorazioneDaModificare
+      console.log(isEditMode ? 'Modificando lavorazione:' : 'Creando lavorazione:', lavorazione)
       
       // Prepara i dati per l'API
       const lavorazioneData = {
@@ -125,23 +127,50 @@ export default function PannelloAdmin() {
         note: lavorazione.note
       }
 
-      const response = await fetch('/api/lavorazioni', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(lavorazioneData)
-      })
+      let response
+      if (isEditMode) {
+        // PUT con formato { azione: 'aggiorna', dati: {...} }
+        response = await fetch(`/api/lavorazioni/${lavorazioneDaModificare.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            azione: 'aggiorna',
+            dati: {
+              descrizione: lavorazione.descrizione,
+              priorita: lavorazione.priorita,
+              user_id: lavorazione.assegnato_a, // API usa user_id non assegnato_a
+              data_scadenza: lavorazione.data_scadenza,
+              note: lavorazione.note,
+              // Aggiorna anche allegati per salvare tipologia
+              allegati: JSON.stringify({
+                tipologia: lavorazione.tipologia,
+                tipologia_verifica_id: lavorazione.tipologia_verifica_id
+              })
+            }
+          })
+        })
+      } else {
+        // POST per nuova lavorazione
+        response = await fetch('/api/lavorazioni', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(lavorazioneData)
+        })
+      }
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Errore nella creazione della lavorazione')
+        throw new Error(errorData.error || `Errore nella ${isEditMode ? 'modifica' : 'creazione'} della lavorazione`)
       }
 
       const result = await response.json()
       
       if (result.success) {
-        console.log('Lavorazione creata con successo:', result.data)
+        console.log(`Lavorazione ${isEditMode ? 'modificata' : 'creata'} con successo:`, result.data)
         
         // Arricchisce i dati con i nomi per la modale di successo
         setLavorazioneCreata({
@@ -149,6 +178,7 @@ export default function PannelloAdmin() {
           ...lavorazioneData // Include tutti i dati del form per il riepilogo
         })
         setShowWizardLavorazioni(false)
+        setLavorazioneDaModificare(null)
         setShowSuccessModal(true)
         
         // Ricarica la lista delle lavorazioni
@@ -157,12 +187,12 @@ export default function PannelloAdmin() {
         // 🔄 Refresh delle statistiche del dashboard
         refreshStatsAfterDelay(1000)
       } else {
-        throw new Error(result.error || 'Errore nella creazione della lavorazione')
+        throw new Error(result.error || `Errore nella ${isEditMode ? 'modifica' : 'creazione'} della lavorazione`)
       }
       
     } catch (error) {
-      console.error('Errore creazione lavorazione:', error)
-      alert(`Errore nella creazione della lavorazione: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`)
+      console.error('Errore lavorazione:', error)
+      alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`)
     }
   }
 
@@ -306,9 +336,8 @@ export default function PannelloAdmin() {
   }
 
   const handleModifica = (lavorazione: Lavorazione) => {
-    // Per ora mostriamo un alert, poi implementeremo un modal di modifica
-    alert(`Modifica lavorazione: ${lavorazione.descrizione}\nID: ${lavorazione.id}`)
-    // TODO: Implementare modal di modifica
+    setLavorazioneDaModificare(lavorazione)
+    setShowWizardLavorazioni(true)
   }
 
   const handleCancella = (lavorazione: Lavorazione) => {
@@ -1287,8 +1316,23 @@ export default function PannelloAdmin() {
       {/* Wizard Nuova Lavorazione */}
       {showWizardLavorazioni && (
         <WizardLavorazioni
-          onClose={() => setShowWizardLavorazioni(false)}
+          onClose={() => {
+            setShowWizardLavorazioni(false)
+            setLavorazioneDaModificare(null)
+          }}
           onComplete={handleNuovaLavorazione}
+          lavorazioneDaModificare={lavorazioneDaModificare ? {
+            id: lavorazioneDaModificare.id,
+            condominio_id: lavorazioneDaModificare.condominio_id,
+            tipologia: lavorazioneDaModificare.allegati ? JSON.parse(lavorazioneDaModificare.allegati).tipologia : 'altro',
+            tipologia_verifica_id: lavorazioneDaModificare.allegati ? JSON.parse(lavorazioneDaModificare.allegati).tipologia_verifica_id : undefined,
+            descrizione: lavorazioneDaModificare.descrizione,
+            priorita: (lavorazioneDaModificare.priorita === 'critica' ? 'alta' : lavorazioneDaModificare.priorita) as 'bassa' | 'media' | 'alta',
+            assegnato_a: lavorazioneDaModificare.user_id,
+            data_scadenza: lavorazioneDaModificare.data_scadenza,
+            note: typeof lavorazioneDaModificare.note === 'string' ? lavorazioneDaModificare.note : undefined,
+            allegati: lavorazioneDaModificare.allegati
+          } : undefined}
         />
       )}
 
