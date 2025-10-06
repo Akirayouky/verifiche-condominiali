@@ -7,7 +7,7 @@ import FotoViewer from '@/components/ui/FotoViewer'
 import GestioneUtenti from './GestioneUtenti'
 import GestioneAssegnazioni from './GestioneAssegnazioni'
 import WizardLavorazioni from './WizardLavorazioni'
-import WizardRiapertura from './WizardRiapertura'
+import WizardIntegrazione from './WizardIntegrazione'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import { refreshStatsAfterDelay } from '@/lib/refreshStats'
 import { NotificationManager } from '@/lib/notifications'
@@ -40,8 +40,8 @@ export default function PannelloAdmin() {
   const [lavorazioneCreata, setLavorazioneCreata] = useState<any>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLavorazione, setDetailLavorazione] = useState<Lavorazione | null>(null)
-  const [showWizardRiapertura, setShowWizardRiapertura] = useState(false)
-  const [lavorazioneDaRiaprire, setLavorazioneDaRiaprire] = useState<Lavorazione | null>(null)
+  const [showWizardIntegrazione, setShowWizardIntegrazione] = useState(false)
+  const [lavorazioneDaIntegrare, setLavorazioneDaIntegrare] = useState<Lavorazione | null>(null)
   
   // Inizializza NotificationManager
   const [notificationManager] = useState(() => NotificationManager.getInstance())
@@ -210,10 +210,10 @@ export default function PannelloAdmin() {
   }
 
   const handleAzione = (lavorazione: Lavorazione, tipoAzione: string) => {
-    if (tipoAzione === 'riapri') {
-      // Apri il wizard di riapertura
-      setLavorazioneDaRiaprire(lavorazione)
-      setShowWizardRiapertura(true)
+    if (tipoAzione === 'crea_integrazione') {
+      // Apri il wizard di integrazione
+      setLavorazioneDaIntegrare(lavorazione)
+      setShowWizardIntegrazione(true)
     } else {
       setLavorazioneSelezionata(lavorazione)
       setAzione(tipoAzione)
@@ -976,10 +976,10 @@ export default function PannelloAdmin() {
                     
                     {lavorazione.stato === 'completata' && (
                       <button
-                        onClick={() => handleAzione(lavorazione, 'riapri')}
-                        className="text-orange-600 hover:text-orange-800 text-sm px-3 py-1 border border-orange-200 rounded"
+                        onClick={() => handleAzione(lavorazione, 'crea_integrazione')}
+                        className="text-green-600 hover:text-green-800 text-sm px-3 py-1 border border-green-200 rounded bg-green-50"
                       >
-                        🔄 Riapri
+                        ➕ Crea Integrazione
                       </button>
                     )}
                     
@@ -1019,7 +1019,7 @@ export default function PannelloAdmin() {
           <div className="bg-white rounded-lg p-6 w-96 mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {azione === 'chiudi' && 'Chiudi Lavorazione'}
-              {azione === 'riapri' && 'Riapri Lavorazione'}
+              {azione === 'crea_integrazione' && 'Crea Integrazione'}
               {azione === 'aggiungi_nota' && 'Aggiungi Nota'}
               {azione === 'elimina' && '🗑️ Elimina Lavorazione'}
             </h3>
@@ -1238,21 +1238,21 @@ export default function PannelloAdmin() {
         <ModalDettaglioLavorazione lavorazione={detailLavorazione} />
       )}
 
-      {/* Wizard Riapertura Lavorazione */}
-      {showWizardRiapertura && lavorazioneDaRiaprire && user && (
-        <WizardRiapertura
-          lavorazione={lavorazioneDaRiaprire}
+      {/* Wizard Integrazione Lavorazione */}
+      {showWizardIntegrazione && lavorazioneDaIntegrare && user && (
+        <WizardIntegrazione
+          lavorazione={lavorazioneDaIntegrare}
           adminId={user.id}
           onClose={() => {
-            setShowWizardRiapertura(false)
-            setLavorazioneDaRiaprire(null)
+            setShowWizardIntegrazione(false)
+            setLavorazioneDaIntegrare(null)
           }}
           onSuccess={() => {
-            setShowWizardRiapertura(false)
-            setLavorazioneDaRiaprire(null)
+            setShowWizardIntegrazione(false)
+            setLavorazioneDaIntegrare(null)
             caricaLavorazioni()
             // Mostra messaggio di successo
-            alert('✅ Lavorazione riaperta con successo! Il sopralluoghista riceverà una notifica.')
+            alert('✅ Integrazione creata con successo! Il sopralluoghista riceverà una notifica.')
           }}
         />
       )}

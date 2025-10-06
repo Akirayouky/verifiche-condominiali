@@ -408,15 +408,23 @@ export default function WizardIntegrazione({
 
             {/* Input per aggiungere nuove foto */}
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                {fotoMantenuteCampo.length > 0 || nuoveFotoCampo.length > 0 
-                  ? 'Aggiungi altre foto' 
-                  : campo.label}
+              <label 
+                htmlFor={`file-input-${campo.nome}`}
+                className="flex items-center justify-center gap-3 px-4 py-3 bg-blue-500 text-white rounded-lg cursor-pointer hover:bg-blue-600 transition-colors shadow-md"
+              >
+                <span className="text-2xl">📷</span>
+                <span className="font-medium">
+                  {fotoMantenuteCampo.length > 0 || nuoveFotoCampo.length > 0 
+                    ? 'Aggiungi altre foto' 
+                    : 'Scatta o scegli foto'}
+                </span>
               </label>
               <input
+                id={`file-input-${campo.nome}`}
                 type="file"
                 multiple
                 accept="image/*"
+                capture="environment"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || [])
                   if (files.length > 0) {
@@ -428,11 +436,11 @@ export default function WizardIntegrazione({
                     e.target.value = ''
                   }
                 }}
-                className={commonClasses}
+                className="hidden"
                 aria-label={campo.label}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {campo.descrizione || 'Seleziona una o più foto da aggiungere'}
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                {campo.descrizione || 'Puoi selezionare più foto contemporaneamente'}
               </p>
             </div>
 
@@ -552,34 +560,14 @@ export default function WizardIntegrazione({
                     (val) => handleValoreRicompilatoChange(campo.nome, val)
                   )}
 
-                  {campo.valore_precedente && (
+                  {campo.valore_precedente && campo.tipo !== 'file' && (
                     <div className="mt-2 text-xs text-gray-500">
                       <span className="font-semibold">Valore precedente:</span>{' '}
-                      {campo.tipo === 'file' ? (
-                        Array.isArray(campo.valore_precedente) ? (
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {campo.valore_precedente.map((foto: any, idx: number) => (
-                              <div key={idx} className="relative w-16 h-16">
-                                <img 
-                                  src={typeof foto === 'string' ? foto : foto.url || foto.path} 
-                                  alt={`Foto ${idx + 1}`}
-                                  className="w-full h-full object-cover rounded border border-gray-300"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="font-mono bg-gray-200 px-2 py-0.5 rounded">
-                            {String(campo.valore_precedente)}
-                          </span>
-                        )
-                      ) : (
-                        <span className="font-mono bg-gray-200 px-2 py-0.5 rounded">
-                          {Array.isArray(campo.valore_precedente) 
-                            ? campo.valore_precedente.join(', ') 
-                            : String(campo.valore_precedente).slice(0, 100)}
-                        </span>
-                      )}
+                      <span className="font-mono bg-gray-200 px-2 py-0.5 rounded">
+                        {Array.isArray(campo.valore_precedente) 
+                          ? campo.valore_precedente.join(', ') 
+                          : String(campo.valore_precedente).slice(0, 100)}
+                      </span>
                     </div>
                   )}
                 </div>
