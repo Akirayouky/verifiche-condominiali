@@ -8,6 +8,7 @@ import GestioneUtenti from './GestioneUtenti'
 import GestioneAssegnazioni from './GestioneAssegnazioni'
 import WizardLavorazioni from './WizardLavorazioni'
 import WizardIntegrazione from './WizardIntegrazione'
+import IntegrazioniCollegate from './IntegrazioniCollegate'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import { refreshStatsAfterDelay } from '@/lib/refreshStats'
 import { NotificationManager } from '@/lib/notifications'
@@ -515,6 +516,39 @@ export default function PannelloAdmin() {
                   </div>
                 </div>
 
+                {/* Collegamenti Integrazione */}
+                {lavorazione.stato === 'integrazione' && lavorazione.lavorazione_originale_id && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🔗 Collegamento</h3>
+                    <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-600 text-2xl">⚡</span>
+                        <div>
+                          <div className="text-sm text-green-700 font-medium">Integrazione di:</div>
+                          <button
+                            onClick={async () => {
+                              const response = await fetch(`/api/lavorazioni?id=${lavorazione.lavorazione_originale_id}`)
+                              const data = await response.json()
+                              if (data.success && data.lavorazioni.length > 0) {
+                                setDetailLavorazione(data.lavorazioni[0])
+                              }
+                            }}
+                            className="text-green-900 font-semibold hover:underline"
+                          >
+                            Lavorazione #{lavorazione.lavorazione_originale_id?.substring(0, 8)}...
+                          </button>
+                        </div>
+                      </div>
+                      {lavorazione.motivo_integrazione && (
+                        <div className="mt-3 pt-3 border-t border-green-200">
+                          <div className="text-xs text-green-600 mb-1">Motivo:</div>
+                          <div className="text-sm text-green-900">{lavorazione.motivo_integrazione}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Condominio */}
                 {lavorazione.condomini && (
                   <div>
@@ -620,6 +654,11 @@ export default function PannelloAdmin() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* Integrazioni Collegate */}
+                {lavorazione.stato === 'completata' && !lavorazione.lavorazione_originale_id && (
+                  <IntegrazioniCollegate lavorazioneId={lavorazione.id} />
                 )}
 
                 {/* PDF Report per lavorazioni completate */}
@@ -833,11 +872,17 @@ export default function PannelloAdmin() {
                 <div key={lavorazione.id} className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <span className="text-2xl">{getStatoIcon(lavorazione.stato)}</span>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatoColor(lavorazione.stato)}`}>
                         {lavorazione.stato.toUpperCase()}
                       </span>
+                      {/* Badge Integrazione */}
+                      {lavorazione.lavorazione_originale_id && (
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-300">
+                          ⚡ INTEGRAZIONE
+                        </span>
+                      )}
                       {isClient && (lavorazione as any)?.priorita && (
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                           (lavorazione as any).priorita === 'alta' ? 'bg-red-100 text-red-800' :
