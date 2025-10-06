@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Lavorazione } from '@/lib/types'
 import { useAuth } from '@/contexts/AuthContext'
 import FotoViewer from '@/components/ui/FotoViewer'
@@ -30,6 +30,9 @@ export default function PannelloAdmin() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filtroStato, setFiltroStato] = useState<string>('tutte')
+  const [filtroTipo, setFiltroTipo] = useState<string>('tutte') // Tutte/Lavorazioni/Integrazioni
+  const [ricercaCondominio, setRicercaCondominio] = useState<string>('')
+  const [paginaCorrente, setPaginaCorrente] = useState(1)
   const [lavorazioneSelezionata, setLavorazioneSelezionata] = useState<Lavorazione | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [nuovaNota, setNuovaNota] = useState('')
@@ -50,11 +53,8 @@ export default function PannelloAdmin() {
   const caricaLavorazioni = useCallback(async () => {
     setLoading(true)
     try {
-      const url = filtroStato !== 'tutte' ? 
-        `/api/lavorazioni?stato=${filtroStato}` : 
-        '/api/lavorazioni'
-      
-      const response = await fetch(url)
+      // Carica TUTTE le lavorazioni, il filtro sarà applicato client-side
+      const response = await fetch('/api/lavorazioni')
       const result = await response.json()
 
       if (result.success) {
@@ -66,7 +66,48 @@ export default function PannelloAdmin() {
       setError('Errore nel caricamento delle lavorazioni')
     }
     setLoading(false)
-  }, [filtroStato])
+  }, []) // Rimosso filtroStato dalla dipendenza
+
+  // Filtraggio client-side con ricerca, stato e tipo
+  const lavorazioniFiltrate = useMemo(() => {
+    let risultato = [...lavorazioni]
+
+    // Filtro per tipo (Lavorazioni normali vs Integrazioni)
+    if (filtroTipo === 'lavorazioni') {
+      risultato = risultato.filter(l => !l.lavorazione_originale_id)
+    } else if (filtroTipo === 'integrazioni') {
+      risultato = risultato.filter(l => l.lavorazione_originale_id)
+    }
+
+    // Filtro per stato
+    if (filtroStato !== 'tutte') {
+      risultato = risultato.filter(l => l.stato === filtroStato)
+    }
+
+    // Filtro per ricerca condominio
+    if (ricercaCondominio.trim()) {
+      const ricercaLower = ricercaCondominio.toLowerCase().trim()
+      risultato = risultato.filter(l => 
+        l.condomini?.nome?.toLowerCase().includes(ricercaLower) ||
+        l.condomini?.indirizzo?.toLowerCase().includes(ricercaLower)
+      )
+    }
+
+    return risultato
+  }, [lavorazioni, filtroStato, filtroTipo, ricercaCondominio])
+
+  // Paginazione client-side (10 per pagina)
+  const ITEMS_PER_PAGE = 10
+  const totalePagine = Math.ceil(lavorazioniFiltrate.length / ITEMS_PER_PAGE)
+  const lavorazioniPaginate = useMemo(() => {
+    const startIndex = (paginaCorrente - 1) * ITEMS_PER_PAGE
+    return lavorazioniFiltrate.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [lavorazioniFiltrate, paginaCorrente])
+
+  // Reset pagina quando cambiano i filtri
+  useEffect(() => {
+    setPaginaCorrente(1)
+  }, [filtroStato, filtroTipo, ricercaCondominio])
 
   const handleNuovaLavorazione = async (lavorazione: any) => {
     try {
@@ -821,31 +862,97 @@ export default function PannelloAdmin() {
       </div>
 
       {/* Filtri */}
-      <div className="flex gap-4 items-center">
-        <label className="text-sm font-medium text-gray-700">Filtra per stato:</label>
-        <select
-          value={filtroStato}
-          onChange={(e) => setFiltroStato(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          title="Filtra lavorazioni per stato"
-        >
-          <option value="tutte">Tutte le lavorazioni</option>
-          <option value="aperta">Solo aperte</option>
-          <option value="chiusa">Solo chiuse</option>
-          <option value="riaperta">Solo riaperte</option>
-        </select>
-        
-        <button
-          onClick={caricaLavorazioni}
-          className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-        >
-          <span>🔄</span>
-          Ricarica
-        </button>
-        
+      <div className="bg-white rounded-lg shadow p-4 space-y-4">
+        <div className="flex flex-wrap gap-4 items-end">
+          {/* Ricerca per condominio */}
+          <div className="flex-1 min-w-[250px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              🔍 Cerca condominio
+            </label>
+            <input
+              type="text"
+              value={ricercaCondominio}
+              onChange={(e) => setRicercaCondominio(e.target.value)}
+              placeholder="Nome o indirizzo..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Filtro per tipo */}
+          <div className="min-w-[180px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo
+            </label>
+            <select
+              value={filtroTipo}
+              onChange={(e) => setFiltroTipo(e.target.value)}
+              title="Filtra per tipo di lavorazione"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="tutte">Tutte</option>
+              <option value="lavorazioni">Solo Lavorazioni</option>
+              <option value="integrazioni">Solo Integrazioni</option>
+            </select>
+          </div>
+
+          {/* Filtro per stato */}
+          <div className="min-w-[180px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Stato
+            </label>
+            <select
+              value={filtroStato}
+              onChange={(e) => setFiltroStato(e.target.value)}
+              title="Filtra per stato lavorazione"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="tutte">Tutte</option>
+              <option value="assegnata">Assegnate</option>
+              <option value="in_corso">In Corso</option>
+              <option value="completata">Completate</option>
+              <option value="riaperta">Riaperte</option>
+              <option value="integrazione">Integrazioni</option>
+            </select>
+          </div>
+
+          <button
+            onClick={caricaLavorazioni}
+            className="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+          >
+            <span>🔄</span>
+            Ricarica
+          </button>
+        </div>
+
+        {/* Info risultati */}
+        <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t">
+          <div>
+            Visualizzati <strong>{lavorazioniPaginate.length}</strong> di{' '}
+            <strong>{lavorazioniFiltrate.length}</strong> risultati
+            {lavorazioni.length !== lavorazioniFiltrate.length && (
+              <span className="text-blue-600"> (filtrate da {lavorazioni.length} totali)</span>
+            )}
+          </div>
+          {(ricercaCondominio || filtroStato !== 'tutte' || filtroTipo !== 'tutte') && (
+            <button
+              onClick={() => {
+                setRicercaCondominio('')
+                setFiltroStato('tutte')
+                setFiltroTipo('tutte')
+              }}
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Cancella filtri
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Pulsante Nuova Lavorazione */}
+      <div className="flex justify-end">
         <button
           onClick={() => setShowWizardLavorazioni(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 ml-auto"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <span>✨</span>
           Nuova Lavorazione
@@ -860,7 +967,7 @@ export default function PannelloAdmin() {
       )}
 
       <div className="bg-white rounded-lg shadow-sm border">
-        {lavorazioni.length === 0 ? (
+        {lavorazioniFiltrate.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <div className="text-4xl mb-2">📋</div>
             <h3 className="text-lg font-medium mb-2">Nessuna lavorazione trovata</h3>
@@ -868,7 +975,7 @@ export default function PannelloAdmin() {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {lavorazioni.map((lavorazione) => {
+            {lavorazioniPaginate.map((lavorazione) => {
               if (!lavorazione || !lavorazione.id) return null
               
               return (
@@ -1057,6 +1164,48 @@ export default function PannelloAdmin() {
               </div>
               )
             })}
+          </div>
+        )}
+
+        {/* Paginazione */}
+        {totalePagine > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Pagina <strong>{paginaCorrente}</strong> di <strong>{totalePagine}</strong>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPaginaCorrente(p => Math.max(1, p - 1))}
+                  disabled={paginaCorrente === 1}
+                  className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Precedente
+                </button>
+                <div className="flex gap-1">
+                  {Array.from({ length: totalePagine }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setPaginaCorrente(page)}
+                      className={`w-8 h-8 rounded-md ${
+                        page === paginaCorrente
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-100'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setPaginaCorrente(p => Math.min(totalePagine, p + 1))}
+                  disabled={paginaCorrente === totalePagine}
+                  className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Successiva →
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
