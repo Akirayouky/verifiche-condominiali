@@ -558,7 +558,7 @@ export default function PannelloAdmin() {
                 </div>
 
                 {/* Collegamenti Integrazione */}
-                {lavorazione.stato === 'integrazione' && lavorazione.lavorazione_originale_id && (
+                {lavorazione.lavorazione_originale_id && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">🔗 Collegamento</h3>
                     <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
