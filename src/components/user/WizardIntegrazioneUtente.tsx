@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Lavorazione } from '@/lib/types'
 
 interface WizardIntegrazioneUtenteProps {
@@ -9,15 +9,23 @@ interface WizardIntegrazioneUtenteProps {
   onSuccess: () => void
 }
 
+type Step = 1 | 2 // Step 1: Campi, Step 2: Firma
+
 export default function WizardIntegrazioneUtente({ 
   lavorazione, 
   onClose, 
   onSuccess 
 }: WizardIntegrazioneUtenteProps) {
+  const [step, setStep] = useState<Step>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [valoriCampi, setValoriCampi] = useState<Record<string, any>>({})
   const [fotoNuove, setFotoNuove] = useState<Record<string, File[]>>({})
+  
+  // Firma
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [hasFirma, setHasFirma] = useState(false)
 
   // Parsing campi nuovi dalla lavorazione
   const campiNuovi = Array.isArray(lavorazione.campi_nuovi) 
@@ -40,8 +48,58 @@ export default function WizardIntegrazioneUtente({
     }))
   }
 
-  const handleSubmit = async () => {
-    // Validazione
+  // Gestione firma
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    setIsDrawing(true)
+  }
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return
+    
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left
+    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.lineTo(x, y)
+    ctx.stroke()
+    setHasFirma(true)
+  }
+
+  const stopDrawing = () => {
+    setIsDrawing(false)
+  }
+
+  const clearFirma = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    setHasFirma(false)
+  }
+
+  const handleNext = () => {
+    // Validazione campi prima di passare alla firma
     for (const campo of campiNuovi) {
       if (campo.required) {
         const valore = valoriCampi[campo.nome]
@@ -57,6 +115,16 @@ export default function WizardIntegrazioneUtente({
           return
         }
       }
+    }
+    setError(null)
+    setStep(2)
+  }
+
+  const handleSubmit = async () => {
+    // Validazione firma
+    if (!hasFirma) {
+      setError('La firma è obbligatoria')
+      return
     }
 
     setLoading(true)
@@ -77,6 +145,17 @@ export default function WizardIntegrazioneUtente({
         fotoInfo[nomeCampo] = files.length
       }
       formData.append('foto_info', JSON.stringify(fotoInfo))
+      
+      // Aggiungi firma
+      const canvas = canvasRef.current
+      if (canvas) {
+        const firmaBlob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, 'image/png')
+        })
+        if (firmaBlob) {
+          formData.append('firma', firmaBlob, 'firma.png')
+        }
+      }
 
       const response = await fetch(`/api/lavorazioni/${lavorazione.id}/completa-integrazione-nuova`, {
         method: 'POST',
@@ -251,6 +330,20 @@ export default function WizardIntegrazioneUtente({
             {lavorazione.titolo || 'Lavorazione'}
           </p>
           
+          {/* Progress indicator */}
+          <div className="flex items-center mt-4 space-x-2">
+            {[1, 2].map((s) => (
+              <div key={s} className="flex-1">
+                <div className={`h-2 rounded-full transition-colors ${
+                  s <= step ? 'bg-white' : 'bg-blue-300'
+                }`} />
+                <div className="text-xs mt-1 text-center">
+                  {s === 1 ? 'Campi' : 'Firma'}
+                </div>
+              </div>
+            ))}
+          </div>
+          
           {/* Motivo integrazione */}
           {lavorazione.motivo_integrazione && (
             <div className="mt-4 bg-blue-600 bg-opacity-30 border border-blue-300 rounded-lg p-3">
@@ -269,36 +362,87 @@ export default function WizardIntegrazioneUtente({
             </div>
           )}
 
-          {campiNuovi.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Nessun campo da compilare</p>
-            </div>
-          ) : (
+          {/* Step 1: Campi */}
+          {step === 1 && (
+            <>
+              {campiNuovi.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Nessun campo da compilare</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                      Campi da Compilare
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4">
+                      Compila tutti i campi richiesti dall&apos;amministratore
+                    </p>
+                  </div>
+
+                  {campiNuovi.map((campo: any) => (
+                    <div key={campo.nome} className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                      <div className="mb-3">
+                        <label className="block font-semibold text-gray-800 mb-1">
+                          {campo.label}
+                          {campo.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        {campo.descrizione && campo.tipo !== 'file' && (
+                          <p className="text-sm text-gray-600 mb-2">{campo.descrizione}</p>
+                        )}
+                      </div>
+                      
+                      {renderCampo(campo)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Step 2: Firma */}
+          {step === 2 && (
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  Campi da Compilare
+                  ✍️ Firma Digitale
                 </h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  Compila tutti i campi richiesti dall&apos;amministratore
+                  Firma nell&apos;area sottostante per confermare l&apos;integrazione
                 </p>
               </div>
 
-              {campiNuovi.map((campo: any) => (
-                <div key={campo.nome} className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                  <div className="mb-3">
-                    <label className="block font-semibold text-gray-800 mb-1">
-                      {campo.label}
-                      {campo.required && <span className="text-red-500 ml-1">*</span>}
-                    </label>
-                    {campo.descrizione && campo.tipo !== 'file' && (
-                      <p className="text-sm text-gray-600 mb-2">{campo.descrizione}</p>
-                    )}
-                  </div>
-                  
-                  {renderCampo(campo)}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+                <canvas
+                  ref={canvasRef}
+                  width={600}
+                  height={200}
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                  className="w-full border border-gray-300 rounded bg-white cursor-crosshair"
+                />
+                
+                <div className="flex justify-end mt-3">
+                  <button
+                    onClick={clearFirma}
+                    className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                  >
+                    🗑️ Cancella Firma
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              {!hasFirma && (
+                <p className="text-sm text-orange-600 flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>La firma è obbligatoria per completare l&apos;integrazione</span>
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -306,22 +450,24 @@ export default function WizardIntegrazioneUtente({
         {/* Footer */}
         <div className="border-t border-gray-200 p-6 bg-gray-50 flex justify-between">
           <button
-            onClick={onClose}
+            onClick={step === 1 ? onClose : () => setStep(1)}
             disabled={loading}
             className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50"
           >
-            Annulla
+            {step === 1 ? 'Annulla' : '← Indietro'}
           </button>
 
           <button
-            onClick={handleSubmit}
-            disabled={loading || campiNuovi.length === 0}
+            onClick={step === 1 ? handleNext : handleSubmit}
+            disabled={loading || (step === 1 && campiNuovi.length === 0) || (step === 2 && !hasFirma)}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
               <>
                 <span className="animate-spin">⏳</span> Invio...
               </>
+            ) : step === 1 ? (
+              <>Avanti →</>
             ) : (
               <>✅ Completa Integrazione</>
             )}
