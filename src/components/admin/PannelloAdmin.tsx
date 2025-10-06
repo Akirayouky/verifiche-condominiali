@@ -130,6 +130,31 @@ export default function PannelloAdmin() {
       let response
       if (isEditMode) {
         // PUT con formato { azione: 'aggiorna', dati: {...} }
+        // Non modifichiamo condominio_id (campo immutabile)
+        const updateFields: any = {
+          descrizione: lavorazione.descrizione,
+          priorita: lavorazione.priorita,
+          note: lavorazione.note
+        }
+        
+        // Solo se assegnato_a è definito
+        if (lavorazione.assegnato_a) {
+          updateFields.user_id = lavorazione.assegnato_a
+        }
+        
+        // Solo se data_scadenza è definita
+        if (lavorazione.data_scadenza) {
+          updateFields.data_scadenza = lavorazione.data_scadenza
+        }
+        
+        // Aggiorna allegati per salvare tipologia
+        if (lavorazione.tipologia || lavorazione.tipologia_verifica_id) {
+          const allegatiObj: any = {}
+          if (lavorazione.tipologia) allegatiObj.tipologia = lavorazione.tipologia
+          if (lavorazione.tipologia_verifica_id) allegatiObj.tipologia_verifica_id = lavorazione.tipologia_verifica_id
+          updateFields.allegati = JSON.stringify(allegatiObj)
+        }
+        
         response = await fetch(`/api/lavorazioni/${lavorazioneDaModificare.id}`, {
           method: 'PUT',
           headers: {
@@ -137,18 +162,7 @@ export default function PannelloAdmin() {
           },
           body: JSON.stringify({
             azione: 'aggiorna',
-            dati: {
-              descrizione: lavorazione.descrizione,
-              priorita: lavorazione.priorita,
-              user_id: lavorazione.assegnato_a, // API usa user_id non assegnato_a
-              data_scadenza: lavorazione.data_scadenza,
-              note: lavorazione.note,
-              // Aggiorna anche allegati per salvare tipologia
-              allegati: JSON.stringify({
-                tipologia: lavorazione.tipologia,
-                tipologia_verifica_id: lavorazione.tipologia_verifica_id
-              })
-            }
+            dati: updateFields
           })
         })
       } else {
