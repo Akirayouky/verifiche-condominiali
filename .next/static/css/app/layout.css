@@ -2297,11 +2297,11 @@ video {
 .hover\:underline:hover {
   text-decoration-line: underline;
 }
-.hover\:opacity-90:hover {
-  opacity: 0.9;
-}
 .hover\:opacity-75:hover {
   opacity: 0.75;
+}
+.hover\:opacity-90:hover {
+  opacity: 0.9;
 }
 .hover\:shadow-lg:hover {
   --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);

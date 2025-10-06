@@ -36,13 +36,23 @@ export default function IntegrazioniCollegate({ lavorazioneId, onSelectIntegrazi
     return (
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">🔗 Integrazioni Collegate</h3>
-        <div className="text-center py-4 text-gray-500">Caricamento...</div>
+        <div className="text-center py-4 text-gray-500">
+          <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+          Caricamento...
+        </div>
       </div>
     )
   }
 
   if (integrazioni.length === 0) {
-    return null
+    return (
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">🔗 Integrazioni Collegate</h3>
+        <div className="text-center py-4 text-gray-500 text-sm">
+          Nessuna integrazione presente
+        </div>
+      </div>
+    )
   }
 
   return (

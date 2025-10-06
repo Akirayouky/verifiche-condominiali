@@ -576,7 +576,7 @@ export default function PannelloAdmin() {
                 )}
 
                 {/* Integrazioni Collegate (per lavorazioni completate) */}
-                {lavorazione.stato === 'completata' && !lavorazione.lavorazione_originale_id && (
+                {!lavorazione.lavorazione_originale_id && (
                   <IntegrazioniCollegate 
                     lavorazioneId={lavorazione.id} 
                     onSelectIntegrazione={(integrazione) => setDetailLavorazione(integrazione)}
