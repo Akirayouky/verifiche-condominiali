@@ -570,8 +570,8 @@ export default function PannelloAdmin() {
                             onClick={async () => {
                               const response = await fetch(`/api/lavorazioni?id=${lavorazione.lavorazione_originale_id}`)
                               const data = await response.json()
-                              if (data.success && data.lavorazioni.length > 0) {
-                                setDetailLavorazione(data.lavorazioni[0])
+                              if (data.success && data.data && data.data.length > 0) {
+                                setDetailLavorazione(data.data[0])
                               }
                             }}
                             className="text-green-900 font-semibold hover:underline"
@@ -722,6 +722,18 @@ export default function PannelloAdmin() {
                       <div className="text-xs text-gray-500 mt-2">
                         Report automatico con tutti i dettagli della verifica
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Messaggio per integrazioni in corso */}
+                {lavorazione.stato === 'integrazione' && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">⏳ Integrazione in Corso</h3>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
+                      <div className="text-4xl mb-4">📝</div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">In Attesa di Completamento</h4>
+                      <p className="text-gray-600">Il report PDF sarà disponibile dopo il completamento dell'integrazione da parte del sopralluoghista</p>
                     </div>
                   </div>
                 )}
