@@ -127,7 +127,7 @@ export interface Lavorazione {
   condominio_id: string             // ID condominio
   titolo: string                    // Titolo automatico
   descrizione: string               // Descrizione della lavorazione
-  stato: 'aperta' | 'in_corso' | 'completata' | 'archiviata' | 'da_eseguire' | 'riaperta'  // Stati unificati (nuovo + legacy)
+  stato: 'aperta' | 'in_corso' | 'completata' | 'archiviata' | 'da_eseguire' | 'riaperta' | 'integrazione'  // Stati unificati (nuovo + legacy + integrazione)
   priorita: 'bassa' | 'media' | 'alta' | 'critica'            // Priorità
   data_apertura: string             // Data apertura
   data_scadenza?: string            // Data scadenza (opzionale)
@@ -136,12 +136,19 @@ export interface Lavorazione {
   note?: string | string[]          // Note generali (string o array per compatibilità)
   allegati?: string                 // Metadata JSON (tipologia, etc)
   
-  // Campi per riapertura
+  // Campi per riapertura (legacy - mantenuto per retrocompatibilità)
   data_riapertura?: string          // Quando è stata riaperta
   riaperta_da?: string              // ID admin che ha riaperto
-  campi_da_ricompilare?: string[]   // Array nomi campi da far ricompilare
-  campi_nuovi?: string[]            // Array nuovi campi da aggiungere
+  campi_da_ricompilare?: any[]      // Array campi da far ricompilare
+  campi_nuovi?: any[]               // Array nuovi campi da aggiungere
   motivo_riapertura?: string        // Perché è stata riaperta
+  
+  // Campi per integrazione (nuovo sistema)
+  lavorazione_originale_id?: string // ID lavorazione madre se questa è un'integrazione
+  motivo_integrazione?: string      // Motivo della richiesta di integrazione
+  data_integrazione?: string        // Quando è stata creata l'integrazione
+  dati_verifiche?: Record<string, any>  // Dati compilati dal sopralluoghista
+  id_cartella?: string              // ID cartella per organizzazione blob storage
   
   // Relazioni (quando popolate dall'API)
   condomini?: {

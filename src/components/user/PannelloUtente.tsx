@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Lavorazione, Condominio, TipologiaVerifica } from '@/lib/types'
 import WizardVerifiche from '@/components/verifiche/WizardVerifiche'
-import WizardIntegrazione from './WizardIntegrazione'
+import WizardIntegrazioneUtente from './WizardIntegrazioneUtente'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import dynamic from 'next/dynamic'
 
@@ -439,7 +439,7 @@ export default function PannelloUtente() {
       // Trova TUTTE le lavorazioni aperte per questo condominio e questo utente
       const lavorazioniAperte = lavorazioni.filter(l => 
         l.condominio_id === condominio.id && 
-        (l.stato === 'aperta' || l.stato === 'in_corso' || l.stato === 'riaperta')
+        (l.stato === 'aperta' || l.stato === 'in_corso' || l.stato === 'riaperta' || l.stato === 'integrazione')
       )
       
       if (lavorazioniAperte.length === 0) {
@@ -531,7 +531,7 @@ export default function PannelloUtente() {
 
   // Filtri per le lavorazioni
   const lavorazioniDaFare = lavorazioni.filter(l => 
-    l.stato === 'aperta' || l.stato === 'in_corso' || l.stato === 'riaperta'
+    l.stato === 'aperta' || l.stato === 'in_corso' || l.stato === 'riaperta' || l.stato === 'integrazione'
   )
   const lavorazioniCompletate = lavorazioni.filter(l => l.stato === 'completata')
 
@@ -1145,11 +1145,10 @@ export default function PannelloUtente() {
         />
       )}
 
-      {/* Wizard Integrazione (per lavorazioni riaperte) */}
+      {/* Wizard Integrazione (per lavorazioni di tipo integrazione) */}
       {showWizardIntegrazione && lavorazioneDaIntegrare && user?.id && (
-        <WizardIntegrazione
+        <WizardIntegrazioneUtente
           lavorazione={lavorazioneDaIntegrare}
-          userId={user.id}
           onClose={() => {
             setShowWizardIntegrazione(false)
             setLavorazioneDaIntegrare(null)
