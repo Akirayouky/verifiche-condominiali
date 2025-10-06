@@ -221,17 +221,26 @@ export default function WizardIntegrazione({
         body: formData // NO Content-Type header, browser lo aggiunge automaticamente con boundary
       })
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch (jsonError) {
+        console.error('❌ Errore parsing JSON response:', jsonError)
+        throw new Error(`Errore del server (${response.status}): Risposta non valida`)
+      }
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Errore durante il completamento dell\'integrazione')
+        const errorMsg = data.error || data.details || 'Errore durante il completamento dell\'integrazione'
+        const errorDetails = data.campi_mancanti ? `\nCampi mancanti: ${data.campi_mancanti.join(', ')}` : ''
+        throw new Error(`${errorMsg}${errorDetails}`)
       }
 
       console.log('✅ Integrazione completata:', data)
       onSuccess()
     } catch (err) {
       console.error('❌ Errore integrazione:', err)
-      setError(err instanceof Error ? err.message : 'Errore sconosciuto')
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto durante l\'integrazione'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
