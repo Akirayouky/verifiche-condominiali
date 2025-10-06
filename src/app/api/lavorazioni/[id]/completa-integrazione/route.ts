@@ -30,13 +30,49 @@ export async function PUT(
     // Parse FormData invece di JSON
     const formData = await request.formData()
     
-    // Estrai dati JSON
-    const campi_ricompilati = JSON.parse(formData.get('campi_ricompilati') as string || '{}')
-    const campi_nuovi_compilati = JSON.parse(formData.get('campi_nuovi_compilati') as string || '{}')
+    // Estrai dati JSON con fallback sicuri
+    let campi_ricompilati: Record<string, any> = {}
+    let campi_nuovi_compilati: Record<string, any> = {}
+    let foto_mantenute: string[] = []
+    let foto_rimosse: string[] = []
+    let foto_nuove_info: Record<string, number> = {}
+    
+    try {
+      const campiRicompStr = formData.get('campi_ricompilati')
+      campi_ricompilati = campiRicompStr ? JSON.parse(campiRicompStr as string) : {}
+    } catch (e) {
+      console.warn('⚠️ Error parsing campi_ricompilati:', e)
+    }
+    
+    try {
+      const campiNuoviStr = formData.get('campi_nuovi_compilati')
+      campi_nuovi_compilati = campiNuoviStr ? JSON.parse(campiNuoviStr as string) : {}
+    } catch (e) {
+      console.warn('⚠️ Error parsing campi_nuovi_compilati:', e)
+    }
+    
+    try {
+      const fotoMantStr = formData.get('foto_mantenute')
+      foto_mantenute = fotoMantStr ? JSON.parse(fotoMantStr as string) : []
+    } catch (e) {
+      console.warn('⚠️ Error parsing foto_mantenute:', e)
+    }
+    
+    try {
+      const fotoRimStr = formData.get('foto_rimosse')
+      foto_rimosse = fotoRimStr ? JSON.parse(fotoRimStr as string) : []
+    } catch (e) {
+      console.warn('⚠️ Error parsing foto_rimosse:', e)
+    }
+    
+    try {
+      const fotoInfoStr = formData.get('foto_nuove_info')
+      foto_nuove_info = fotoInfoStr ? JSON.parse(fotoInfoStr as string) : {}
+    } catch (e) {
+      console.warn('⚠️ Error parsing foto_nuove_info:', e)
+    }
+    
     const utente_id = formData.get('utente_id') as string
-    const foto_mantenute = JSON.parse(formData.get('foto_mantenute') as string || '[]') as string[]
-    const foto_rimosse = JSON.parse(formData.get('foto_rimosse') as string || '[]') as string[]
-    const foto_nuove_info = JSON.parse(formData.get('foto_nuove_info') as string || '{}') as Record<string, number>
 
     console.log('📥 Received completa-integrazione request:', {
       lavorazioneId: id,
