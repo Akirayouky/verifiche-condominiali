@@ -1335,18 +1335,37 @@ export default function PannelloAdmin() {
             setLavorazioneDaModificare(null)
           }}
           onComplete={handleNuovaLavorazione}
-          lavorazioneDaModificare={lavorazioneDaModificare ? {
-            id: lavorazioneDaModificare.id,
-            condominio_id: lavorazioneDaModificare.condominio_id,
-            tipologia: lavorazioneDaModificare.allegati ? JSON.parse(lavorazioneDaModificare.allegati).tipologia : 'altro',
-            tipologia_verifica_id: lavorazioneDaModificare.allegati ? JSON.parse(lavorazioneDaModificare.allegati).tipologia_verifica_id : undefined,
-            descrizione: lavorazioneDaModificare.descrizione,
-            priorita: (lavorazioneDaModificare.priorita === 'critica' ? 'alta' : lavorazioneDaModificare.priorita) as 'bassa' | 'media' | 'alta',
-            assegnato_a: lavorazioneDaModificare.user_id,
-            data_scadenza: lavorazioneDaModificare.data_scadenza,
-            note: typeof lavorazioneDaModificare.note === 'string' ? lavorazioneDaModificare.note : undefined,
-            allegati: lavorazioneDaModificare.allegati
-          } : undefined}
+          lavorazioneDaModificare={lavorazioneDaModificare ? (() => {
+            // Parse allegati in modo sicuro
+            let tipologia = 'altro'
+            let tipologia_verifica_id = undefined
+            
+            if (lavorazioneDaModificare.allegati) {
+              try {
+                const allegatiParsed = typeof lavorazioneDaModificare.allegati === 'string' 
+                  ? JSON.parse(lavorazioneDaModificare.allegati) 
+                  : lavorazioneDaModificare.allegati
+                
+                tipologia = allegatiParsed.tipologia || 'altro'
+                tipologia_verifica_id = allegatiParsed.tipologia_verifica_id
+              } catch (e) {
+                console.warn('Errore parsing allegati per modifica:', e)
+              }
+            }
+            
+            return {
+              id: lavorazioneDaModificare.id,
+              condominio_id: lavorazioneDaModificare.condominio_id,
+              tipologia,
+              tipologia_verifica_id,
+              descrizione: lavorazioneDaModificare.descrizione,
+              priorita: (lavorazioneDaModificare.priorita === 'critica' ? 'alta' : lavorazioneDaModificare.priorita) as 'bassa' | 'media' | 'alta',
+              assegnato_a: lavorazioneDaModificare.user_id,
+              data_scadenza: lavorazioneDaModificare.data_scadenza,
+              note: typeof lavorazioneDaModificare.note === 'string' ? lavorazioneDaModificare.note : undefined,
+              allegati: lavorazioneDaModificare.allegati
+            }
+          })() : undefined}
         />
       )}
 
