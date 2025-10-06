@@ -14,7 +14,20 @@ ADD COLUMN IF NOT EXISTS lavorazione_originale_id UUID REFERENCES lavorazioni(id
 ALTER TABLE lavorazioni 
 ADD COLUMN IF NOT EXISTS motivo_integrazione TEXT;
 
--- 3. Modifica constraint stato per includere 'integrazione'
+-- 3. Aggiungi colonna per ID cartella Blob (separazione foto)
+ALTER TABLE lavorazioni 
+ADD COLUMN IF NOT EXISTS id_cartella TEXT;
+
+-- 4. Aggiungi colonna per dati verifiche (JSON)
+ALTER TABLE lavorazioni 
+ADD COLUMN IF NOT EXISTS dati_verifiche JSONB DEFAULT '{}'::jsonb;
+
+-- 5. Aggiungi colonna per data integrazione
+ALTER TABLE lavorazioni 
+ADD COLUMN IF NOT EXISTS data_integrazione TIMESTAMP WITH TIME ZONE;
+
+-- 6. Modifica constraint stato per includere 'integrazione'
+-- 6. Modifica constraint stato per includere 'integrazione'
 ALTER TABLE lavorazioni 
 DROP CONSTRAINT IF EXISTS lavorazioni_stato_check;
 
@@ -32,7 +45,8 @@ CHECK (stato IN (
   'da_fare'
 ));
 
--- 4. Crea indici per query efficienti
+-- 7. Crea indici per query efficienti
+-- 7. Crea indici per query efficienti
 CREATE INDEX IF NOT EXISTS idx_lavorazioni_originale 
 ON lavorazioni(lavorazione_originale_id) 
 WHERE lavorazione_originale_id IS NOT NULL;
@@ -45,14 +59,29 @@ CREATE INDEX IF NOT EXISTS idx_lavorazioni_motivo_integrazione
 ON lavorazioni(motivo_integrazione) 
 WHERE motivo_integrazione IS NOT NULL;
 
--- 5. Commenti per documentazione
+CREATE INDEX IF NOT EXISTS idx_lavorazioni_id_cartella 
+ON lavorazioni(id_cartella) 
+WHERE id_cartella IS NOT NULL;
+
+-- 8. Commenti per documentazione
+-- 8. Commenti per documentazione
 COMMENT ON COLUMN lavorazioni.lavorazione_originale_id IS 
 'ID della lavorazione originale se questa è un''integrazione';
 
 COMMENT ON COLUMN lavorazioni.motivo_integrazione IS 
 'Motivo per cui è stata richiesta l''integrazione dall''admin';
 
--- 6. Verifica configurazione
+COMMENT ON COLUMN lavorazioni.id_cartella IS 
+'ID univoco della cartella Vercel Blob per separare le foto di ogni lavorazione/integrazione';
+
+COMMENT ON COLUMN lavorazioni.dati_verifiche IS 
+'Dati compilati dall''utente per l''integrazione (campi_nuovi)';
+
+COMMENT ON COLUMN lavorazioni.data_integrazione IS 
+'Data di completamento dell''integrazione';
+
+-- 9. Verifica configurazione
+-- 9. Verifica configurazione
 SELECT 
   column_name, 
   data_type, 
@@ -60,10 +89,11 @@ SELECT
   column_default
 FROM information_schema.columns
 WHERE table_name = 'lavorazioni'
-AND column_name IN ('lavorazione_originale_id', 'motivo_integrazione', 'dati_verifiche')
+AND column_name IN ('lavorazione_originale_id', 'motivo_integrazione', 'dati_verifiche', 'id_cartella', 'data_integrazione')
 ORDER BY column_name;
 
--- 7. Test query: trova tutte le integrazioni
+-- 10. Test query: trova tutte le integrazioni
+-- 10. Test query: trova tutte le integrazioni
 SELECT 
   l.id,
   l.titolo AS integrazione_titolo,
@@ -79,7 +109,7 @@ WHERE l.lavorazione_originale_id IS NOT NULL
 ORDER BY l.created_at DESC
 LIMIT 10;
 
--- 8. Test query: trova lavorazione con sue integrazioni
+-- 11. Test query: trova lavorazione con sue integrazioni
 SELECT 
   l.id,
   l.titolo,
