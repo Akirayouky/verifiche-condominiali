@@ -162,7 +162,7 @@ export default function WizardIntegrazione({
 
               <div>
                 <label className="block font-semibold text-gray-800 mb-2">
-                  Motivo dell'integrazione <span className="text-red-500">*</span>
+                  Motivo dell&apos;integrazione <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={motivoIntegrazione}
