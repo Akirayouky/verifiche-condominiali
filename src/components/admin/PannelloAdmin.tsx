@@ -1134,15 +1134,6 @@ export default function PannelloAdmin() {
                       </button>
                     )}
                     
-                    {lavorazione.stato === 'completata' && (
-                      <button
-                        onClick={() => handleAzione(lavorazione, 'crea_integrazione')}
-                        className="text-green-600 hover:text-green-800 text-sm px-3 py-1 border border-green-200 rounded bg-green-50"
-                      >
-                        ➕ Crea Integrazione
-                      </button>
-                    )}
-                    
                     {/* Pulsanti CRUD */}
                     <button
                       onClick={() => mostraDettaglio(lavorazione)}
@@ -1221,7 +1212,6 @@ export default function PannelloAdmin() {
           <div className="bg-white rounded-lg p-6 w-96 mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {azione === 'chiudi' && 'Chiudi Lavorazione'}
-              {azione === 'crea_integrazione' && 'Crea Integrazione'}
               {azione === 'aggiungi_nota' && 'Aggiungi Nota'}
               {azione === 'elimina' && '🗑️ Elimina Lavorazione'}
             </h3>
