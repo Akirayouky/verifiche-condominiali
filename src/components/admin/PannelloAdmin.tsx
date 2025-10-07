@@ -7,8 +7,6 @@ import FotoViewer from '@/components/ui/FotoViewer'
 import GestioneUtenti from './GestioneUtenti'
 import GestioneAssegnazioni from './GestioneAssegnazioni'
 import WizardLavorazioni from './WizardLavorazioni'
-import WizardIntegrazione from './WizardIntegrazione'
-import IntegrazioniCollegate from './IntegrazioniCollegate'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import { refreshStatsAfterDelay } from '@/lib/refreshStats'
 import { NotificationManager } from '@/lib/notifications'
@@ -45,8 +43,6 @@ export default function PannelloAdmin() {
   const [lavorazioneCreata, setLavorazioneCreata] = useState<any>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLavorazione, setDetailLavorazione] = useState<Lavorazione | null>(null)
-  const [showWizardIntegrazione, setShowWizardIntegrazione] = useState(false)
-  const [lavorazioneDaIntegrare, setLavorazioneDaIntegrare] = useState<Lavorazione | null>(null)
   
   // Inizializza NotificationManager
   const [notificationManager] = useState(() => NotificationManager.getInstance())
@@ -130,30 +126,42 @@ export default function PannelloAdmin() {
       let response
       if (isEditMode) {
         // PUT con formato { azione: 'aggiorna', dati: {...} }
-        // Non modifichiamo condominio_id (campo immutabile)
+        // Invia TUTTI i dati: modificati + originali non modificati
+        
+        // Parse allegati originali per preservare dati esistenti (foto, firma, ecc.)
+        let allegatiOriginali: any = {}
+        if (lavorazioneDaModificare.allegati) {
+          try {
+            allegatiOriginali = typeof lavorazioneDaModificare.allegati === 'string'
+              ? JSON.parse(lavorazioneDaModificare.allegati)
+              : lavorazioneDaModificare.allegati
+          } catch (e) {
+            console.warn('Errore parsing allegati originali:', e)
+          }
+        }
+        
+        // Merge: nuova tipologia + dati esistenti (foto, firma, dati_verifiche, ecc.)
+        const allegatiAggiornati = {
+          ...allegatiOriginali, // Mantiene foto, firma, dati_verifica_completamento, ecc.
+          tipologia: lavorazione.tipologia,
+          tipologia_verifica_id: lavorazione.tipologia_verifica_id
+        }
+        
         const updateFields: any = {
           descrizione: lavorazione.descrizione,
           priorita: lavorazione.priorita,
-          note: lavorazione.note
+          user_id: lavorazione.assegnato_a || lavorazioneDaModificare.user_id,
+          data_scadenza: lavorazione.data_scadenza || lavorazioneDaModificare.data_scadenza,
+          note: lavorazione.note || lavorazioneDaModificare.note,
+          allegati: JSON.stringify(allegatiAggiornati)
         }
         
-        // Solo se assegnato_a è definito
-        if (lavorazione.assegnato_a) {
-          updateFields.user_id = lavorazione.assegnato_a
+        // Mantieni anche dati_verifiche se esistono
+        if (lavorazioneDaModificare.dati_verifiche) {
+          updateFields.dati_verifiche = lavorazioneDaModificare.dati_verifiche
         }
         
-        // Solo se data_scadenza è definita
-        if (lavorazione.data_scadenza) {
-          updateFields.data_scadenza = lavorazione.data_scadenza
-        }
-        
-        // Aggiorna allegati per salvare tipologia
-        if (lavorazione.tipologia || lavorazione.tipologia_verifica_id) {
-          const allegatiObj: any = {}
-          if (lavorazione.tipologia) allegatiObj.tipologia = lavorazione.tipologia
-          if (lavorazione.tipologia_verifica_id) allegatiObj.tipologia_verifica_id = lavorazione.tipologia_verifica_id
-          updateFields.allegati = JSON.stringify(allegatiObj)
-        }
+        console.log('📤 Dati aggiornamento completi:', updateFields)
         
         response = await fetch(`/api/lavorazioni/${lavorazioneDaModificare.id}`, {
           method: 'PUT',
@@ -296,15 +304,9 @@ export default function PannelloAdmin() {
   }
 
   const handleAzione = (lavorazione: Lavorazione, tipoAzione: string) => {
-    if (tipoAzione === 'crea_integrazione') {
-      // Apri il wizard di integrazione
-      setLavorazioneDaIntegrare(lavorazione)
-      setShowWizardIntegrazione(true)
-    } else {
-      setLavorazioneSelezionata(lavorazione)
-      setAzione(tipoAzione)
-      setShowModal(true)
-    }
+    setLavorazioneSelezionata(lavorazione)
+    setAzione(tipoAzione)
+    setShowModal(true)
   }
 
   const confermaAzione = () => {
@@ -600,39 +602,6 @@ export default function PannelloAdmin() {
                   </div>
                 </div>
 
-                {/* Collegamenti Integrazione */}
-                {lavorazione.lavorazione_originale_id && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🔗 Collegamento</h3>
-                    <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-green-600 text-2xl">⚡</span>
-                        <div>
-                          <div className="text-sm text-green-700 font-medium">Integrazione di:</div>
-                          <button
-                            onClick={async () => {
-                              const response = await fetch(`/api/lavorazioni?id=${lavorazione.lavorazione_originale_id}`)
-                              const data = await response.json()
-                              if (data.success && data.data && data.data.length > 0) {
-                                setDetailLavorazione(data.data[0])
-                              }
-                            }}
-                            className="text-green-900 font-semibold hover:underline"
-                          >
-                            Lavorazione #{lavorazione.lavorazione_originale_id?.substring(0, 8)}...
-                          </button>
-                        </div>
-                      </div>
-                      {lavorazione.motivo_integrazione && (
-                        <div className="mt-3 pt-3 border-t border-green-200">
-                          <div className="text-xs text-green-600 mb-1">Motivo:</div>
-                          <div className="text-sm text-green-900">{lavorazione.motivo_integrazione}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {/* Condominio */}
                 {lavorazione.condomini && (
                   <div>
@@ -659,13 +628,6 @@ export default function PannelloAdmin() {
                   </div>
                 )}
 
-                {/* Integrazioni Collegate (per lavorazioni completate) */}
-                {!lavorazione.lavorazione_originale_id && (
-                  <IntegrazioniCollegate 
-                    lavorazioneId={lavorazione.id} 
-                    onSelectIntegrazione={(integrazione) => setDetailLavorazione(integrazione)}
-                  />
-                )}
               </div>
 
               {/* Date e Timeline */}
@@ -769,17 +731,6 @@ export default function PannelloAdmin() {
                   </div>
                 )}
 
-                {/* Messaggio per integrazioni in corso */}
-                {lavorazione.stato === 'integrazione' && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">⏳ Integrazione in Corso</h3>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
-                      <div className="text-4xl mb-4">📝</div>
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">In Attesa di Completamento</h4>
-                      <p className="text-gray-600">Il report PDF sarà disponibile dopo il completamento dell'integrazione da parte del sopralluoghista</p>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -966,7 +917,6 @@ export default function PannelloAdmin() {
               <option value="in_corso">In Corso</option>
               <option value="completata">Completate</option>
               <option value="riaperta">Riaperte</option>
-              <option value="integrazione">Integrazioni</option>
             </select>
           </div>
 
@@ -1522,25 +1472,6 @@ export default function PannelloAdmin() {
       {/* Modal Dettaglio Lavorazione */}
       {showDetailModal && detailLavorazione && (
         <ModalDettaglioLavorazione lavorazione={detailLavorazione} />
-      )}
-
-      {/* Wizard Integrazione Lavorazione */}
-      {showWizardIntegrazione && lavorazioneDaIntegrare && user && (
-        <WizardIntegrazione
-          lavorazione={lavorazioneDaIntegrare}
-          adminId={user.id}
-          onClose={() => {
-            setShowWizardIntegrazione(false)
-            setLavorazioneDaIntegrare(null)
-          }}
-          onSuccess={() => {
-            setShowWizardIntegrazione(false)
-            setLavorazioneDaIntegrare(null)
-            caricaLavorazioni()
-            // Mostra messaggio di successo
-            alert('✅ Integrazione creata con successo! Il sopralluoghista riceverà una notifica.')
-          }}
-        />
       )}
     </div>
   )

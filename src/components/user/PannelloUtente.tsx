@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Lavorazione, Condominio, TipologiaVerifica } from '@/lib/types'
 import WizardVerifiche from '@/components/verifiche/WizardVerifiche'
-import WizardIntegrazioneUtente from './WizardIntegrazioneUtente'
 import { PDFGenerator, LavorazionePDF } from '@/lib/pdfGenerator'
 import dynamic from 'next/dynamic'
 
@@ -404,8 +403,6 @@ export default function PannelloUtente() {
   const [showLavorazioniModal, setShowLavorazioniModal] = useState(false)
   const [lavorazioniCondominio, setLavorazioniCondominio] = useState<Lavorazione[]>([])
   const [condominioSelezionato, setCondominioSelezionato] = useState<Condominio | null>(null)
-  const [showWizardIntegrazione, setShowWizardIntegrazione] = useState(false)
-  const [lavorazioneDaIntegrare, setLavorazioneDaIntegrare] = useState<Lavorazione | null>(null)
 
   const caricaLavorazioni = useCallback(async () => {
     if (!user?.id) return
@@ -438,15 +435,8 @@ export default function PannelloUtente() {
   }, [caricaLavorazioni])
 
   const iniziaLavorazione = (lavorazione: Lavorazione) => {
-    // Se è un'integrazione, apri il wizard specifico per integrazioni
-    if (lavorazione.stato === 'integrazione' || lavorazione.lavorazione_originale_id) {
-      setLavorazioneDaIntegrare(lavorazione)
-      setShowWizardIntegrazione(true)
-    } else {
-      // Altrimenti apri il wizard normale
-      setSelectedLavorazione(lavorazione)
-      setShowWizard(true)
-    }
+    setSelectedLavorazione(lavorazione)
+    setShowWizard(true)
   }
 
   const handleQrScan = async (qrCode: string) => {
@@ -799,10 +789,7 @@ export default function PannelloUtente() {
                                 <span className="text-orange-600 font-bold mr-2">🔄 INTEGRAZIONE RICHIESTA</span>
                               </div>
                               <button
-                                onClick={() => {
-                                  setLavorazioneDaIntegrare(lavorazione)
-                                  setShowWizardIntegrazione(true)
-                                }}
+                                onClick={() => iniziaLavorazione(lavorazione)}
                                 className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-bold"
                               >
                                 ✏️ Inizia Integrazione
@@ -1184,23 +1171,6 @@ export default function PannelloUtente() {
             setShowWizard(false)
             setSelectedLavorazione(null)
             caricaLavorazioni()
-          }}
-        />
-      )}
-
-      {/* Wizard Integrazione (per lavorazioni di tipo integrazione) */}
-      {showWizardIntegrazione && lavorazioneDaIntegrare && user?.id && (
-        <WizardIntegrazioneUtente
-          lavorazione={lavorazioneDaIntegrare}
-          onClose={() => {
-            setShowWizardIntegrazione(false)
-            setLavorazioneDaIntegrare(null)
-          }}
-          onSuccess={() => {
-            setShowWizardIntegrazione(false)
-            setLavorazioneDaIntegrare(null)
-            caricaLavorazioni()
-            alert('✅ Integrazione completata con successo! L\'amministratore è stato notificato.')
           }}
         />
       )}

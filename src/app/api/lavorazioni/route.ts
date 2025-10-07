@@ -8,9 +8,11 @@ import { NotificationManager } from '@/lib/notifications'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
     const stato = searchParams.get('stato')
     const verificaId = searchParams.get('verifica_id')
     const utenteAssegnato = searchParams.get('utente_assegnato') || searchParams.get('utente')
+    const lavorazioneOriginaleId = searchParams.get('lavorazione_originale_id')
 
     let query = supabase
       .from('lavorazioni')
@@ -38,6 +40,12 @@ export async function GET(request: NextRequest) {
       `)
 
     // Applica filtri se presenti
+    if (id) {
+      query = query.eq('id', id)
+    }
+    if (lavorazioneOriginaleId) {
+      query = query.eq('lavorazione_originale_id', lavorazioneOriginaleId)
+    }
     if (stato && stato !== 'tutte') {
       query = query.eq('stato', stato)
     }

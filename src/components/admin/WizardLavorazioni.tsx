@@ -38,6 +38,18 @@ interface NuovaLavorazione {
 interface WizardLavorazioniProps {
   onClose: () => void
   onComplete: (lavorazione: NuovaLavorazione) => void
+  lavorazioneDaModificare?: {
+    id: string
+    condominio_id: string
+    tipologia: string
+    tipologia_verifica_id?: string
+    descrizione: string
+    priorita: 'bassa' | 'media' | 'alta'
+    assegnato_a?: string
+    data_scadenza?: string
+    note?: string
+    allegati?: string
+  }
 }
 
 const tipologieLavorazioni = [
@@ -49,17 +61,49 @@ const tipologieLavorazioni = [
   { id: 'altro', nome: 'Altro', descrizione: 'Altre tipologie di lavorazione' }
 ]
 
-export default function WizardLavorazioni({ onClose, onComplete }: WizardLavorazioniProps) {
+export default function WizardLavorazioni({ onClose, onComplete, lavorazioneDaModificare }: WizardLavorazioniProps) {
   const [step, setStep] = useState(1)
   const [condomini, setCondomini] = useState<Condominio[]>([])
   const [sopralluoghisti, setSopralluoghisti] = useState<User[]>([])
   const [tipologieVerifiche, setTipologieVerifiche] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState<NuovaLavorazione>({
-    condominio_id: '',
-    tipologia: '',
-    descrizione: '',
-    priorita: 'media'
+  const [isEditMode] = useState(!!lavorazioneDaModificare)
+  
+  // Inizializza formData con i dati della lavorazione da modificare o vuoto
+  const [formData, setFormData] = useState<NuovaLavorazione>(() => {
+    if (lavorazioneDaModificare) {
+      // Parse allegati per estrarre tipologia
+      let tipologia = lavorazioneDaModificare.tipologia || 'altro'
+      let tipologia_verifica_id = lavorazioneDaModificare.tipologia_verifica_id
+      
+      if (lavorazioneDaModificare.allegati) {
+        try {
+          const metadata = JSON.parse(lavorazioneDaModificare.allegati)
+          tipologia = metadata.tipologia || tipologia
+          tipologia_verifica_id = metadata.tipologia_verifica_id || tipologia_verifica_id
+        } catch (e) {
+          console.warn('Errore parsing allegati:', e)
+        }
+      }
+      
+      return {
+        condominio_id: lavorazioneDaModificare.condominio_id,
+        tipologia: tipologia,
+        tipologia_verifica_id: tipologia_verifica_id,
+        descrizione: lavorazioneDaModificare.descrizione,
+        priorita: lavorazioneDaModificare.priorita,
+        assegnato_a: lavorazioneDaModificare.assegnato_a,
+        data_scadenza: lavorazioneDaModificare.data_scadenza,
+        note: lavorazioneDaModificare.note
+      }
+    }
+    
+    return {
+      condominio_id: '',
+      tipologia: '',
+      descrizione: '',
+      priorita: 'media'
+    }
   })
 
   useEffect(() => {
@@ -138,7 +182,9 @@ export default function WizardLavorazioni({ onClose, onComplete }: WizardLavoraz
         
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-t-xl">
-          <h2 className="text-2xl font-bold">Crea Nuova Lavorazione</h2>
+          <h2 className="text-2xl font-bold">
+            {isEditMode ? '✏️ Modifica Lavorazione' : '✨ Crea Nuova Lavorazione'}
+          </h2>
           <div className="mt-4 flex justify-between items-center">
             <div className="flex space-x-2">
               {Array.from({ length: getTotalSteps() }, (_, i) => i + 1).map((i) => (
@@ -435,7 +481,7 @@ export default function WizardLavorazioni({ onClose, onComplete }: WizardLavoraz
                   disabled={!canSubmit}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Crea Lavorazione
+                  {isEditMode ? '💾 Salva Modifiche' : '✨ Crea Lavorazione'}
                 </button>
               )}
             </div>
