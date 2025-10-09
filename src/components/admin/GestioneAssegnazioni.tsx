@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Condominio, User } from '@/lib/types'
 
 interface AssegnamentoStats {
@@ -31,13 +31,6 @@ export default function GestioneAssegnazioni() {
       caricaSopralluoghisti()
     ]).finally(() => setLoading(false))
   }, [])
-
-  // Calcola statistiche quando cambiano i dati
-  useEffect(() => {
-    if (condomini.length > 0 && sopralluoghisti.length > 0) {
-      calcolaStats()
-    }
-  }, [condomini, sopralluoghisti])
 
   const caricaCondomini = async () => {
     try {
@@ -73,7 +66,7 @@ export default function GestioneAssegnazioni() {
     }
   }
 
-  const calcolaStats = () => {
+  const calcolaStats = useCallback(() => {
     const assegnati = condomini.filter(c => c.assigned_to).length
     const nonAssegnati = condomini.length - assegnati
     
@@ -90,7 +83,14 @@ export default function GestioneAssegnazioni() {
       nonAssegnati,
       sopralluoghisti: sopralluoghistiStats
     })
-  }
+  }, [condomini, sopralluoghisti])
+
+  // Calcola statistiche quando cambiano i dati
+  useEffect(() => {
+    if (condomini.length > 0 && sopralluoghisti.length > 0) {
+      calcolaStats()
+    }
+  }, [condomini, sopralluoghisti, calcolaStats])
 
   const condominiFiltrati = condomini.filter(condominio => {
     if (filtroAssegnazione === 'assegnati') return condominio.assigned_to

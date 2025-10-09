@@ -172,7 +172,7 @@ export default function VideoIntro({ onComplete }: VideoIntroProps) {
                     onClick={handleSkip}
                     className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors font-medium"
                   >
-                    ✅ Continua all'App
+                    ✅ Continua all&apos;App
                   </button>
                 </div>
               </div>
