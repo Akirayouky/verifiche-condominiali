@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import LoginPage from '@/components/auth/LoginPage'
 import GestioneCondomini from '@/components/condomini/GestioneCondomini'
@@ -13,11 +13,34 @@ import ImpostazioniUtente from '@/components/user/ImpostazioniUtente'
 import Dashboard from '@/components/Dashboard'
 import NotificationCenter from '@/components/notifications/NotificationCenterSimple'
 import Guida from '@/components/Guida'
+import VideoIntro from '@/components/intro/VideoIntro'
 import Link from 'next/link'
 
 function MainApp() {
   const { isAuthenticated, user, role, logout } = useAuth()
   const [activeSection, setActiveSection] = useState(role === 'admin' ? 'dashboard' : 'lavorazioni')
+  const [showVideoIntro, setShowVideoIntro] = useState(false)
+  const [hasSeenIntro, setHasSeenIntro] = useState(false)
+
+  // Gestisce l'intro video dopo il login
+  useEffect(() => {
+    if (isAuthenticated && !hasSeenIntro) {
+      // Controlla se l'utente ha già visto l'intro (localStorage)
+      const hasSeenIntroStored = localStorage.getItem('hasSeenVideoIntro')
+      if (!hasSeenIntroStored) {
+        setShowVideoIntro(true)
+      } else {
+        setHasSeenIntro(true)
+      }
+    }
+  }, [isAuthenticated, hasSeenIntro])
+
+  // Funzione chiamata quando l'intro è completato
+  const handleIntroComplete = () => {
+    localStorage.setItem('hasSeenVideoIntro', 'true')
+    setShowVideoIntro(false)
+    setHasSeenIntro(true)
+  }
 
   // Sezioni diverse in base al ruolo
   const adminSections = [
@@ -141,6 +164,11 @@ function MainApp() {
           )}
         </div>
       </main>
+
+      {/* Video Intro Modal */}
+      {showVideoIntro && (
+        <VideoIntro onComplete={handleIntroComplete} />
+      )}
     </div>
   )
 }
